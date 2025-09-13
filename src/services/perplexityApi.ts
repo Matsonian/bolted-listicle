@@ -1,0 +1,391 @@
+export interface ListicleResult {
+  id: string;
+  title: string;
+  url: string;
+  domain: string;
+}
+
+export class PerplexitySearchService {
+  private apiKey: string;
+  private baseUrl = 'https://api.perplexity.ai/chat/completions';
+
+  constructor() {
+    this.apiKey = import.meta.env.VITE_PERPLEXITY_API_KEY || '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';
+    
+    if (!this.apiKey) {
+      console.error('VITE_PERPLEXITY_API_KEY not found in environment variables. Please check your .env file.');
+    }
+  }
+
+  async searchListicles(query: string): Promise<ListicleResult[]> {
+    if (!this.apiKey) {
+      throw new Error('Perplexity API key not configured. The API key should be automatically loaded from environment variables.');
+    }
+
+    if (!query || typeof query !== 'string') {
+      throw new Error('Invalid search query');
+    }
+
+    const sanitizedQuery = query.trim();
+    if (!sanitizedQuery) {
+      throw new Error('Search query cannot be empty');
+    }
+
+    try {
+      const searchVariations = this.generateSearchVariations(sanitizedQuery);
+      const allResults: ListicleResult[] = [];
+      
+      console.log('=== ENHANCED SEARCH STRATEGY ===');
+      console.log(`Search variations (${searchVariations.length}):`, searchVariations);
+      
+      for (let i = 0; i < searchVariations.length; i++) {
+        const searchTerm = searchVariations[i];
+        console.log(`\n--- Search ${i + 1}/${searchVariations.length}: "${searchTerm}" ---`);
+        
+        try {
+          const results = await this.performSingleSearch(searchTerm, sanitizedQuery);
+          console.log(`Found ${results.length} results for "${searchTerm}"`);
+          allResults.push(...results);
+          
+          if (i < searchVariations.length - 1) {
+            await new Promise(resolve => setTimeout(resolve, 800));
+          }
+        } catch (error) {
+          console.error(`Error in search variation "${searchTerm}":`, error);
+        }
+      }
+      
+      const uniqueResults = this.deduplicateResults(allResults);
+      console.log(`\n=== ENHANCED RESULTS ===`);
+      console.log(`Total results before deduplication: ${allResults.length}`);
+      console.log(`Unique results after deduplication: ${uniqueResults.length}`);
+      console.log('=========================');
+      
+      return uniqueResults.slice(0, 50);
+    } catch (error) {
+      console.error('Enhanced search error:', error);
+      
+      if (error instanceof Error) {
+        throw error;
+      }
+      
+      throw new Error('Search service temporarily unavailable');
+    }
+  }
+
+  generateSearchVariations(query: string): string[] {
+    const variations = [
+      // Original and basic patterns
+      query,
+      `best ${query}`,
+      `top ${query}`,
+      `${query} reviews`,
+      
+      // Numbered lists (high value for outreach)
+      `top 10 ${query}`,
+      `top 15 ${query}`,
+      `best 5 ${query}`,
+      `7 best ${query}`,
+      
+      // Buying guides and recommendations
+      `${query} buying guide`,
+      `${query} recommendations`,
+      `${query} buyer's guide`,
+      
+      // Comprehensive guides (often from smaller sites)
+      `ultimate ${query} guide`,
+      `complete ${query} guide`,
+      `${query} roundup`,
+      
+      // Testing and comparison (niche sites love these)
+      `${query} tested`,
+      `${query} comparison`,
+      `${query} vs`,
+      
+      // Budget and value (smaller sites often focus here)
+      `best budget ${query}`,
+      `cheap ${query}`,
+      `affordable ${query}`,
+      
+      // Specific use cases (niche publications)
+      `${query} for beginners`,
+      `professional ${query}`,
+      
+      // Year-specific (catches recent smaller articles)
+      `best ${query} 2024`,
+      `${query} 2025`
+    ];
+    
+    // Return more variations to cast wider net
+    return [...new Set(variations)].slice(0, 12);
+  }
+
+  async performSingleSearch(searchTerm: string, originalQuery: string): Promise<ListicleResult[]> {
+    const response = await fetch(this.baseUrl, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${this.apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'sonar',
+        messages: [
+          {
+            role: 'user',
+            content: `Find ALL listicles and "best of" articles about: ${searchTerm}
+
+CRITICAL INSTRUCTIONS:
+- ONLY return results for articles that actually exist and that you can verify
+- DO NOT make up or fabricate any URLs
+- DO NOT create fake article titles
+- DO NOT provide general website recommendations or "this is a good site for..." statements
+- If you find fewer than 10 results, that's perfectly fine - quality over quantity
+
+WHAT I NEED:
+- Real article titles (preferably H1 tags from actual webpages)
+- Working URLs to actual articles
+- Only listicles, rankings, and "best of" articles - not general blogs or informational sites
+
+SEARCH CRITERIA:
+- Numbered lists ("Top 10", "Best 5", etc.)
+- "Best of" product recommendations
+- Product comparison articles
+- Buying guides with ranked recommendations
+
+RESPONSE FORMAT:
+For each REAL article you find:
+Title: [Actual article headline/H1 from webpage]
+URL: [Complete working URL]
+
+If you can only find 3-5 real articles, return those. Do not pad the results with fake entries or general website suggestions.
+
+ABSOLUTELY DO NOT:
+- Invent URLs that don't exist
+- Create generic titles like "Best [Product] Guide"  
+- Include general blogs without specific listicles
+- Add commentary about websites being "good resources"
+
+Only verified, actual listicle articles with real titles and working URLs.`
+          }
+        ],
+        return_citations: true,
+        temperature: 0.1,
+        max_tokens: 6000,
+        search_domain_filter: null,
+        search_recency_filter: null
+      })
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(`Perplexity API error: ${response.status} ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    const citations = data.citations || [];
+    const content = data.choices[0]?.message?.content || '';
+    
+    const citationUrls = citations;
+    const contentUrls = this.extractUrlsFromContent(content);
+    
+    const allUrls = [...citationUrls, ...contentUrls];
+    const uniqueUrls = [...new Set(allUrls)];
+    
+    console.log(`=== URL EXTRACTION DEBUG ===`);
+    console.log(`Citations found: ${citations.length}`);
+    console.log(`Content URLs extracted: ${contentUrls.length}`);
+    console.log(`Total unique URLs: ${uniqueUrls.length}`);
+    
+    return this.parseResults(uniqueUrls, content, originalQuery);
+  }
+
+  extractUrlsFromContent(content: string): string[] {
+    // More aggressive URL extraction for smaller sites
+    const urlPattern = /https?:\/\/[^\s\)>,;!"'\]\}]+/gi;
+    const urls = content.match(urlPattern) || [];
+    
+    // Clean and filter URLs but be more permissive
+    const cleanUrls = urls
+      .map(url => url.replace(/[.,;!?)\]"'>}]+$/, ''))
+      .filter(url => {
+        try {
+          const urlObj = new URL(url);
+          const hostname = urlObj.hostname.toLowerCase();
+          const pathname = urlObj.pathname.toLowerCase();
+          
+          // Only exclude obvious non-articles (be more permissive)
+          const excludePatterns = [
+            // Still block video platforms
+            'youtube.com', 'youtu.be', 'vimeo.com',
+            // Still block social media
+            'facebook.com', 'twitter.com', 'instagram.com', 'linkedin.com',
+            // Navigation pages
+            '/search', '/tag/', '/category/', '/author/',
+            '/contact', '/about', '/privacy', '/terms',
+            // File types
+            '.pdf', '.doc', '.xls', '.ppt', '.zip'
+          ];
+          
+          const isExcluded = excludePatterns.some(pattern => 
+            hostname.includes(pattern) || pathname.includes(pattern)
+          );
+          
+          // More permissive - allow affiliate sites, smaller blogs, etc.
+          return !isExcluded;
+        } catch {
+          return false;
+        }
+      });
+    
+    return [...new Set(cleanUrls)];
+  }
+
+  parseResults(urls: string[], content: string, query: string): ListicleResult[] {
+    const results: ListicleResult[] = [];
+    
+    urls.forEach((url, index) => {
+      try {
+        const urlObj = new URL(url);
+        const domain = urlObj.hostname.replace('www.', '');
+        
+        const title = this.extractTitleFromContent(content, url, index) || 
+                     this.extractTitleFromUrl(url) || 
+                     this.generateTitleFromDomain(domain, query);
+        
+        results.push({
+          id: `enhanced-${Date.now()}-${index}`,
+          title,
+          url,
+          domain
+        });
+      } catch (error) {
+        console.error('Error processing URL:', url, error);
+      }
+    });
+
+    console.log(`Parsed ${results.length} results from ${urls.length} URLs`);
+    return results.slice(0, 40);
+  }
+
+  deduplicateResults(results: ListicleResult[]): ListicleResult[] {
+    const seen = new Set();
+    const unique: ListicleResult[] = [];
+    
+    for (const result of results) {
+      const key = result.url.toLowerCase();
+      if (!seen.has(key)) {
+        seen.add(key);
+        unique.push(result);
+      }
+    }
+    
+    return unique;
+  }
+
+  extractTitleFromContent(content: string, url: string, index: number): string {
+    const lines = content.split('\n').filter(line => line.trim().length > 0);
+    
+    // Method 1: Look for titles in numbered lists or bullet points
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i].trim();
+      
+      if (line.includes(url)) {
+        // Look backwards for a title
+        for (let j = i - 1; j >= Math.max(0, i - 3); j--) {
+          const prevLine = lines[j].trim();
+          if (this.looksLikeTitle(prevLine)) {
+            return this.cleanTitle(prevLine);
+          }
+        }
+        
+        // Look forwards for a title
+        for (let j = i + 1; j < Math.min(lines.length, i + 3); j++) {
+          const nextLine = lines[j].trim();
+          if (this.looksLikeTitle(nextLine)) {
+            return this.cleanTitle(nextLine);
+          }
+        }
+      }
+    }
+    
+    // Method 2: Look for patterns like "Title - URL" or "Number. Title"
+    for (const line of lines) {
+      if (line.includes(url)) {
+        const patterns = [
+          /^(\d+\.\s*)?(.+?)\s*[-–—]\s*https?:\/\//,
+          /^(\d+\.\s*)?(.+?)\s*\(\s*https?:\/\//,
+          /^(\d+\.\s*)?(.+?)\s*https?:\/\//,
+          /^[•\-*]\s*(.+?)\s*[-–—]\s*https?:\/\//,
+          /^[•\-*]\s*(.+?)\s*https?:\/\//
+        ];
+        
+        for (const pattern of patterns) {
+          const match = line.match(pattern);
+          if (match && match[2]) {
+            const title = match[2].trim();
+            if (this.looksLikeTitle(title)) {
+              return this.cleanTitle(title);
+            }
+          }
+        }
+      }
+    }
+    
+    return '';
+  }
+  
+  extractTitleFromUrl(url: string): string {
+    try {
+      const urlObj = new URL(url);
+      const pathname = urlObj.pathname;
+      
+      const pathParts = pathname.split('/').filter(part => part.length > 0);
+      const lastPart = pathParts[pathParts.length - 1];
+      
+      if (lastPart && lastPart !== 'index.html' && lastPart !== 'index.php') {
+        const title = lastPart
+          .replace(/\.(html|php|aspx?)$/i, '')
+          .replace(/[-_]/g, ' ')
+          .replace(/\b\w/g, l => l.toUpperCase())
+          .trim();
+          
+        if (title.length > 5 && title.length < 100) {
+          return title;
+        }
+      }
+    } catch (error) {
+      // Invalid URL
+    }
+    
+    return '';
+  }
+  
+  looksLikeTitle(text: string): boolean {
+    if (!text || text.length < 10 || text.length > 200) return false;
+    if (text.includes('http://') || text.includes('https://')) return false;
+    
+    const wordCount = text.split(/\s+/).length;
+    return wordCount >= 3;
+  }
+  
+  cleanTitle(title: string): string {
+    return title
+      .replace(/^\d+\.\s*/, '')
+      .replace(/^[•\-*]\s*/, '')
+      .replace(/\s*[-–—]\s*$/, '')
+      .replace(/\s*\|\s*.*$/, '')
+      .trim();
+  }
+  
+  generateTitleFromDomain(domain: string, query: string): string {
+    const domainName = domain.split('.')[0];
+    const capitalizedDomain = domainName.charAt(0).toUpperCase() + domainName.slice(1);
+    const capitalizedQuery = query.split(' ').map(word => 
+      word.charAt(0).toUpperCase() + word.slice(1)
+    ).join(' ');
+    
+    return `${capitalizedQuery} Guide from ${capitalizedDomain}`;
+  }
+}
+
+export const perplexityService = new PerplexitySearchService();
