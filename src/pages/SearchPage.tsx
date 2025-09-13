@@ -49,7 +49,6 @@ export default function SearchPage() {
       const phases = [
         { phase: 'analyzing', progress: 10, message: 'Analyzing your search query...', delay: 10000 },
         { phase: 'generating', progress: 20, message: 'Generating 10+ search variations...', delay: 10000 },
-        { phase: 'searching', progress: 35, message: 'Searching across the web for listicles...', delay: 60000 },
         { phase: 'filtering', progress: 75, message: 'Filtering high-quality listicles...', delay: 10000 },
         { phase: 'organizing', progress: 90, message: 'Organizing and ranking results...', delay: 10000 }
       ];
@@ -57,11 +56,31 @@ export default function SearchPage() {
       // Start with initializing immediately
       setSearchProgress({ phase: 'initializing', progress: 0, message: 'Initializing search...' });
       
-      // Show progress phases while search runs
+      // Show progress phases while search runs (with special handling for search phase)
       const progressPromise = (async () => {
-        for (const phaseData of phases) {
-          setSearchProgress(phaseData);
-          await new Promise(resolve => setTimeout(resolve, phaseData.delay));
+        for (let i = 0; i < phases.length; i++) {
+          const phaseData = phases[i];
+          
+          if (phaseData.phase === 'searching') {
+            // Special handling for search phase - move 1/6 every 10 seconds
+            const searchStartProgress = 20; // Previous phase end
+            const searchEndProgress = 75; // Next phase start
+            const searchRange = searchEndProgress - searchStartProgress;
+            const increment = searchRange / 6; // 1/6 of the range
+            
+            for (let step = 0; step < 6; step++) {
+              const currentProgress = searchStartProgress + (increment * (step + 1));
+              setSearchProgress({
+                phase: 'searching',
+                progress: Math.round(currentProgress),
+                message: 'Searching across the web for listicles...'
+              });
+              await new Promise(resolve => setTimeout(resolve, 10000)); // 10 seconds each
+            }
+          } else {
+            setSearchProgress(phaseData);
+            await new Promise(resolve => setTimeout(resolve, phaseData.delay));
+          }
         }
         setSearchProgress({ phase: 'finalizing', progress: 95, message: 'Finalizing results...' });
       })();
