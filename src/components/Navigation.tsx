@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Menu, X, User, LogOut, Search } from 'lucide-react';
 import { supabase } from '../lib/supabase';
-import type { User as SupabaseUser } from '@supabase/supabase-js';
 
 interface UserProfile {
   id: string;
@@ -14,20 +13,28 @@ interface UserProfile {
 
 export default function Navigation() {
   const [isOpen, setIsOpen] = useState(false);
-  const [user, setUser] = useState<SupabaseUser | null>(null);
+  const [user, setUser] = useState<any>(null);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const location = useLocation();
 
   useEffect(() => {
     // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
-      if (session?.user) {
-        fetchUserProfile(session.user.id);
+    const getSession = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        setUser(session?.user ?? null);
+        if (session?.user) {
+          await fetchUserProfile(session.user.id);
+        }
+        setLoading(false);
+      } catch (error) {
+        console.error('Error getting session:', error);
+        setLoading(false);
       }
-      setLoading(false);
-    });
+    };
+
+    getSession();
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -92,9 +99,6 @@ export default function Navigation() {
                 className="h-10 w-auto max-w-none"
               />
             </Link>
-            <div className="hidden md:flex items-center space-x-8">
-              <div className="w-20 h-6 bg-gray-200 animate-pulse rounded"></div>
-            </div>
           </div>
         </div>
       </nav>
@@ -146,7 +150,7 @@ export default function Navigation() {
             >
               Blog
             </Link>
-            {user && (
+            {user && user.email_confirmed_at && (
               <Link 
                 to="/education" 
                 className={`font-medium transition-colors ${
@@ -158,7 +162,7 @@ export default function Navigation() {
                 Education
               </Link>
             )}
-            {user && (
+            {user && user.email_confirmed_at && (
               <Link 
                 to="/maker" 
                 className={`font-medium transition-colors ${
@@ -172,36 +176,50 @@ export default function Navigation() {
             )}
             
             {user ? (
-              <div className="flex items-center space-x-4">
-                {userProfile && (
-                  <div className="flex items-center space-x-2">
-                    <span className="text-sm text-gray-600">
-                      {userProfile.name}
-                    </span>
-                    <span className={`text-xs px-2 py-1 rounded-full font-medium ${
-                      userProfile.tier === 'pro' 
-                        ? 'bg-purple-100 text-purple-800' 
-                        : 'bg-blue-100 text-blue-800'
-                    }`}>
-                      {userProfile.tier.toUpperCase()}
-                    </span>
-                  </div>
-                )}
-                <Link 
-                  to="/profile" 
-                  className="text-gray-700 hover:text-blue-600 transition-colors"
-                  title="My Account"
-                >
-                  <User className="w-6 h-6 stroke-2" />
-                </Link>
-                <button
-                  onClick={handleLogout}
-                  className="text-red-600 hover:text-red-700 transition-colors"
-                  title="Logout"
-                >
-                  <LogOut className="w-6 h-6 stroke-2" />
-                </button>
-              </div>
+              user.email_confirmed_at ? (
+                <div className="flex items-center space-x-4">
+                  {userProfile && (
+                    <div className="flex items-center space-x-2">
+                      <span className="text-sm text-gray-600">
+                        {userProfile.name}
+                      </span>
+                      <span className={`text-xs px-2 py-1 rounded-full font-medium ${
+                        userProfile.tier === 'pro' 
+                          ? 'bg-purple-100 text-purple-800' 
+                          : 'bg-blue-100 text-blue-800'
+                      }`}>
+                        {userProfile.tier.toUpperCase()}
+                      </span>
+                    </div>
+                  )}
+                  <Link 
+                    to="/profile" 
+                    className="text-gray-700 hover:text-blue-600 transition-colors"
+                    title="My Account"
+                  >
+                    <User className="w-6 h-6 stroke-2" />
+                  </Link>
+                  <button
+                    onClick={handleLogout}
+                    className="text-red-600 hover:text-red-700 transition-colors"
+                    title="Logout"
+                  >
+                    <LogOut className="w-6 h-6 stroke-2" />
+                  </button>
+                </div>
+              ) : (
+                <div className="flex items-center space-x-4">
+                  <span className="text-sm text-yellow-600 font-medium">
+                    Email Confirmation Required
+                  </span>
+                  <button
+                    onClick={handleLogout}
+                    className="text-red-600 hover:text-red-700 transition-colors text-sm"
+                  >
+                    Sign Out
+                  </button>
+                </div>
+              )
             ) : (
               <div className="flex items-center space-x-4">
                 <Link 
@@ -254,7 +272,7 @@ export default function Navigation() {
               >
                 Blog
               </Link>
-              {user && (
+              {user && user.email_confirmed_at && (
                 <Link 
                   to="/education" 
                   className="text-gray-700 hover:text-blue-600 font-medium transition-colors"
@@ -263,7 +281,7 @@ export default function Navigation() {
                   Education
                 </Link>
               )}
-              {user && (
+              {user && user.email_confirmed_at && (
                 <Link 
                   to="/maker" 
                   className="text-gray-700 hover:text-blue-600 font-medium transition-colors"
@@ -274,42 +292,59 @@ export default function Navigation() {
               )}
               
               {user ? (
-                <>
-                  {userProfile && (
-                    <div className="flex items-center space-x-2 py-2">
-                      <span className="text-sm text-gray-600">
-                        {userProfile.name}
-                      </span>
-                      <span className={`text-xs px-2 py-1 rounded-full font-medium ${
-                        userProfile.tier === 'pro' 
-                          ? 'bg-purple-100 text-purple-800' 
-                          : 'bg-blue-100 text-blue-800'
-                      }`}>
-                        {userProfile.tier.toUpperCase()}
-                      </span>
-                    </div>
-                  )}
-                  <Link 
-                    to="/profile" 
-                    className="text-gray-700 hover:text-blue-600 font-medium transition-colors flex items-center space-x-2"
-                    onClick={() => setIsOpen(false)}
-                    title="My Account"
-                  >
-                    <User className="w-5 h-5 stroke-2" />
-                    <span>Profile</span>
-                  </Link>
-                  <button
-                    onClick={() => {
-                      handleLogout();
-                      setIsOpen(false);
-                    }}
-                    className="text-red-600 hover:text-red-700 font-medium transition-colors text-left flex items-center space-x-2"
-                    title="Logout"
-                  >
-                    <LogOut className="w-5 h-5 stroke-2" />
-                    <span>Logout</span>
-                  </button>
-                </>
+                user.email_confirmed_at ? (
+                  <>
+                    {userProfile && (
+                      <div className="flex items-center space-x-2 py-2">
+                        <span className="text-sm text-gray-600">
+                          {userProfile.name}
+                        </span>
+                        <span className={`text-xs px-2 py-1 rounded-full font-medium ${
+                          userProfile.tier === 'pro' 
+                            ? 'bg-purple-100 text-purple-800' 
+                            : 'bg-blue-100 text-blue-800'
+                        }`}>
+                          {userProfile.tier.toUpperCase()}
+                        </span>
+                      </div>
+                    )}
+                    <Link 
+                      to="/profile" 
+                      className="text-gray-700 hover:text-blue-600 font-medium transition-colors flex items-center space-x-2"
+                      onClick={() => setIsOpen(false)}
+                      title="My Account"
+                    >
+                      <User className="w-5 h-5 stroke-2" />
+                      <span>Profile</span>
+                    </Link>
+                    <button
+                      onClick={() => {
+                        handleLogout();
+                        setIsOpen(false);
+                      }}
+                      className="text-red-600 hover:text-red-700 font-medium transition-colors text-left flex items-center space-x-2"
+                      title="Logout"
+                    >
+                      <LogOut className="w-5 h-5 stroke-2" />
+                      <span>Logout</span>
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <span className="text-sm text-yellow-600 font-medium">
+                      Email Confirmation Required
+                    </span>
+                    <button
+                      onClick={() => {
+                        handleLogout();
+                        setIsOpen(false);
+                      }}
+                      className="text-red-600 hover:text-red-700 font-medium transition-colors text-left"
+                    >
+                      Sign Out
+                    </button>
+                  </>
+                )
               ) : (
                 <>
                   <Link 
