@@ -41,6 +41,7 @@ function App() {
             <Route path="/you-need-listicles" element={<YouNeedListiclesPage />} />
             <Route path="/confirm-email" element={<ConfirmEmailPage />} />
             <Route path="/welcome" element={<WelcomePage />} />
+            <Route path="/listicle-detail/:url" element={<ListicleDetailPage />} />
 
 
           </Routes>
