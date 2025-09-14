@@ -11,9 +11,34 @@ export default function ConfirmEmailPage() {
   useEffect(() => {
     // Get current user to show their email
     const getCurrentUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      setUser(user);
-      setEmail(user?.email || '');
+      try {
+        // First try to get from current session
+        const { data: { user }, error } = await supabase.auth.getUser();
+        console.log('Current user data:', user);
+        console.log('User email:', user?.email);
+        
+        if (error) {
+          console.error('Error getting user:', error);
+          return;
+        }
+        
+        setUser(user);
+        
+        // Set email from user data, or try to get from session
+        if (user?.email) {
+          setEmail(user.email);
+        } else {
+          // Fallback: try to get from session
+          const { data: { session } } = await supabase.auth.getSession();
+          console.log('Session data:', session);
+          if (session?.user?.email) {
+            setEmail(session.user.email);
+            setUser(session.user);
+          }
+        }
+      } catch (error) {
+        console.error('Error in getCurrentUser:', error);
+      }
     };
 
     getCurrentUser();
