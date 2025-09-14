@@ -8,3 +8,8 @@ if (!supabaseUrl || !supabaseAnonKey) {
 }
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey)
+
+
+console.log('Available env vars:', Object.keys(import.meta.env));
+console.log('SUPABASE_NEXT_PUBLIC_SUPABASE_URL:', import.meta.env.SUPABASE_NEXT_PUBLIC_SUPABASE_URL);
+console.log('SUPABASE_NEXT_PUBLIC_SUPABASE_ANON_KEY:', import.meta.env.SUPABASE_NEXT_PUBLIC_SUPABASE_ANON_KEY);
