@@ -18,13 +18,43 @@ export default function SignupPage() {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [passwordErrors, setPasswordErrors] = useState<string[]>([]);
   const navigate = useNavigate();
 
+  const validatePassword = (password: string): string[] => {
+    const errors: string[] = [];
+    
+    if (password.length < 8) {
+      errors.push('At least 8 characters');
+    }
+    if (!/[A-Z]/.test(password)) {
+      errors.push('One uppercase letter');
+    }
+    if (!/[a-z]/.test(password)) {
+      errors.push('One lowercase letter');
+    }
+    if (!/\d/.test(password)) {
+      errors.push('One number');
+    }
+    if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) {
+      errors.push('One special character (!@#$%^&* etc.)');
+    }
+    
+    return errors;
+  };
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    
     setFormData(prev => ({
       ...prev,
-      [e.target.name]: e.target.value
+      [name]: value
     }));
+
+    // Real-time password validation
+    if (name === 'password') {
+      setPasswordErrors(validatePassword(value));
+    }
   };
 
   const handleSignup = async (e: React.FormEvent) => {
@@ -39,8 +69,9 @@ export default function SignupPage() {
       return;
     }
 
-    if (formData.password.length < 6) {
-      setError('Password must be at least 6 characters');
+    const passwordValidationErrors = validatePassword(formData.password);
+    if (passwordValidationErrors.length > 0) {
+      setError('Password does not meet security requirements');
       setLoading(false);
       return;
     }
