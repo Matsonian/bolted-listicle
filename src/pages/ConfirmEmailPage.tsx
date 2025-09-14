@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Mail, RefreshCw, CheckCircle } from 'lucide-react';
+import { useLocation } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 
 export default function ConfirmEmailPage() {
@@ -7,12 +8,20 @@ export default function ConfirmEmailPage() {
   const [isResending, setIsResending] = useState(false);
   const [resendSuccess, setResendSuccess] = useState(false);
   const [user, setUser] = useState<any>(null);
+  const location = useLocation();
 
   useEffect(() => {
     // Get current user to show their email
     const getCurrentUser = async () => {
       try {
-        // First try to get from current session
+        // First check if email was passed via navigation state
+        const stateEmail = location.state?.email;
+        if (stateEmail) {
+          setEmail(stateEmail);
+          console.log('Email from navigation state:', stateEmail);
+        }
+
+        // Also try to get from current session
         const { data: { user }, error } = await supabase.auth.getUser();
         console.log('Current user data:', user);
         console.log('User email:', user?.email);
@@ -24,10 +33,10 @@ export default function ConfirmEmailPage() {
         
         setUser(user);
         
-        // Set email from user data, or try to get from session
-        if (user?.email) {
+        // Set email from user data if we don't have it from state
+        if (user?.email && !stateEmail) {
           setEmail(user.email);
-        } else {
+        } else if (!user?.email && !stateEmail) {
           // Fallback: try to get from session
           const { data: { session } } = await supabase.auth.getSession();
           console.log('Session data:', session);
