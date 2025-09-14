@@ -15,6 +15,9 @@ import BlogPostPage from './pages/BlogPostPage';
 import EducationPage from './pages/EducationPage';
 import MakerPage from './pages/MakerPage';
 import YouNeedListiclesPage from './pages/YouNeedListiclesPage';
+import ConfirmEmailPage from './pages/ConfirmEmailPage';
+import WelcomePage from './pages/WelcomePage';
+
 
 function App() {
   return (
@@ -36,6 +39,10 @@ function App() {
             <Route path="/education" element={<EducationPage />} />
             <Route path="/maker" element={<MakerPage />} />
             <Route path="/you-need-listicles" element={<YouNeedListiclesPage />} />
+            <Route path="/confirm-email" element={<ConfirmEmailPage />} />
+            <Route path="/welcome" element={<WelcomePage />} />
+
+
           </Routes>
         </main>
         <Footer />
