@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { Search, ExternalLink, Globe, Lock, Brain, Zap, Filter, BarChart3 } from 'lucide-react';
+import { Search, ExternalLink, Globe, Lock, Brain, Zap, Filter, BarChart3, ArrowUpRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { perplexityService, ListicleResult } from '../services/perplexityApi';
 
@@ -108,6 +108,11 @@ export default function SearchPage() {
     }
   };
 
+  const handleGetListicled = (article: ListicleResult) => {
+    // Navigate to listicle detail page with URL-encoded article URL
+    const encodedUrl = encodeURIComponent(article.url);
+    navigate(`/listicle-detail/${encodedUrl}`);
+  };
 
   const canViewAllResults = user !== null;
   const freeResultsLimit = 5;
@@ -287,15 +292,27 @@ export default function SearchPage() {
                         </div>
                       </div>
                       
-                      <a
-                        href={article.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors duration-200"
-                      >
-                        <span>View Listicle</span>
-                        <ExternalLink className="w-4 h-4" />
-                      </a>
+                      <div className="flex items-center justify-between">
+                        <a
+                          href={article.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors duration-200"
+                        >
+                          <span>View Listicle</span>
+                          <ExternalLink className="w-4 h-4" />
+                        </a>
+                        
+                        {canViewAllResults && (
+                          <button
+                            onClick={() => handleGetListicled(article)}
+                            className="inline-flex items-center space-x-2 bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-all duration-200 shadow-md hover:shadow-lg"
+                          >
+                            <span>GetListicled</span>
+                            <ArrowUpRight className="w-4 h-4" />
+                          </button>
+                        )}
+                      </div>
                     </div>
                   </div>
                 );
