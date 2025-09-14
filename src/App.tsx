@@ -17,6 +17,8 @@ import MakerPage from './pages/MakerPage';
 import YouNeedListiclesPage from './pages/YouNeedListiclesPage';
 import ConfirmEmailPage from './pages/ConfirmEmailPage';
 import WelcomePage from './pages/WelcomePage';
+import ListicleDetailPage from './src/pages/ListicleDetailPage';
+
 
 
 function App() {
