@@ -11,20 +11,25 @@ export default function LoginPage() {
   const navigate = useNavigate();
 
   const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setError('');
+  e.preventDefault();
+  setLoading(true);
+  setError('');
 
-    try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
+  console.log('Attempting login with:', email); // Debug log
 
-      if (error) {
-        setError(error.message);
-        return;
-      }
+  try {
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email: email,
+      password: password,
+    });
+
+    console.log('Login response:', data); // Debug log
+    console.log('Login error:', error); // Debug log
+
+    if (error) {
+      setError(error.message);
+      return;
+    }
 
       if (data.user) {
         // Fetch user profile data
