@@ -43,10 +43,14 @@ export default function SignupPage() {
     try {
       // Create auth user
       const { data: authData, error: authError } = await supabase.auth.signUp({
+        
         email: formData.email,
         password: formData.password,
       });
 
+      console.log('Auth user created:', authData.user);
+console.log('User ID:', authData.user?.id);
+console.log('User confirmed:', authData.user?.email_confirmed_at);
       if (authError) {
         setError(authError.message);
         return;
