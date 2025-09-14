@@ -58,35 +58,8 @@ export default function ConfirmEmailPage() {
     }
   };
 
-  const handleLogout = async () => {
-    const { error } = await supabase.auth.signOut();
-    if (error) {
-      console.error('Error signing out:', error);
-    } else {
-      window.location.href = '/';
-    }
-  };
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-900 via-blue-800 to-teal-700">
-      {/* Navigation Bar - Minimal */}
-      <nav className="bg-white/10 backdrop-blur-sm border-b border-white/20">
-        <div className="container mx-auto px-4">
-          <div className="flex justify-between items-center h-16">
-            <img 
-              src="/GetListicledLogo-BlueGreen.png" 
-              alt="Get Listicled" 
-              className="h-10 w-auto"
-            />
-            <button
-              onClick={handleLogout}
-              className="text-white/80 hover:text-white text-sm transition-colors"
-            >
-              Sign Out
-            </button>
-          </div>
-        </div>
-      </nav>
 
       {/* Main Content */}
       <div className="container mx-auto px-4 py-16">
