@@ -9,8 +9,15 @@ export default function ConfirmEmailPage() {
   const [resendSuccess, setResendSuccess] = useState(false);
   const [user, setUser] = useState<any>(null);
   const location = useLocation();
+  const [searchParams] = useSearchParams();
 
   useEffect(() => {
+    // Get email from URL params first
+    const urlEmail = searchParams.get('email');
+    if (urlEmail) {
+      setEmail(urlEmail);
+      console.log('Email from URL:', urlEmail);
+    }
     // Get current user to show their email
     const getCurrentUser = async () => {
       try {
