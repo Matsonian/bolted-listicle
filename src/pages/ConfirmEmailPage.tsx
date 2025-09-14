@@ -9,7 +9,8 @@ export default function ConfirmEmailPage() {
   const [resendSuccess, setResendSuccess] = useState(false);
   const [user, setUser] = useState<any>(null);
   const location = useLocation();
-  const [searchParams] = useSearchParams();
+  const searchParams = new URLSearchParams(location.search);
+const urlEmail = searchParams.get('email');
 
   useEffect(() => {
     // Get email from URL params first
