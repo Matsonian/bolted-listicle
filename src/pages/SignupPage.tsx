@@ -84,7 +84,7 @@ console.log('User confirmed:', authData.user?.email_confirmed_at);
           });
         } else {
           // Basic tier - proceed to app
-         navigate('/confirm-email');
+         navigate('/confirm-email', { state: { email: formData.email } });
         }
       }
     } catch (err) {
