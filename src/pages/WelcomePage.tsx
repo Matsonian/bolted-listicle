@@ -10,8 +10,17 @@ export default function WelcomePage() {
   const navigate = useNavigate();
 
   useEffect(() => {
+    // Force refresh session when landing on welcome page
+    const refreshSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      console.log('Welcome page session:', session);
+    };
+    
     const fetchUserProfile = async () => {
       const { data: { user } } = await supabase.auth.getUser();
+      console.log('Welcome page user:', user);
+      console.log('Email confirmed:', user?.email_confirmed_at);
+      
       if (user) {
         const { data, error } = await supabase
           .from('users')
@@ -25,6 +34,7 @@ export default function WelcomePage() {
       }
     };
 
+    refreshSession();
     fetchUserProfile();
   }, []);
 
