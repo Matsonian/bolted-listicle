@@ -1,11 +1,11 @@
 import { createClient } from '@supabase/supabase-js'
 
-// Debug: Log the actual values
-console.log('Supabase URL:', import.meta.env.SUPABASE_NEXT_PUBLIC_SUPABASE_URL)
-console.log('Supabase Key:', import.meta.env.SUPABASE_NEXT_PUBLIC_SUPABASE_ANON_KEY ? 'Found' : 'Missing')
+// Use VITE_ prefixed variables for Vite projects
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
 
-const supabaseUrl = import.meta.env.SUPABASE_NEXT_PUBLIC_SUPABASE_URL
-const supabaseAnonKey = import.meta.env.SUPABASE_NEXT_PUBLIC_SUPABASE_ANON_KEY
+console.log('Supabase URL:', supabaseUrl)
+console.log('Supabase Key:', supabaseAnonKey ? 'Found' : 'Missing')
 
 if (!supabaseUrl || !supabaseAnonKey) {
   throw new Error('Missing Supabase environment variables')
