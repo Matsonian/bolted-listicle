@@ -37,8 +37,7 @@ export default function LoginPage() {
       setError('An unexpected error occurred');
     } finally {
       setLoading(false);
-    } finally {
-      setLoading(false);
+    }
   };
 
   return (
