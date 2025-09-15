@@ -11,7 +11,10 @@ export default function WelcomePage() {
 
   useEffect(() => {
     const fetchUserProfile = async () => {
+      console.log('WelcomePage: Starting user profile fetch');
       const { data: { user } } = await supabase.auth.getUser();
+      
+      console.log('WelcomePage: User check result', { user: !!user, confirmed: !!user?.email_confirmed_at });
       
       if (user && user.email_confirmed_at) {
         const { data, error } = await supabase
@@ -20,11 +23,14 @@ export default function WelcomePage() {
           .eq('id', user.id)
           .single();
         
+        console.log('WelcomePage: Profile fetch result', { data: !!data, error });
+        
         if (data) {
           setUserProfile(data);
         }
       } else {
         // Not logged in or email not confirmed, redirect
+        console.log('WelcomePage: Redirecting to login - no user or email not confirmed');
         window.location.href = '/login';
       }
     };
@@ -71,7 +77,7 @@ export default function WelcomePage() {
             <div className="inline-flex items-center space-x-2 bg-white/10 backdrop-blur-sm rounded-full px-6 py-3 mb-6">
               <Sparkles className="w-5 h-5 text-yellow-300" />
               <span className="text-white font-medium">
-                Welcome to the Inner Circle, {userProfile?.name || 'Member'}!
+                Welcome to the Inner Circle, {userProfile?.name || userProfile?.first_name || 'Member'}!
               </span>
             </div>
             
