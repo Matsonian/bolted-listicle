@@ -30,10 +30,10 @@ function Navigation() {
           if (session?.user) {
             await fetchUserProfile(session.user.id);
           }
-          setLoading(false);
         }
       } catch (error) {
         console.error('Auth init error:', error);
+      } finally {
         if (mounted) {
           setLoading(false);
         }
@@ -46,7 +46,6 @@ function Navigation() {
       async (event, session) => {
         if (!mounted) return;
         
-        console.log('Auth changed:', event, session?.user?.email);
         setUser(session?.user ?? null);
         
         if (session?.user) {
@@ -54,7 +53,6 @@ function Navigation() {
         } else {
           setUserProfile(null);
         }
-        setLoading(false);
       }
     );
 
@@ -81,12 +79,17 @@ function Navigation() {
   };
 
   const handleLogout = async () => {
+    if (loading) return;
+    
     try {
+      setLoading(true);
       await supabase.auth.signOut();
       setUser(null);
       setUserProfile(null);
     } catch (error) {
       console.error('Logout error:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -165,6 +168,10 @@ function Navigation() {
             {/* Auth Section */}
             {loading ? (
               <div className="flex items-center space-x-4">
+                <span className="text-sm text-gray-500">Loading...</span>
+              </div>
+            ) : user ? (
+              <div className="flex items-center space-x-4">
                 <div className="w-16 h-6 bg-gray-200 rounded animate-pulse"></div>
                 <div className="w-16 h-8 bg-gray-200 rounded animate-pulse"></div>
               </div>
@@ -194,6 +201,7 @@ function Navigation() {
                   </Link>
                   <button
                     onClick={handleLogout}
+                    disabled={loading}
                     className="text-red-600 hover:text-red-700 transition-colors"
                     title="Logout"
                   >
@@ -207,6 +215,7 @@ function Navigation() {
                   </span>
                   <button
                     onClick={handleLogout}
+                    disabled={loading}
                     className="text-red-600 hover:text-red-700 transition-colors text-sm"
                   >
                     Sign Out
@@ -284,9 +293,7 @@ function Navigation() {
                 </Link>
               )}
               
-              {loading ? (
-                <div className="py-2">Loading...</div>
-              ) : user ? (
+              {user ? (
                 isEmailConfirmed ? (
                   <>
                     {userProfile && (
@@ -316,6 +323,7 @@ function Navigation() {
                         handleLogout();
                         setIsOpen(false);
                       }}
+                      disabled={loading}
                       className="text-red-600 hover:text-red-700 font-medium transition-colors text-left flex items-center space-x-2"
                     >
                       <LogOut className="w-5 h-5 stroke-2" />
@@ -332,13 +340,14 @@ function Navigation() {
                         handleLogout();
                         setIsOpen(false);
                       }}
+                      disabled={loading}
                       className="text-red-600 hover:text-red-700 font-medium transition-colors text-left"
                     >
                       Sign Out
                     </button>
                   </>
                 )
-              ) : (
+              ) : !loading ? (
                 <>
                   <Link 
                     to="/login" 
@@ -355,7 +364,7 @@ function Navigation() {
                     Sign Up
                   </Link>
                 </>
-              )}
+              ) : null}
             </div>
           </div>
         )}

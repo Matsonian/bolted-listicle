@@ -27,20 +27,18 @@ export default function LoginPage() {
       }
 
       if (data.user) {
-        // Force a small delay to ensure auth state propagates
-        setTimeout(() => {
-          if (!data.user.email_confirmed_at) {
-            navigate(`/confirm-email?email=${encodeURIComponent(data.user.email || email)}`);
-          } else {
-            navigate('/welcome');
-          }
-        }, 100);
+        if (!data.user.email_confirmed_at) {
+          navigate(`/confirm-email?email=${encodeURIComponent(data.user.email || email)}`);
+        } else {
+          navigate('/welcome');
+        }
       }
     } catch (err) {
       setError('An unexpected error occurred');
     } finally {
       setLoading(false);
-    }
+    } finally {
+      setLoading(false);
   };
 
   return (
