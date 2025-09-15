@@ -15,56 +15,41 @@ function Navigation() {
   const [isOpen, setIsOpen] = useState(false);
   const [user, setUser] = useState<any>(null);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [authLoading, setAuthLoading] = useState(true);
   const location = useLocation();
 
   useEffect(() => {
-    let mounted = true;
-
     const initializeAuth = async () => {
       try {
-        // Get initial session
         const { data: { session }, error } = await supabase.auth.getSession();
         
-        if (mounted) {
-          setUser(session?.user ?? null);
-          if (session?.user) {
-            await fetchUserProfile(session.user.id);
-          }
-          setLoading(false);
+        setUser(session?.user ?? null);
+        if (session?.user) {
+          await fetchUserProfile(session.user.id);
         }
+        setAuthLoading(false);
       } catch (error) {
         console.error('Error getting initial session:', error);
-        if (mounted) {
-          setLoading(false);
-        }
+        setAuthLoading(false);
       }
     };
 
-    // Initialize auth
     initializeAuth();
 
-    // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        if (!mounted) return;
-        
         setUser(session?.user ?? null);
         
         if (session?.user) {
           await fetchUserProfile(session.user.id);
         } else {
           setUserProfile(null);
-          // Clear any cached user data
-          localStorage.removeItem('user');
         }
-        
-        setLoading(false);
+        setAuthLoading(false);
       }
     );
 
     return () => {
-      mounted = false;
       subscription.unsubscribe();
     };
   }, []);
@@ -91,8 +76,7 @@ function Navigation() {
 
   const handleLogout = async () => {
     try {
-      // Clear local storage first
-      localStorage.removeItem('user');
+      setAuthLoading(true);
       setUser(null);
       setUserProfile(null);
       
@@ -100,18 +84,15 @@ function Navigation() {
       if (error) {
         console.error('Error signing out:', error);
       }
-      
-      // Force redirect to home
-      window.location.href = '/';
     } catch (error) {
       console.error('Error during logout:', error);
-      // Force redirect even on error
-      window.location.href = '/';
+    } finally {
+      setAuthLoading(false);
     }
   };
 
-  // Show loading state briefly
-  if (loading) {
+  // Always show navigation structure, even during loading
+  if (authLoading) {
     return (
       <nav className="bg-white shadow-sm border-b border-gray-100 sticky top-0 z-50">
         <div className="container mx-auto px-4">
@@ -124,6 +105,18 @@ function Navigation() {
               />
             </Link>
           </div>
+          
+          {/* Show loading indicator */}
+          <div className="hidden md:flex items-center space-x-8">
+            <div className="animate-pulse bg-gray-200 h-4 w-16 rounded"></div>
+            <div className="animate-pulse bg-gray-200 h-4 w-16 rounded"></div>
+            <div className="animate-pulse bg-gray-200 h-8 w-20 rounded"></div>
+          </div>
+          
+          {/* Mobile menu button */}
+          <button className="md:hidden text-gray-400">
+            <Menu className="w-6 h-6" />
+          </button>
         </div>
       </nav>
     );
@@ -227,7 +220,8 @@ function Navigation() {
                   </Link>
                   <button
                     onClick={handleLogout}
-                    className="text-red-600 hover:text-red-700 transition-colors"
+                    disabled={authLoading}
+                    className="text-red-600 hover:text-red-700 transition-colors disabled:opacity-50"
                     title="Logout"
                   >
                     <LogOut className="w-6 h-6 stroke-2" />
@@ -240,7 +234,8 @@ function Navigation() {
                   </span>
                   <button
                     onClick={handleLogout}
-                    className="text-red-600 hover:text-red-700 transition-colors text-sm"
+                    disabled={authLoading}
+                    className="text-red-600 hover:text-red-700 transition-colors text-sm disabled:opacity-50"
                   >
                     Sign Out
                   </button>
@@ -339,6 +334,7 @@ function Navigation() {
                       className="text-gray-700 hover:text-blue-600 font-medium transition-colors flex items-center space-x-2"
                       onClick={() => setIsOpen(false)}
                       title="My Account"
+                      disabled={authLoading}
                     >
                       <User className="w-5 h-5 stroke-2" />
                       <span>Profile</span>
@@ -348,7 +344,7 @@ function Navigation() {
                         handleLogout();
                         setIsOpen(false);
                       }}
-                      className="text-red-600 hover:text-red-700 font-medium transition-colors text-left flex items-center space-x-2"
+                      className="text-red-600 hover:text-red-700 font-medium transition-colors text-left flex items-center space-x-2 disabled:opacity-50"
                       title="Logout"
                     >
                       <LogOut className="w-5 h-5 stroke-2" />
@@ -365,7 +361,8 @@ function Navigation() {
                         handleLogout();
                         setIsOpen(false);
                       }}
-                      className="text-red-600 hover:text-red-700 font-medium transition-colors text-left"
+                      disabled={authLoading}
+                      className="text-red-600 hover:text-red-700 font-medium transition-colors text-left disabled:opacity-50"
                     >
                       Sign Out
                     </button>
