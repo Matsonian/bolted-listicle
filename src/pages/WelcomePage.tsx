@@ -31,7 +31,7 @@ export default function WelcomePage() {
       } else {
         // Not logged in or email not confirmed, redirect
         console.log('WelcomePage: Redirecting to login - no user or email not confirmed');
-        window.location.href = '/login';
+        navigate('/login');
       }
     };
 

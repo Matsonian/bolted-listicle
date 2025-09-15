@@ -1,5 +1,5 @@
 import React, { useState, useEffect, memo } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Menu, X, User, LogOut } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
@@ -17,6 +17,7 @@ function Navigation() {
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const location = useLocation();
+  const navigate = useNavigate();
 
   useEffect(() => {
     console.log('Navigation: Starting auth initialization');
@@ -34,9 +35,11 @@ function Navigation() {
           console.log('Navigation: No user found');
           setUser(null);
           setUserProfile(null);
+          setLoading(false);
         }
       } catch (error) {
         console.error('Navigation: Auth init error:', error);
+        setLoading(false);
       } finally {
         console.log('Navigation: Auth init complete, setting loading false');
         setLoading(false);
@@ -57,10 +60,6 @@ function Navigation() {
           console.log('Navigation: Clearing user from auth change');
           setUser(null);
           setUserProfile(null);
-        }
-        
-        if (loading) {
-          setLoading(false);
         }
       }
     );
@@ -93,13 +92,17 @@ function Navigation() {
 
   const handleLogout = async () => {
     console.log('Navigation: Logout initiated');
+    setLoading(true);
     try {
       await supabase.auth.signOut();
       setUser(null);
       setUserProfile(null);
       console.log('Navigation: Logout successful');
+      navigate('/');
     } catch (error) {
       console.error('Navigation: Logout error:', error);
+    } finally {
+      setLoading(false);
     }
   };
 

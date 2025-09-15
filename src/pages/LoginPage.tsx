@@ -30,7 +30,7 @@ export default function LoginPage() {
         if (!data.user.email_confirmed_at) {
           navigate(`/confirm-email?email=${encodeURIComponent(data.user.email || email)}`);
         } else {
-          navigate('/welcome');
+          navigate('/profile');
         }
       }
     } catch (err) {
