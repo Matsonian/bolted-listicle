@@ -10,18 +10,10 @@ export default function WelcomePage() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Force refresh session when landing on welcome page
-    const refreshSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      console.log('Welcome page session:', session);
-    };
-    
     const fetchUserProfile = async () => {
       const { data: { user } } = await supabase.auth.getUser();
-      console.log('Welcome page user:', user);
-      console.log('Email confirmed:', user?.email_confirmed_at);
       
-      if (user) {
+      if (user && user.email_confirmed_at) {
         const { data, error } = await supabase
           .from('users')
           .select('*')
@@ -31,10 +23,12 @@ export default function WelcomePage() {
         if (data) {
           setUserProfile(data);
         }
+      } else {
+        // Not logged in or email not confirmed, redirect
+        window.location.href = '/login';
       }
     };
 
-    refreshSession();
     fetchUserProfile();
   }, []);
 

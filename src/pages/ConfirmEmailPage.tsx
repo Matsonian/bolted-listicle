@@ -13,29 +13,24 @@ export default function ConfirmEmailPage() {
 const urlEmail = searchParams.get('email');
 
   useEffect(() => {
-    // Get email from URL params first
-    const urlEmail = searchParams.get('email');
-    if (urlEmail) {
-      setEmail(urlEmail);
-      console.log('Email from URL:', urlEmail);
-    }
-    // Get current user to show their email
     const getCurrentUser = async () => {
       try {
+        // Get email from URL params first
+        const urlEmail = searchParams.get('email');
+        if (urlEmail) {
+          setEmail(urlEmail);
+        }
+        
         // First check if email was passed via navigation state
         const stateEmail = location.state?.email;
         if (stateEmail) {
           setEmail(stateEmail);
-          console.log('Email from navigation state:', stateEmail);
         }
 
         // Also try to get from current session
         const { data: { user }, error } = await supabase.auth.getUser();
-        console.log('Current user data:', user);
-        console.log('User email:', user?.email);
         
         if (error) {
-          console.error('Error getting user:', error);
           return;
         }
         
@@ -47,14 +42,12 @@ const urlEmail = searchParams.get('email');
         } else if (!user?.email && !stateEmail) {
           // Fallback: try to get from session
           const { data: { session } } = await supabase.auth.getSession();
-          console.log('Session data:', session);
           if (session?.user?.email) {
             setEmail(session.user.email);
             setUser(session.user);
           }
         }
       } catch (error) {
-        console.error('Error in getCurrentUser:', error);
       }
     };
 

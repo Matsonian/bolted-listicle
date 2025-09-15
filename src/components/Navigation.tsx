@@ -19,19 +19,16 @@ function Navigation() {
   const location = useLocation();
 
   useEffect(() => {
-    console.log('Navigation useEffect is running');
     let mounted = true;
 
     const initializeAuth = async () => {
       try {
         // Get initial session
         const { data: { session }, error } = await supabase.auth.getSession();
-        console.log('Initial session:', session);
         
         if (mounted) {
           setUser(session?.user ?? null);
           if (session?.user) {
-            console.log('User found, fetching profile for:', session.user.id);
             await fetchUserProfile(session.user.id);
           }
           setLoading(false);
@@ -52,14 +49,14 @@ function Navigation() {
       async (event, session) => {
         if (!mounted) return;
         
-        console.log('Auth state changed:', event, session);
         setUser(session?.user ?? null);
         
         if (session?.user) {
-          console.log('User found in auth change, fetching profile for:', session.user.id);
           await fetchUserProfile(session.user.id);
         } else {
           setUserProfile(null);
+          // Clear any cached user data
+          localStorage.removeItem('user');
         }
         
         setLoading(false);
@@ -94,16 +91,22 @@ function Navigation() {
 
   const handleLogout = async () => {
     try {
+      // Clear local storage first
+      localStorage.removeItem('user');
+      setUser(null);
+      setUserProfile(null);
+      
       const { error } = await supabase.auth.signOut();
       if (error) {
         console.error('Error signing out:', error);
-      } else {
-        setUser(null);
-        setUserProfile(null);
-        window.location.href = '/';
       }
+      
+      // Force redirect to home
+      window.location.href = '/';
     } catch (error) {
       console.error('Error during logout:', error);
+      // Force redirect even on error
+      window.location.href = '/';
     }
   };
 

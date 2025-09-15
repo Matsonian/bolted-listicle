@@ -15,43 +15,26 @@ export default function LoginPage() {
   setLoading(true);
   setError('');
 
-  console.log('Attempting login with:', email); // Debug log
-
   try {
     const { data, error } = await supabase.auth.signInWithPassword({
       email: email,
       password: password,
     });
 
-    console.log('Login response:', data); // Debug log
-    console.log('Login error:', error); // Debug log
-
     if (error) {
       setError(error.message);
       return;
     }
 
-      if (data.user) {
-        // Fetch user profile data
-        const { data: profile } = await supabase
-          .from('users')
-          .select('*')
-          .eq('id', data.user.id)
-          .single();
-
-        if (profile) {
-          // Store user data for app state
-          localStorage.setItem('user', JSON.stringify({
-            id: profile.id,
-            email: profile.email,
-            name: profile.name,
-            tier: profile.tier,
-            subscription_status: profile.subscription_status
-          }));
-        }
-
-        navigate('/search');
+    if (data.user) {
+      // Check if email is confirmed
+      if (!data.user.email_confirmed_at) {
+        navigate(`/confirm-email?email=${encodeURIComponent(data.user.email)}`);
+      } else {
+        // Email confirmed, go to welcome page
+        navigate('/welcome');
       }
+    }
     } catch (err) {
       setError('An unexpected error occurred');
     } finally {
