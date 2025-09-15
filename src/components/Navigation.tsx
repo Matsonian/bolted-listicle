@@ -7,6 +7,7 @@ interface UserProfile {
   id: string;
   email: string;
   name: string;
+  first_name: string;
   tier: 'basic' | 'pro';
   subscription_status: string;
 }
@@ -15,34 +16,55 @@ function Navigation() {
   const [isOpen, setIsOpen] = useState(false);
   const [user, setUser] = useState<any>(null);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [authLoading, setAuthLoading] = useState(true);
+  const [logoutLoading, setLogoutLoading] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
 
   useEffect(() => {
-    console.log('Navigation: Starting auth initialization');
-    
+    let mounted = true;
+
     const initAuth = async () => {
       try {
-        const { data: { session }, error } = await supabase.auth.getSession();
-        console.log('Navigation: Initial session check', { session: !!session, error });
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (!mounted) return;
         
         if (session?.user) {
-          console.log('Navigation: User found, fetching profile');
           setUser(session.user);
           await fetchUserProfile(session.user.id);
         } else {
-          console.log('Navigation: No user found');
           setUser(null);
           setUserProfile(null);
-          setLoading(false);
         }
       } catch (error) {
-        console.error('Navigation: Auth init error:', error);
-        setLoading(false);
+        console.error('Auth init error:', error);
+        if (mounted) {
+          setUser(null);
+          setUserProfile(null);
+        }
       } finally {
-        console.log('Navigation: Auth init complete, setting loading false');
-        setLoading(false);
+        if (mounted) {
+          setAuthLoading(false);
+        }
+      }
+    };
+
+    const fetchUserProfile = async (userId: string) => {
+      try {
+        const { data, error } = await supabase
+          .from('users')
+          .select('*')
+          .eq('id', userId)
+          .single();
+
+        if (!mounted) return;
+
+        if (!error && data) {
+          setUserProfile(data);
+        }
+      } catch (error) {
+        console.error('Profile fetch error:', error);
       }
     };
 
@@ -50,14 +72,12 @@ function Navigation() {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        console.log('Navigation: Auth state change', { event, session: !!session });
+        if (!mounted) return;
         
         if (session?.user) {
-          console.log('Navigation: Setting user from auth change');
           setUser(session.user);
           await fetchUserProfile(session.user.id);
         } else {
-          console.log('Navigation: Clearing user from auth change');
           setUser(null);
           setUserProfile(null);
         }
@@ -65,55 +85,27 @@ function Navigation() {
     );
 
     return () => {
-      console.log('Navigation: Cleaning up auth subscription');
+      mounted = false;
       subscription.unsubscribe();
     };
   }, []);
 
-  const fetchUserProfile = async (userId: string) => {
-    try {
-      console.log('Navigation: Fetching profile for user', userId);
-      const { data, error } = await supabase
-        .from('users')
-        .select('*')
-        .eq('id', userId)
-        .single();
-
-      if (!error && data) {
-        console.log('Navigation: Profile fetched successfully', data);
-        setUserProfile(data);
-      } else {
-        console.error('Navigation: Profile fetch error:', error);
-      }
-    } catch (error) {
-      console.error('Navigation: Profile fetch exception:', error);
-    }
-  };
-
   const handleLogout = async () => {
-    console.log('Navigation: Logout initiated');
-    setLoading(true);
+    setLogoutLoading(true);
     try {
       await supabase.auth.signOut();
       setUser(null);
       setUserProfile(null);
-      console.log('Navigation: Logout successful');
       navigate('/');
     } catch (error) {
-      console.error('Navigation: Logout error:', error);
+      console.error('Logout error:', error);
     } finally {
-      setLoading(false);
+      setLogoutLoading(false);
     }
   };
 
   const isEmailConfirmed = user?.email_confirmed_at;
-
-  console.log('Navigation: Render state', { 
-    loading, 
-    user: !!user, 
-    userProfile: !!userProfile, 
-    isEmailConfirmed 
-  });
+  const displayName = userProfile?.first_name || userProfile?.name || 'User';
 
   return (
     <nav className="bg-white shadow-sm border-b border-gray-100 sticky top-0 z-50">
@@ -186,7 +178,7 @@ function Navigation() {
             )}
             
             {/* Auth Section */}
-            {loading ? (
+            {authLoading ? (
               <div className="text-sm text-gray-500">Loading...</div>
             ) : user ? (
               isEmailConfirmed ? (
@@ -194,7 +186,7 @@ function Navigation() {
                   {userProfile && (
                     <div className="flex items-center space-x-2">
                       <span className="text-sm text-gray-600">
-                        {userProfile.name}
+                        {displayName}
                       </span>
                       <span className={`text-xs px-2 py-1 rounded-full font-medium ${
                         userProfile.tier === 'pro' 
@@ -214,7 +206,8 @@ function Navigation() {
                   </Link>
                   <button
                     onClick={handleLogout}
-                    className="text-red-600 hover:text-red-700 transition-colors"
+                    disabled={logoutLoading}
+                    className="text-red-600 hover:text-red-700 transition-colors disabled:opacity-50"
                     title="Logout"
                   >
                     <LogOut className="w-6 h-6 stroke-2" />
@@ -227,7 +220,8 @@ function Navigation() {
                   </span>
                   <button
                     onClick={handleLogout}
-                    className="text-red-600 hover:text-red-700 transition-colors text-sm"
+                    disabled={logoutLoading}
+                    className="text-red-600 hover:text-red-700 transition-colors text-sm disabled:opacity-50"
                   >
                     Sign Out
                   </button>
@@ -304,7 +298,7 @@ function Navigation() {
                 </Link>
               )}
               
-              {loading ? (
+              {authLoading ? (
                 <div className="text-sm text-gray-500">Loading...</div>
               ) : user ? (
                 isEmailConfirmed ? (
@@ -312,7 +306,7 @@ function Navigation() {
                     {userProfile && (
                       <div className="flex items-center space-x-2 py-2">
                         <span className="text-sm text-gray-600">
-                          {userProfile.name}
+                          {displayName}
                         </span>
                         <span className={`text-xs px-2 py-1 rounded-full font-medium ${
                           userProfile.tier === 'pro' 
@@ -336,7 +330,8 @@ function Navigation() {
                         handleLogout();
                         setIsOpen(false);
                       }}
-                      className="text-red-600 hover:text-red-700 font-medium transition-colors text-left flex items-center space-x-2"
+                      disabled={logoutLoading}
+                      className="text-red-600 hover:text-red-700 font-medium transition-colors text-left flex items-center space-x-2 disabled:opacity-50"
                     >
                       <LogOut className="w-5 h-5 stroke-2" />
                       <span>Logout</span>
@@ -352,7 +347,8 @@ function Navigation() {
                         handleLogout();
                         setIsOpen(false);
                       }}
-                      className="text-red-600 hover:text-red-700 font-medium transition-colors text-left"
+                      disabled={logoutLoading}
+                      className="text-red-600 hover:text-red-700 font-medium transition-colors text-left disabled:opacity-50"
                     >
                       Sign Out
                     </button>
