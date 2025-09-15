@@ -204,7 +204,8 @@ export default function Navigation() {
                       handleLogout();
                       setIsOpen(false);
                     }}
-                    className="text-red-600 hover:text-red-700 font-medium transition-colors text-left flex items-center space-x-2"
+                    disabled={!user}
+                    className="text-red-600 hover:text-red-700 font-medium transition-colors text-left flex items-center space-x-2 disabled:opacity-50"
                   >
                     <LogOut className="w-5 h-5 stroke-2" />
                     <span>Logout</span>
