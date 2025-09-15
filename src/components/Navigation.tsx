@@ -25,8 +25,9 @@ function Navigation() {
     let mounted = true;
 
     const initAuth = async () => {
+      console.log('Navigation: Starting auth initialization');
+      
       try {
-        console.log('Navigation: Starting auth initialization');
         const { data: { session }, error } = await supabase.auth.getSession();
         
         if (!mounted) return;
@@ -35,10 +36,7 @@ function Navigation() {
           console.log('Navigation: Session error:', error);
           setUser(null);
           setUserProfile(null);
-          return;
-        }
-        
-        if (session?.user) {
+        } else if (session?.user) {
           console.log('Navigation: User found, fetching profile');
           setUser(session.user);
           await fetchUserProfile(session.user.id);
@@ -53,11 +51,12 @@ function Navigation() {
           setUser(null);
           setUserProfile(null);
         }
-      } finally {
-        if (mounted) {
-          console.log('Navigation: Auth initialization complete');
-          setAuthLoading(false);
-        }
+      }
+      
+      // Always set loading to false, regardless of success or failure
+      if (mounted) {
+        console.log('Navigation: Setting authLoading to false');
+        setAuthLoading(false);
       }
     };
 
@@ -199,9 +198,7 @@ function Navigation() {
             </Link>
             
             {/* Auth Section */}
-            {authLoading ? (
-              <div className="text-sm text-gray-500">Loading...</div>
-            ) : isLoggedIn && isEmailConfirmed ? (
+            {isLoggedIn && isEmailConfirmed ? (
               <div className="flex items-center space-x-4">
                 {userProfile && (
                   <div className="flex items-center space-x-2">
@@ -313,9 +310,7 @@ function Navigation() {
                 Maker
               </Link>
               
-              {authLoading ? (
-                <div className="text-sm text-gray-500">Loading...</div>
-              ) : isLoggedIn && isEmailConfirmed ? (
+              {isLoggedIn && isEmailConfirmed ? (
                 <>
                   {userProfile && (
                     <div className="flex items-center space-x-2 py-2">
