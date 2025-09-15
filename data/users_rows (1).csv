@@ -1,0 +1,2 @@
+id,email,name,tier,searches_today,search_reset_date,subscription_status,subscription_end_date,stripe_customer_id,created_at,updated_at,first_name,last_name,business_name,business_description,years_in_business,website
+9450c595-c7f0-49b3-a2e3-f03b9e1113df,saccitizen@gmail.com,Sac Citizen,basic,0,2025-09-15,active,,,2025-09-15 06:28:34.492043+00,2025-09-15 06:28:34.492043+00,Sac,Citizen,Sac Citizen,News & Commentary,10,https://saccitizen.com
