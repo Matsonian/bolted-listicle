@@ -24,6 +24,30 @@ function Navigation() {
   useEffect(() => {
     let mounted = true;
 
+    const fetchUserProfile = async (userId: string) => {
+      try {
+        console.log('Navigation: Fetching user profile for:', userId);
+        const { data, error } = await supabase
+          .from('users')
+          .select('*')
+          .eq('id', userId)
+          .single();
+
+        if (mounted && !error && data) {
+          console.log('Navigation: Profile fetched successfully');
+          setUserProfile(data);
+        } else {
+          console.log('Navigation: Profile fetch error:', error);
+          setUserProfile(null);
+        }
+      } catch (error) {
+        console.error('Navigation: Profile fetch error:', error);
+        if (mounted) {
+          setUserProfile(null);
+        }
+      }
+    };
+
     const initAuth = async () => {
       console.log('Navigation: Starting auth initialization');
       
@@ -37,7 +61,7 @@ function Navigation() {
           setUser(null);
           setUserProfile(null);
         } else if (session?.user) {
-          console.log('Navigation: User found, fetching profile');
+          console.log('Navigation: User found in session');
           setUser(session.user);
           await fetchUserProfile(session.user.id);
         } else {
@@ -51,52 +75,34 @@ function Navigation() {
           setUser(null);
           setUserProfile(null);
         }
-      }
-      
-      // Always set loading to false, regardless of success or failure
-      if (mounted) {
-        console.log('Navigation: Setting authLoading to false');
-        setAuthLoading(false);
-      }
-    };
-
-    const fetchUserProfile = async (userId: string) => {
-      try {
-        console.log('Navigation: Fetching user profile for:', userId);
-        const { data, error } = await supabase
-          .from('users')
-          .select('*')
-          .eq('id', userId)
-          .single();
-
-        if (!mounted) return;
-
-        if (!error && data) {
-          console.log('Navigation: Profile fetched successfully');
-          setUserProfile(data);
-        } else {
-          console.log('Navigation: Profile fetch error:', error);
-        }
-      } catch (error) {
-        console.error('Navigation: Profile fetch error:', error);
       } finally {
         if (mounted) {
-          console.log('Navigation: Setting authLoading to false after profile fetch');
+          console.log('Navigation: Setting authLoading to false');
           setAuthLoading(false);
         }
       }
     };
 
+    // Initialize auth
     initAuth();
 
+    // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         console.log('Navigation: Auth state change:', event, !!session);
         if (!mounted) return;
         
-        if (session?.user) {
+        if (event === 'SIGNED_OUT') {
+          setUser(null);
+          setUserProfile(null);
+          setAuthLoading(false);
+        } else if (session?.user) {
           setUser(session.user);
-          await fetchUserProfile(session.user.id);
+          // Only fetch profile if we don't already have it or it's a different user
+          if (!userProfile || userProfile.id !== session.user.id) {
+            await fetchUserProfile(session.user.id);
+          }
+          setAuthLoading(false);
         } else {
           setUser(null);
           setUserProfile(null);
@@ -109,15 +115,13 @@ function Navigation() {
       mounted = false;
       subscription.unsubscribe();
     };
-  }, []);
+  }, []); // Remove userProfile dependency to prevent loops
 
   const handleLogout = async () => {
     setLogoutLoading(true);
     try {
       console.log('Navigation: Logging out');
       await supabase.auth.signOut();
-      setUser(null);
-      setUserProfile(null);
       navigate('/');
     } catch (error) {
       console.error('Navigation: Logout error:', error);
@@ -204,7 +208,9 @@ function Navigation() {
             </Link>
             
             {/* Auth Section */}
-            {isLoggedIn && isEmailConfirmed ? (
+            {authLoading ? (
+              <div className="text-gray-500">Loading...</div>
+            ) : isLoggedIn && isEmailConfirmed ? (
               <div className="flex items-center space-x-4">
                 {userProfile && (
                   <div className="flex items-center space-x-2">
@@ -316,7 +322,9 @@ function Navigation() {
                 Maker
               </Link>
               
-              {isLoggedIn && isEmailConfirmed ? (
+              {authLoading ? (
+                <div className="text-gray-500">Loading...</div>
+              ) : isLoggedIn && isEmailConfirmed ? (
                 <>
                   {userProfile && (
                     <div className="flex items-center space-x-2 py-2">
