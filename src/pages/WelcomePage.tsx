@@ -12,9 +12,9 @@ export default function WelcomePage() {
   useEffect(() => {
     const fetchUserProfile = async () => {
       console.log('WelcomePage: Starting user profile fetch');
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
       
-      console.log('WelcomePage: User check result', { user: !!user, confirmed: !!user?.email_confirmed_at });
+      console.log('WelcomePage: User check result', { user: !!user, confirmed: !!user?.email_confirmed_at, error: userError });
       
       if (user && user.email_confirmed_at) {
         const { data, error } = await supabase
