@@ -28,6 +28,11 @@ export default function Navigation() {
     async (event, session) => {
       console.log('Auth state changed:', event, session);
       setUser(session?.user ?? null);
+
+// Add these debug logs
+console.log('User object:', session?.user);
+console.log('Email confirmed at:', session?.user?.email_confirmed_at);
+console.log('User exists:', !!session?.user);
       
       if (session?.user) {
         console.log('User found, fetching profile for:', session.user.id);
