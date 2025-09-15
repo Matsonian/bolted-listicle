@@ -26,7 +26,9 @@ export default function Navigation() {
   const location = useLocation();
 
   useEffect(() => {
-    const getSession = async () => {
+  console.log('Navigation useEffect is running');
+  
+  const getSession = async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
         setUser(session?.user ?? null);
