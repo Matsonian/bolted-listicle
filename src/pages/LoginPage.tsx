@@ -23,21 +23,22 @@ export default function LoginPage() {
 
       if (error) {
         setError(error.message);
-        setLoading(false);
         return;
       }
 
       if (data.user) {
-        // Check if email is confirmed
-        if (!data.user.email_confirmed_at) {
-          navigate(`/confirm-email?email=${encodeURIComponent(data.user.email || email)}`);
-        } else {
-          // Email confirmed, go to welcome page
-          navigate('/welcome');
-        }
+        // Force a small delay to ensure auth state propagates
+        setTimeout(() => {
+          if (!data.user.email_confirmed_at) {
+            navigate(`/confirm-email?email=${encodeURIComponent(data.user.email || email)}`);
+          } else {
+            navigate('/welcome');
+          }
+        }, 100);
       }
     } catch (err) {
       setError('An unexpected error occurred');
+    } finally {
       setLoading(false);
     }
   };

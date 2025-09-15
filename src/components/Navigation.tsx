@@ -1,6 +1,6 @@
 import React, { useState, useEffect, memo } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Menu, X, User, LogOut, Search } from 'lucide-react';
+import { Menu, X, User, LogOut } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
 interface UserProfile {
@@ -15,30 +15,38 @@ function Navigation() {
   const [isOpen, setIsOpen] = useState(false);
   const [user, setUser] = useState<any>(null);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
-  const [authLoading, setAuthLoading] = useState(true);
+  const [loading, setLoading] = useState(true);
   const location = useLocation();
 
   useEffect(() => {
-    const initializeAuth = async () => {
+    let mounted = true;
+
+    const initAuth = async () => {
       try {
-        const { data: { session }, error } = await supabase.auth.getSession();
+        const { data: { session } } = await supabase.auth.getSession();
         
-        setUser(session?.user ?? null);
-        if (session?.user) {
-          await fetchUserProfile(session.user.id);
+        if (mounted) {
+          setUser(session?.user ?? null);
+          if (session?.user) {
+            await fetchUserProfile(session.user.id);
+          }
+          setLoading(false);
         }
-        setAuthLoading(false);
       } catch (error) {
-        console.error('Error getting initial session:', error);
-        setAuthLoading(false);
+        console.error('Auth init error:', error);
+        if (mounted) {
+          setLoading(false);
+        }
       }
     };
 
-    initializeAuth();
+    initAuth();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        console.log('Auth state changed:', event, session?.user?.email);
+        if (!mounted) return;
+        
+        console.log('Auth changed:', event, session?.user?.email);
         setUser(session?.user ?? null);
         
         if (session?.user) {
@@ -46,11 +54,12 @@ function Navigation() {
         } else {
           setUserProfile(null);
         }
-        setAuthLoading(false);
+        setLoading(false);
       }
     );
 
     return () => {
+      mounted = false;
       subscription.unsubscribe();
     };
   }, []);
@@ -63,69 +72,23 @@ function Navigation() {
         .eq('id', userId)
         .single();
 
-      if (error) {
-        console.error('Error fetching user profile:', error);
-        // Don't return early - user might not have profile yet
-        return;
+      if (!error && data) {
+        setUserProfile(data);
       }
-
-      setUserProfile(data);
     } catch (error) {
-      console.error('Error fetching user profile:', error);
+      console.error('Profile fetch error:', error);
     }
   };
 
   const handleLogout = async () => {
     try {
-      setAuthLoading(true);
+      await supabase.auth.signOut();
       setUser(null);
       setUserProfile(null);
-      
-      const { error } = await supabase.auth.signOut();
-      if (error) {
-        console.error('Error signing out:', error);
-      }
     } catch (error) {
-      console.error('Error during logout:', error);
-    } finally {
-      setAuthLoading(false);
+      console.error('Logout error:', error);
     }
   };
-
-  // Always show navigation structure, even during loading
-  if (authLoading) {
-    return (
-      <nav className="bg-white shadow-sm border-b border-gray-100 sticky top-0 z-50">
-        <div className="container mx-auto px-4">
-          <div className="flex justify-between items-center h-16">
-            <Link to="/" className="flex items-center space-x-2">
-              <img 
-                src="/GetListicledLogo-BlueGreen.png" 
-                alt="Get Listicled" 
-                className="h-10 w-auto max-w-none"
-              />
-            </Link>
-            
-            {/* Show basic navigation during loading */}
-            <div className="hidden md:flex items-center space-x-8">
-              <Link to="/" className="text-gray-700 hover:text-blue-600 font-medium">Home</Link>
-              <Link to="/search" className="text-gray-700 hover:text-blue-600 font-medium">Search</Link>
-              <Link to="/blog" className="text-gray-700 hover:text-blue-600 font-medium">Blog</Link>
-              <div className="flex items-center space-x-4">
-                <Link to="/login" className="text-gray-700 hover:text-blue-600 font-medium">Login</Link>
-                <Link to="/signup" className="btn-primary">Sign Up</Link>
-              </div>
-            </div>
-            
-            {/* Mobile menu button */}
-            <button className="md:hidden text-gray-400">
-              <Menu className="w-6 h-6" />
-            </button>
-          </div>
-        </div>
-      </nav>
-    );
-  }
 
   const isEmailConfirmed = user?.email_confirmed_at;
 
@@ -199,7 +162,13 @@ function Navigation() {
               </Link>
             )}
             
-            {user ? (
+            {/* Auth Section */}
+            {loading ? (
+              <div className="flex items-center space-x-4">
+                <div className="w-16 h-6 bg-gray-200 rounded animate-pulse"></div>
+                <div className="w-16 h-8 bg-gray-200 rounded animate-pulse"></div>
+              </div>
+            ) : user ? (
               isEmailConfirmed ? (
                 <div className="flex items-center space-x-4">
                   {userProfile && (
@@ -225,8 +194,7 @@ function Navigation() {
                   </Link>
                   <button
                     onClick={handleLogout}
-                    disabled={authLoading}
-                    className="text-red-600 hover:text-red-700 transition-colors disabled:opacity-50"
+                    className="text-red-600 hover:text-red-700 transition-colors"
                     title="Logout"
                   >
                     <LogOut className="w-6 h-6 stroke-2" />
@@ -239,8 +207,7 @@ function Navigation() {
                   </span>
                   <button
                     onClick={handleLogout}
-                    disabled={authLoading}
-                    className="text-red-600 hover:text-red-700 transition-colors text-sm disabled:opacity-50"
+                    className="text-red-600 hover:text-red-700 transition-colors text-sm"
                   >
                     Sign Out
                   </button>
@@ -317,7 +284,9 @@ function Navigation() {
                 </Link>
               )}
               
-              {user ? (
+              {loading ? (
+                <div className="py-2">Loading...</div>
+              ) : user ? (
                 isEmailConfirmed ? (
                   <>
                     {userProfile && (
@@ -338,8 +307,6 @@ function Navigation() {
                       to="/profile" 
                       className="text-gray-700 hover:text-blue-600 font-medium transition-colors flex items-center space-x-2"
                       onClick={() => setIsOpen(false)}
-                      title="My Account"
-                      disabled={authLoading}
                     >
                       <User className="w-5 h-5 stroke-2" />
                       <span>Profile</span>
@@ -349,8 +316,7 @@ function Navigation() {
                         handleLogout();
                         setIsOpen(false);
                       }}
-                      className="text-red-600 hover:text-red-700 font-medium transition-colors text-left flex items-center space-x-2 disabled:opacity-50"
-                      title="Logout"
+                      className="text-red-600 hover:text-red-700 font-medium transition-colors text-left flex items-center space-x-2"
                     >
                       <LogOut className="w-5 h-5 stroke-2" />
                       <span>Logout</span>
@@ -366,8 +332,7 @@ function Navigation() {
                         handleLogout();
                         setIsOpen(false);
                       }}
-                      disabled={authLoading}
-                      className="text-red-600 hover:text-red-700 font-medium transition-colors text-left disabled:opacity-50"
+                      className="text-red-600 hover:text-red-700 font-medium transition-colors text-left"
                     >
                       Sign Out
                     </button>
