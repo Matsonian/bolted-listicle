@@ -36,24 +36,7 @@ export default function Navigation() {
     navigate('/');
   };
 
-  // Show nothing until we know auth state
-  if (!initialized) {
-    return (
-      <nav className="bg-white shadow-sm border-b border-gray-100 sticky top-0 z-50">
-        <div className="container mx-auto px-4">
-          <div className="flex justify-between items-center h-16">
-            <Link to="/" className="flex items-center space-x-2">
-              <img 
-                src="/GetListicledLogo-BlueGreen.png" 
-                alt="Get Listicled" 
-                className="h-10 w-auto max-w-none"
-              />
-            </Link>
-          </div>
-        </div>
-      </nav>
-    );
-  }
+  // Always show navigation structure
 
   return (
     <nav className="bg-white shadow-sm border-b border-gray-100 sticky top-0 z-50">
