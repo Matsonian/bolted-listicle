@@ -23,19 +23,27 @@ export default function Navigation() {
   useEffect(() => {
   console.log('Navigation useEffect is running');
   
-  const getSession = async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        setUser(session?.user ?? null);
-        if (session?.user) {
-          await fetchUserProfile(session.user.id);
-        }
-      } catch (error) {
-        console.error('Error getting session:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
+const getSession = async () => {
+  console.log('About to call supabase.auth.getSession()');
+  
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    console.log('getSession result:', session);
+    
+    setUser(session?.user ?? null);
+    if (session?.user) {
+      console.log('User found, fetching profile for:', session.user.id);
+      await fetchUserProfile(session.user.id);
+    } else {
+      console.log('No user in session');
+    }
+  } catch (error) {
+    console.error('Error getting session:', error);
+  } finally {
+    console.log('Setting loading to false');
+    setLoading(false);
+  }
+};
 
     getSession();
 
