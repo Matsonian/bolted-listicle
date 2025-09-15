@@ -25,16 +25,13 @@ export default function Navigation() {
   
 const getSession = async () => {
   console.log('About to call supabase.auth.getSession()');
+
+
   
   try {
-    // Add timeout to prevent hanging
-    const sessionPromise = supabase.auth.getSession();
-    const timeoutPromise = new Promise((_, reject) => 
-      setTimeout(() => reject(new Error('Session timeout')), 5000)
-    );
-    
-    const { data: { session } } = await Promise.race([sessionPromise, timeoutPromise]);
-    console.log('getSession result:', session);
+// Remove the timeout for now to see what's actually happening
+const { data: { session } } = await supabase.auth.getSession();
+console.log('getSession result:', session);
     
     setUser(session?.user ?? null);
     if (session?.user) {
