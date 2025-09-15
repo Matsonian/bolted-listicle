@@ -26,25 +26,36 @@ function Navigation() {
 
     const initAuth = async () => {
       try {
-        const { data: { session } } = await supabase.auth.getSession();
+        console.log('Navigation: Starting auth initialization');
+        const { data: { session }, error } = await supabase.auth.getSession();
         
         if (!mounted) return;
         
+        if (error) {
+          console.log('Navigation: Session error:', error);
+          setUser(null);
+          setUserProfile(null);
+          return;
+        }
+        
         if (session?.user) {
+          console.log('Navigation: User found, fetching profile');
           setUser(session.user);
           await fetchUserProfile(session.user.id);
         } else {
+          console.log('Navigation: No user session');
           setUser(null);
           setUserProfile(null);
         }
       } catch (error) {
-        console.error('Auth init error:', error);
+        console.error('Navigation: Auth init error:', error);
         if (mounted) {
           setUser(null);
           setUserProfile(null);
         }
       } finally {
         if (mounted) {
+          console.log('Navigation: Auth initialization complete');
           setAuthLoading(false);
         }
       }
@@ -52,6 +63,7 @@ function Navigation() {
 
     const fetchUserProfile = async (userId: string) => {
       try {
+        console.log('Navigation: Fetching user profile for:', userId);
         const { data, error } = await supabase
           .from('users')
           .select('*')
@@ -61,10 +73,13 @@ function Navigation() {
         if (!mounted) return;
 
         if (!error && data) {
+          console.log('Navigation: Profile fetched successfully');
           setUserProfile(data);
+        } else {
+          console.log('Navigation: Profile fetch error:', error);
         }
       } catch (error) {
-        console.error('Profile fetch error:', error);
+        console.error('Navigation: Profile fetch error:', error);
       }
     };
 
@@ -72,6 +87,7 @@ function Navigation() {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        console.log('Navigation: Auth state change:', event, !!session);
         if (!mounted) return;
         
         if (session?.user) {
@@ -93,19 +109,28 @@ function Navigation() {
   const handleLogout = async () => {
     setLogoutLoading(true);
     try {
+      console.log('Navigation: Logging out');
       await supabase.auth.signOut();
       setUser(null);
       setUserProfile(null);
       navigate('/');
     } catch (error) {
-      console.error('Logout error:', error);
+      console.error('Navigation: Logout error:', error);
     } finally {
       setLogoutLoading(false);
     }
   };
 
+  const isLoggedIn = !!user;
   const isEmailConfirmed = user?.email_confirmed_at;
   const displayName = userProfile?.first_name || userProfile?.name || 'User';
+
+  console.log('Navigation: Render state', { 
+    authLoading, 
+    isLoggedIn, 
+    isEmailConfirmed, 
+    userProfile: !!userProfile 
+  });
 
   return (
     <nav className="bg-white shadow-sm border-b border-gray-100 sticky top-0 z-50">
@@ -152,81 +177,75 @@ function Navigation() {
             >
               Blog
             </Link>
-            {user && isEmailConfirmed && (
-              <Link 
-                to="/education" 
-                className={`font-medium transition-colors ${
-                  location.pathname === '/education' 
-                    ? 'text-blue-600' 
-                    : 'text-gray-700 hover:text-blue-600'
-                }`}
-              >
-                Education
-              </Link>
-            )}
-            {user && isEmailConfirmed && (
-              <Link 
-                to="/maker" 
-                className={`font-medium transition-colors ${
-                  location.pathname === '/maker' 
-                    ? 'text-blue-600' 
-                    : 'text-gray-700 hover:text-blue-600'
-                }`}
-              >
-                Maker
-              </Link>
-            )}
+            <Link 
+              to="/education" 
+              className={`font-medium transition-colors ${
+                location.pathname === '/education' 
+                  ? 'text-blue-600' 
+                  : 'text-gray-700 hover:text-blue-600'
+              }`}
+            >
+              Education
+            </Link>
+            <Link 
+              to="/maker" 
+              className={`font-medium transition-colors ${
+                location.pathname === '/maker' 
+                  ? 'text-blue-600' 
+                  : 'text-gray-700 hover:text-blue-600'
+              }`}
+            >
+              Maker
+            </Link>
             
             {/* Auth Section */}
             {authLoading ? (
               <div className="text-sm text-gray-500">Loading...</div>
-            ) : user ? (
-              isEmailConfirmed ? (
-                <div className="flex items-center space-x-4">
-                  {userProfile && (
-                    <div className="flex items-center space-x-2">
-                      <span className="text-sm text-gray-600">
-                        {displayName}
-                      </span>
-                      <span className={`text-xs px-2 py-1 rounded-full font-medium ${
-                        userProfile.tier === 'pro' 
-                          ? 'bg-purple-100 text-purple-800' 
-                          : 'bg-blue-100 text-blue-800'
-                      }`}>
-                        {userProfile.tier.toUpperCase()}
-                      </span>
-                    </div>
-                  )}
-                  <Link 
-                    to="/profile" 
-                    className="text-gray-700 hover:text-blue-600 transition-colors"
-                    title="My Account"
-                  >
-                    <User className="w-6 h-6 stroke-2" />
-                  </Link>
-                  <button
-                    onClick={handleLogout}
-                    disabled={logoutLoading}
-                    className="text-red-600 hover:text-red-700 transition-colors disabled:opacity-50"
-                    title="Logout"
-                  >
-                    <LogOut className="w-6 h-6 stroke-2" />
-                  </button>
-                </div>
-              ) : (
-                <div className="flex items-center space-x-4">
-                  <span className="text-sm text-yellow-600 font-medium">
-                    Email Confirmation Required
-                  </span>
-                  <button
-                    onClick={handleLogout}
-                    disabled={logoutLoading}
-                    className="text-red-600 hover:text-red-700 transition-colors text-sm disabled:opacity-50"
-                  >
-                    Sign Out
-                  </button>
-                </div>
-              )
+            ) : isLoggedIn && isEmailConfirmed ? (
+              <div className="flex items-center space-x-4">
+                {userProfile && (
+                  <div className="flex items-center space-x-2">
+                    <span className="text-sm text-gray-600">
+                      {displayName}
+                    </span>
+                    <span className={`text-xs px-2 py-1 rounded-full font-medium ${
+                      userProfile.tier === 'pro' 
+                        ? 'bg-purple-100 text-purple-800' 
+                        : 'bg-blue-100 text-blue-800'
+                    }`}>
+                      {userProfile.tier.toUpperCase()}
+                    </span>
+                  </div>
+                )}
+                <Link 
+                  to="/profile" 
+                  className="text-gray-700 hover:text-blue-600 transition-colors"
+                  title="My Account"
+                >
+                  <User className="w-6 h-6 stroke-2" />
+                </Link>
+                <button
+                  onClick={handleLogout}
+                  disabled={logoutLoading}
+                  className="text-red-600 hover:text-red-700 transition-colors disabled:opacity-50"
+                  title="Logout"
+                >
+                  <LogOut className="w-6 h-6 stroke-2" />
+                </button>
+              </div>
+            ) : isLoggedIn && !isEmailConfirmed ? (
+              <div className="flex items-center space-x-4">
+                <span className="text-sm text-yellow-600 font-medium">
+                  Email Confirmation Required
+                </span>
+                <button
+                  onClick={handleLogout}
+                  disabled={logoutLoading}
+                  className="text-red-600 hover:text-red-700 transition-colors text-sm disabled:opacity-50"
+                >
+                  Sign Out
+                </button>
+              </div>
             ) : (
               <div className="flex items-center space-x-4">
                 <Link 
@@ -279,81 +298,75 @@ function Navigation() {
               >
                 Blog
               </Link>
-              {user && isEmailConfirmed && (
-                <Link 
-                  to="/education" 
-                  className="text-gray-700 hover:text-blue-600 font-medium transition-colors"
-                  onClick={() => setIsOpen(false)}
-                >
-                  Education
-                </Link>
-              )}
-              {user && isEmailConfirmed && (
-                <Link 
-                  to="/maker" 
-                  className="text-gray-700 hover:text-blue-600 font-medium transition-colors"
-                  onClick={() => setIsOpen(false)}
-                >
-                  Maker
-                </Link>
-              )}
+              <Link 
+                to="/education" 
+                className="text-gray-700 hover:text-blue-600 font-medium transition-colors"
+                onClick={() => setIsOpen(false)}
+              >
+                Education
+              </Link>
+              <Link 
+                to="/maker" 
+                className="text-gray-700 hover:text-blue-600 font-medium transition-colors"
+                onClick={() => setIsOpen(false)}
+              >
+                Maker
+              </Link>
               
               {authLoading ? (
                 <div className="text-sm text-gray-500">Loading...</div>
-              ) : user ? (
-                isEmailConfirmed ? (
-                  <>
-                    {userProfile && (
-                      <div className="flex items-center space-x-2 py-2">
-                        <span className="text-sm text-gray-600">
-                          {displayName}
-                        </span>
-                        <span className={`text-xs px-2 py-1 rounded-full font-medium ${
-                          userProfile.tier === 'pro' 
-                            ? 'bg-purple-100 text-purple-800' 
-                            : 'bg-blue-100 text-blue-800'
-                        }`}>
-                          {userProfile.tier.toUpperCase()}
-                        </span>
-                      </div>
-                    )}
-                    <Link 
-                      to="/profile" 
-                      className="text-gray-700 hover:text-blue-600 font-medium transition-colors flex items-center space-x-2"
-                      onClick={() => setIsOpen(false)}
-                    >
-                      <User className="w-5 h-5 stroke-2" />
-                      <span>Profile</span>
-                    </Link>
-                    <button
-                      onClick={() => {
-                        handleLogout();
-                        setIsOpen(false);
-                      }}
-                      disabled={logoutLoading}
-                      className="text-red-600 hover:text-red-700 font-medium transition-colors text-left flex items-center space-x-2 disabled:opacity-50"
-                    >
-                      <LogOut className="w-5 h-5 stroke-2" />
-                      <span>Logout</span>
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    <span className="text-sm text-yellow-600 font-medium">
-                      Email Confirmation Required
-                    </span>
-                    <button
-                      onClick={() => {
-                        handleLogout();
-                        setIsOpen(false);
-                      }}
-                      disabled={logoutLoading}
-                      className="text-red-600 hover:text-red-700 font-medium transition-colors text-left disabled:opacity-50"
-                    >
-                      Sign Out
-                    </button>
-                  </>
-                )
+              ) : isLoggedIn && isEmailConfirmed ? (
+                <>
+                  {userProfile && (
+                    <div className="flex items-center space-x-2 py-2">
+                      <span className="text-sm text-gray-600">
+                        {displayName}
+                      </span>
+                      <span className={`text-xs px-2 py-1 rounded-full font-medium ${
+                        userProfile.tier === 'pro' 
+                          ? 'bg-purple-100 text-purple-800' 
+                          : 'bg-blue-100 text-blue-800'
+                      }`}>
+                        {userProfile.tier.toUpperCase()}
+                      </span>
+                    </div>
+                  )}
+                  <Link 
+                    to="/profile" 
+                    className="text-gray-700 hover:text-blue-600 font-medium transition-colors flex items-center space-x-2"
+                    onClick={() => setIsOpen(false)}
+                  >
+                    <User className="w-5 h-5 stroke-2" />
+                    <span>Profile</span>
+                  </Link>
+                  <button
+                    onClick={() => {
+                      handleLogout();
+                      setIsOpen(false);
+                    }}
+                    disabled={logoutLoading}
+                    className="text-red-600 hover:text-red-700 font-medium transition-colors text-left flex items-center space-x-2 disabled:opacity-50"
+                  >
+                    <LogOut className="w-5 h-5 stroke-2" />
+                    <span>Logout</span>
+                  </button>
+                </>
+              ) : isLoggedIn && !isEmailConfirmed ? (
+                <>
+                  <span className="text-sm text-yellow-600 font-medium">
+                    Email Confirmation Required
+                  </span>
+                  <button
+                    onClick={() => {
+                      handleLogout();
+                      setIsOpen(false);
+                    }}
+                    disabled={logoutLoading}
+                    className="text-red-600 hover:text-red-700 font-medium transition-colors text-left disabled:opacity-50"
+                  >
+                    Sign Out
+                  </button>
+                </>
               ) : (
                 <>
                   <Link 
