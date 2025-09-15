@@ -110,7 +110,10 @@ function Navigation() {
               <Link to="/" className="text-gray-700 hover:text-blue-600 font-medium">Home</Link>
               <Link to="/search" className="text-gray-700 hover:text-blue-600 font-medium">Search</Link>
               <Link to="/blog" className="text-gray-700 hover:text-blue-600 font-medium">Blog</Link>
-              <div className="animate-pulse bg-gray-200 h-8 w-20 rounded"></div>
+              <div className="flex items-center space-x-4">
+                <Link to="/login" className="text-gray-700 hover:text-blue-600 font-medium">Login</Link>
+                <Link to="/signup" className="btn-primary">Sign Up</Link>
+              </div>
             </div>
             
             {/* Mobile menu button */}
