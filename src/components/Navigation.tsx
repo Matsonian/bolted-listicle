@@ -79,6 +79,11 @@ function Navigation() {
         }
       } catch (error) {
         console.error('Navigation: Profile fetch error:', error);
+      } finally {
+        if (mounted) {
+          console.log('Navigation: Setting authLoading to false after profile fetch');
+          setAuthLoading(false);
+        }
       }
     };
 
@@ -95,6 +100,7 @@ function Navigation() {
         } else {
           setUser(null);
           setUserProfile(null);
+          setAuthLoading(false);
         }
       }
     );
