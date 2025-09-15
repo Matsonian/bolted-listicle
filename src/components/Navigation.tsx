@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, memo } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Menu, X, User, LogOut, Search } from 'lucide-react';
 import { supabase } from '../lib/supabase';
@@ -11,47 +11,66 @@ interface UserProfile {
   subscription_status: string;
 }
 
-export default function Navigation() {
-    console.log('Navigation component is mounting');
-
+function Navigation() {
   const [isOpen, setIsOpen] = useState(false);
   const [user, setUser] = useState<any>(null);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const location = useLocation();
 
- useEffect(() => {
-  console.log('Navigation useEffect is running');
-  
-  // Skip the getSession() call and just listen for auth changes
-  const { data: { subscription } } = supabase.auth.onAuthStateChange(
-    async (event, session) => {
-      console.log('Auth state changed:', event, session);
-      setUser(session?.user ?? null);
+  useEffect(() => {
+    console.log('Navigation useEffect is running');
+    let mounted = true;
 
-// Add these debug logs
-console.log('User object:', session?.user);
-console.log('Email confirmed at:', session?.user?.email_confirmed_at);
-console.log('User exists:', !!session?.user);
-      
-      if (session?.user) {
-        console.log('User found, fetching profile for:', session.user.id);
-        // Comment out profile fetch for now to test navigation
-        // await fetchUserProfile(session.user.id);
-      } else {
-        setUserProfile(null);
+    const initializeAuth = async () => {
+      try {
+        // Get initial session
+        const { data: { session }, error } = await supabase.auth.getSession();
+        console.log('Initial session:', session);
+        
+        if (mounted) {
+          setUser(session?.user ?? null);
+          if (session?.user) {
+            console.log('User found, fetching profile for:', session.user.id);
+            await fetchUserProfile(session.user.id);
+          }
+          setLoading(false);
+        }
+      } catch (error) {
+        console.error('Error getting initial session:', error);
+        if (mounted) {
+          setLoading(false);
+        }
       }
-      setLoading(false);
-    }
-  );
+    };
 
-  // Set loading to false immediately to show navigation
-  setLoading(false);
+    // Initialize auth
+    initializeAuth();
 
-  return () => subscription.unsubscribe();
-}, []);
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        if (!mounted) return;
+        
+        console.log('Auth state changed:', event, session);
+        setUser(session?.user ?? null);
+        
+        if (session?.user) {
+          console.log('User found in auth change, fetching profile for:', session.user.id);
+          await fetchUserProfile(session.user.id);
+        } else {
+          setUserProfile(null);
+        }
+        
+        setLoading(false);
+      }
+    );
 
- 
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
+  }, []);
 
   const fetchUserProfile = async (userId: string) => {
     try {
@@ -63,6 +82,7 @@ console.log('User exists:', !!session?.user);
 
       if (error) {
         console.error('Error fetching user profile:', error);
+        // Don't return early - user might not have profile yet
         return;
       }
 
@@ -105,6 +125,8 @@ console.log('User exists:', !!session?.user);
       </nav>
     );
   }
+
+  const isEmailConfirmed = user?.email_confirmed_at;
 
   return (
     <nav className="bg-white shadow-sm border-b border-gray-100 sticky top-0 z-50">
@@ -151,7 +173,7 @@ console.log('User exists:', !!session?.user);
             >
               Blog
             </Link>
-            {user && user.email_confirmed_at && (
+            {user && isEmailConfirmed && (
               <Link 
                 to="/education" 
                 className={`font-medium transition-colors ${
@@ -163,7 +185,7 @@ console.log('User exists:', !!session?.user);
                 Education
               </Link>
             )}
-            {user && user.email_confirmed_at && (
+            {user && isEmailConfirmed && (
               <Link 
                 to="/maker" 
                 className={`font-medium transition-colors ${
@@ -177,7 +199,7 @@ console.log('User exists:', !!session?.user);
             )}
             
             {user ? (
-              user.email_confirmed_at ? (
+              isEmailConfirmed ? (
                 <div className="flex items-center space-x-4">
                   {userProfile && (
                     <div className="flex items-center space-x-2">
@@ -273,7 +295,7 @@ console.log('User exists:', !!session?.user);
               >
                 Blog
               </Link>
-              {user && user.email_confirmed_at && (
+              {user && isEmailConfirmed && (
                 <Link 
                   to="/education" 
                   className="text-gray-700 hover:text-blue-600 font-medium transition-colors"
@@ -282,7 +304,7 @@ console.log('User exists:', !!session?.user);
                   Education
                 </Link>
               )}
-              {user && user.email_confirmed_at && (
+              {user && isEmailConfirmed && (
                 <Link 
                   to="/maker" 
                   className="text-gray-700 hover:text-blue-600 font-medium transition-colors"
@@ -293,7 +315,7 @@ console.log('User exists:', !!session?.user);
               )}
               
               {user ? (
-                user.email_confirmed_at ? (
+                isEmailConfirmed ? (
                   <>
                     {userProfile && (
                       <div className="flex items-center space-x-2 py-2">
@@ -371,3 +393,5 @@ console.log('User exists:', !!session?.user);
     </nav>
   );
 }
+
+export default memo(Navigation);
