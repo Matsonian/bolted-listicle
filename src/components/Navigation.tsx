@@ -1,3 +1,10 @@
+export default function Navigation() {
+  console.log('Navigation component is mounting');
+  
+  const [isOpen, setIsOpen] = useState(false);
+
+  //Test is above
+
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Menu, X, User, LogOut, Search } from 'lucide-react';
