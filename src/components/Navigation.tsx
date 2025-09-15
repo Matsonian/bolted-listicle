@@ -27,7 +27,13 @@ const getSession = async () => {
   console.log('About to call supabase.auth.getSession()');
   
   try {
-    const { data: { session } } = await supabase.auth.getSession();
+    // Add timeout to prevent hanging
+    const sessionPromise = supabase.auth.getSession();
+    const timeoutPromise = new Promise((_, reject) => 
+      setTimeout(() => reject(new Error('Session timeout')), 5000)
+    );
+    
+    const { data: { session } } = await Promise.race([sessionPromise, timeoutPromise]);
     console.log('getSession result:', session);
     
     setUser(session?.user ?? null);
