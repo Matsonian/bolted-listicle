@@ -104,19 +104,20 @@ function Navigation() {
                 className="h-10 w-auto max-w-none"
               />
             </Link>
+            
+            {/* Show basic navigation during loading */}
+            <div className="hidden md:flex items-center space-x-8">
+              <Link to="/" className="text-gray-700 hover:text-blue-600 font-medium">Home</Link>
+              <Link to="/search" className="text-gray-700 hover:text-blue-600 font-medium">Search</Link>
+              <Link to="/blog" className="text-gray-700 hover:text-blue-600 font-medium">Blog</Link>
+              <div className="animate-pulse bg-gray-200 h-8 w-20 rounded"></div>
+            </div>
+            
+            {/* Mobile menu button */}
+            <button className="md:hidden text-gray-400">
+              <Menu className="w-6 h-6" />
+            </button>
           </div>
-          
-          {/* Show loading indicator */}
-          <div className="hidden md:flex items-center space-x-8">
-            <div className="animate-pulse bg-gray-200 h-4 w-16 rounded"></div>
-            <div className="animate-pulse bg-gray-200 h-4 w-16 rounded"></div>
-            <div className="animate-pulse bg-gray-200 h-8 w-20 rounded"></div>
-          </div>
-          
-          {/* Mobile menu button */}
-          <button className="md:hidden text-gray-400">
-            <Menu className="w-6 h-6" />
-          </button>
         </div>
       </nav>
     );
