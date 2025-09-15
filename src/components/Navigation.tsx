@@ -1,145 +1,59 @@
-import React, { useState, useEffect, memo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Menu, X, User, LogOut } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
-interface UserProfile {
-  id: string;
-  email: string;
-  name: string;
-  first_name: string;
-  tier: 'basic' | 'pro';
-  subscription_status: string;
-}
-
-function Navigation() {
+export default function Navigation() {
   const [isOpen, setIsOpen] = useState(false);
   const [user, setUser] = useState<any>(null);
-  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
-  const [authLoading, setAuthLoading] = useState(true);
-  const [logoutLoading, setLogoutLoading] = useState(false);
+  const [initialized, setInitialized] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
 
   useEffect(() => {
-    let mounted = true;
-
-    const fetchUserProfile = async (userId: string) => {
-      try {
-        console.log('Navigation: Fetching user profile for:', userId);
-        const { data, error } = await supabase
-          .from('users')
-          .select('*')
-          .eq('id', userId)
-          .single();
-
-        if (mounted && !error && data) {
-          console.log('Navigation: Profile fetched successfully');
-          setUserProfile(data);
-        } else {
-          console.log('Navigation: Profile fetch error:', error);
-          setUserProfile(null);
-        }
-      } catch (error) {
-        console.error('Navigation: Profile fetch error:', error);
-        if (mounted) {
-          setUserProfile(null);
-        }
-      }
-    };
-
-    const initAuth = async () => {
-      console.log('Navigation: Starting auth initialization');
-      
-      try {
-        const { data: { session }, error } = await supabase.auth.getSession();
-        
-        if (!mounted) return;
-        
-        if (error) {
-          console.log('Navigation: Session error:', error);
-          setUser(null);
-          setUserProfile(null);
-        } else if (session?.user) {
-          console.log('Navigation: User found in session');
-          setUser(session.user);
-          await fetchUserProfile(session.user.id);
-        } else {
-          console.log('Navigation: No user session');
-          setUser(null);
-          setUserProfile(null);
-        }
-      } catch (error) {
-        console.error('Navigation: Auth init error:', error);
-        if (mounted) {
-          setUser(null);
-          setUserProfile(null);
-        }
-      } finally {
-        if (mounted) {
-          console.log('Navigation: Setting authLoading to false');
-          setAuthLoading(false);
-        }
-      }
-    };
-
-    // Initialize auth
-    initAuth();
+    console.log('Navigation: Initializing auth');
+    
+    // Get current session immediately
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log('Navigation: Initial session:', !!session?.user);
+      setUser(session?.user || null);
+      setInitialized(true);
+    });
 
     // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        console.log('Navigation: Auth state change:', event, !!session);
-        if (!mounted) return;
-        
-        if (event === 'SIGNED_OUT') {
-          setUser(null);
-          setUserProfile(null);
-          setAuthLoading(false);
-        } else if (session?.user) {
-          setUser(session.user);
-          // Only fetch profile if we don't already have it or it's a different user
-          if (!userProfile || userProfile.id !== session.user.id) {
-            await fetchUserProfile(session.user.id);
-          }
-          setAuthLoading(false);
-        } else {
-          setUser(null);
-          setUserProfile(null);
-          setAuthLoading(false);
-        }
-      }
-    );
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log('Navigation: Auth changed:', event, !!session?.user);
+      setUser(session?.user || null);
+      setInitialized(true);
+    });
 
-    return () => {
-      mounted = false;
-      subscription.unsubscribe();
-    };
-  }, []); // Remove userProfile dependency to prevent loops
+    return () => subscription.unsubscribe();
+  }, []);
 
   const handleLogout = async () => {
-    setLogoutLoading(true);
-    try {
-      console.log('Navigation: Logging out');
-      await supabase.auth.signOut();
-      navigate('/');
-    } catch (error) {
-      console.error('Navigation: Logout error:', error);
-    } finally {
-      setLogoutLoading(false);
-    }
+    console.log('Navigation: Logging out');
+    await supabase.auth.signOut();
+    navigate('/');
   };
 
-  const isLoggedIn = !!user;
-  const isEmailConfirmed = user?.email_confirmed_at;
-  const displayName = userProfile?.first_name || userProfile?.name || 'User';
-
-  console.log('Navigation: Render state', { 
-    authLoading, 
-    isLoggedIn, 
-    isEmailConfirmed, 
-    userProfile: !!userProfile 
-  });
+  // Show nothing until we know auth state
+  if (!initialized) {
+    return (
+      <nav className="bg-white shadow-sm border-b border-gray-100 sticky top-0 z-50">
+        <div className="container mx-auto px-4">
+          <div className="flex justify-between items-center h-16">
+            <Link to="/" className="flex items-center space-x-2">
+              <img 
+                src="/GetListicledLogo-BlueGreen.png" 
+                alt="Get Listicled" 
+                className="h-10 w-auto max-w-none"
+              />
+            </Link>
+          </div>
+        </div>
+      </nav>
+    );
+  }
 
   return (
     <nav className="bg-white shadow-sm border-b border-gray-100 sticky top-0 z-50">
@@ -208,24 +122,8 @@ function Navigation() {
             </Link>
             
             {/* Auth Section */}
-            {authLoading ? (
-              <div className="text-gray-500">Loading...</div>
-            ) : isLoggedIn && isEmailConfirmed ? (
+            {user ? (
               <div className="flex items-center space-x-4">
-                {userProfile && (
-                  <div className="flex items-center space-x-2">
-                    <span className="text-sm text-gray-600">
-                      {displayName}
-                    </span>
-                    <span className={`text-xs px-2 py-1 rounded-full font-medium ${
-                      userProfile.tier === 'pro' 
-                        ? 'bg-purple-100 text-purple-800' 
-                        : 'bg-blue-100 text-blue-800'
-                    }`}>
-                      {userProfile.tier.toUpperCase()}
-                    </span>
-                  </div>
-                )}
                 <Link 
                   to="/profile" 
                   className="text-gray-700 hover:text-blue-600 transition-colors"
@@ -235,24 +133,10 @@ function Navigation() {
                 </Link>
                 <button
                   onClick={handleLogout}
-                  disabled={logoutLoading}
-                  className="text-red-600 hover:text-red-700 transition-colors disabled:opacity-50"
+                  className="text-red-600 hover:text-red-700 transition-colors"
                   title="Logout"
                 >
                   <LogOut className="w-6 h-6 stroke-2" />
-                </button>
-              </div>
-            ) : isLoggedIn && !isEmailConfirmed ? (
-              <div className="flex items-center space-x-4">
-                <span className="text-sm text-yellow-600 font-medium">
-                  Email Confirmation Required
-                </span>
-                <button
-                  onClick={handleLogout}
-                  disabled={logoutLoading}
-                  className="text-red-600 hover:text-red-700 transition-colors text-sm disabled:opacity-50"
-                >
-                  Sign Out
                 </button>
               </div>
             ) : (
@@ -322,24 +206,8 @@ function Navigation() {
                 Maker
               </Link>
               
-              {authLoading ? (
-                <div className="text-gray-500">Loading...</div>
-              ) : isLoggedIn && isEmailConfirmed ? (
+              {user ? (
                 <>
-                  {userProfile && (
-                    <div className="flex items-center space-x-2 py-2">
-                      <span className="text-sm text-gray-600">
-                        {displayName}
-                      </span>
-                      <span className={`text-xs px-2 py-1 rounded-full font-medium ${
-                        userProfile.tier === 'pro' 
-                          ? 'bg-purple-100 text-purple-800' 
-                          : 'bg-blue-100 text-blue-800'
-                      }`}>
-                        {userProfile.tier.toUpperCase()}
-                      </span>
-                    </div>
-                  )}
                   <Link 
                     to="/profile" 
                     className="text-gray-700 hover:text-blue-600 font-medium transition-colors flex items-center space-x-2"
@@ -353,27 +221,10 @@ function Navigation() {
                       handleLogout();
                       setIsOpen(false);
                     }}
-                    disabled={logoutLoading}
-                    className="text-red-600 hover:text-red-700 font-medium transition-colors text-left flex items-center space-x-2 disabled:opacity-50"
+                    className="text-red-600 hover:text-red-700 font-medium transition-colors text-left flex items-center space-x-2"
                   >
                     <LogOut className="w-5 h-5 stroke-2" />
                     <span>Logout</span>
-                  </button>
-                </>
-              ) : isLoggedIn && !isEmailConfirmed ? (
-                <>
-                  <span className="text-sm text-yellow-600 font-medium">
-                    Email Confirmation Required
-                  </span>
-                  <button
-                    onClick={() => {
-                      handleLogout();
-                      setIsOpen(false);
-                    }}
-                    disabled={logoutLoading}
-                    className="text-red-600 hover:text-red-700 font-medium transition-colors text-left disabled:opacity-50"
-                  >
-                    Sign Out
                   </button>
                 </>
               ) : (
@@ -401,5 +252,3 @@ function Navigation() {
     </nav>
   );
 }
-
-export default memo(Navigation);
