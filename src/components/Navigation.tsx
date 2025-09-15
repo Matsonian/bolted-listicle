@@ -20,51 +20,33 @@ export default function Navigation() {
   const [loading, setLoading] = useState(true);
   const location = useLocation();
 
-  useEffect(() => {
+ useEffect(() => {
   console.log('Navigation useEffect is running');
   
-const getSession = async () => {
-  console.log('About to call supabase.auth.getSession()');
-
-
-  
-  try {
-// Remove the timeout for now to see what's actually happening
-const { data: { session } } = await supabase.auth.getSession();
-console.log('getSession result:', session);
-    
-    setUser(session?.user ?? null);
-    if (session?.user) {
-      console.log('User found, fetching profile for:', session.user.id);
-      await fetchUserProfile(session.user.id);
-    } else {
-      console.log('No user in session');
-    }
-  } catch (error) {
-    console.error('Error getting session:', error);
-  } finally {
-    console.log('Setting loading to false');
-    setLoading(false);
-  }
-};
-
-    getSession();
-
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        setUser(session?.user ?? null);
-        if (session?.user) {
-          await fetchUserProfile(session.user.id);
-        } else {
-          setUserProfile(null);
-        }
-        setLoading(false);
+  // Skip the getSession() call and just listen for auth changes
+  const { data: { subscription } } = supabase.auth.onAuthStateChange(
+    async (event, session) => {
+      console.log('Auth state changed:', event, session);
+      setUser(session?.user ?? null);
+      
+      if (session?.user) {
+        console.log('User found, fetching profile for:', session.user.id);
+        // Comment out profile fetch for now to test navigation
+        // await fetchUserProfile(session.user.id);
+      } else {
+        setUserProfile(null);
       }
-    );
+      setLoading(false);
+    }
+  );
 
-    return () => subscription.unsubscribe();
-  }, []);
+  // Set loading to false immediately to show navigation
+  setLoading(false);
+
+  return () => subscription.unsubscribe();
+}, []);
+
+ 
 
   const fetchUserProfile = async (userId: string) => {
     try {
