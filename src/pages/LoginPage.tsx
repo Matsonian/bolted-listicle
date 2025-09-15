@@ -11,33 +11,33 @@ export default function LoginPage() {
   const navigate = useNavigate();
 
   const handleLogin = async (e: React.FormEvent) => {
-  e.preventDefault();
-  setLoading(true);
-  setError('');
+    e.preventDefault();
+    setLoading(true);
+    setError('');
 
-  try {
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email: email,
-      password: password,
-    });
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: email,
+        password: password,
+      });
 
-    if (error) {
-      setError(error.message);
-      return;
-    }
-
-    if (data.user) {
-      // Check if email is confirmed
-      if (!data.user.email_confirmed_at) {
-        navigate(`/confirm-email?email=${encodeURIComponent(data.user.email)}`);
-      } else {
-        // Email confirmed, go to welcome page
-        navigate('/welcome');
+      if (error) {
+        setError(error.message);
+        setLoading(false);
+        return;
       }
-    }
+
+      if (data.user) {
+        // Check if email is confirmed
+        if (!data.user.email_confirmed_at) {
+          navigate(`/confirm-email?email=${encodeURIComponent(data.user.email || email)}`);
+        } else {
+          // Email confirmed, go to welcome page
+          navigate('/welcome');
+        }
+      }
     } catch (err) {
       setError('An unexpected error occurred');
-    } finally {
       setLoading(false);
     }
   };
