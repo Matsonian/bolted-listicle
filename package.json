@@ -10,8 +10,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@supabase/auth-helpers-nextjs": "^0.10.0",
-    "@supabase/supabase-js": "^2.56.0",
+  
     "@types/bcryptjs": "^2.4.6",
     "@types/node": "^24.3.1",
     "bcryptjs": "^3.0.2",
