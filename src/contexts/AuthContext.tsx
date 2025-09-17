@@ -160,41 +160,38 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
-  useEffect(() => {
+useEffect(() => {
   console.log('AuthContext mounting - checking session...')
   
   const getSession = async () => {
-    const { data: { session }, error } = await supabase.auth.getSession()
-    console.log('Initial session check:', { session, error })
-    
-    if (session?.user) {
-      console.log('Found existing session for user:', session.user.email)
-      setUser(session.user)
-      await fetchUserProfile(session.user.id)
-    } else {
-      console.log('No existing session found')
+    try {
+      console.log('About to call supabase.auth.getSession()')
+      const { data: { session }, error } = await supabase.auth.getSession()
+      console.log('Initial session check result:', { session, error })
+      
+      if (error) {
+        console.error('Session check error:', error)
+      }
+      
+      if (session?.user) {
+        console.log('Found existing session for user:', session.user.email)
+        setUser(session.user)
+        await fetchUserProfile(session.user.id)
+      } else {
+        console.log('No existing session found')
+      }
+    } catch (err) {
+      console.error('Exception during session check:', err)
+    } finally {
+      console.log('Setting loading to false')
+      setLoading(false)
     }
-    setLoading(false)
   }
   
   getSession()
 }, [])
 
-  return (
-    <AuthContext.Provider value={{
-      user,
-      userProfile,
-      loading,
-      signUp,
-      signIn,
-      signOut,
-      canSearch,
-      incrementSearchUsage
-    }}>
-      {children}
-    </AuthContext.Provider>
-  )
-}
+
 
 export function useAuth() {
   const context = useContext(AuthContext)
