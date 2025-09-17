@@ -48,60 +48,86 @@ export default function SignupPage() {
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setError('')
-    setLoading(true)
+  e.preventDefault()
+  setError('')
+  setLoading(true)
 
-    // Validation
-    if (!formData.firstName || !formData.lastName || !formData.email || 
-        !formData.businessName || !formData.businessDescription || 
-        !formData.yearsInBusiness || !formData.password) {
-      setError('Please fill in all required fields')
-      setLoading(false)
-      return
-    }
-
-    if (formData.password !== formData.confirmPassword) {
-      setError('Passwords do not match')
-      setLoading(false)
-      return
-    }
-
-    const passwordValidation = validatePassword(formData.password)
-    if (!passwordValidation.valid) {
-      setError('Password does not meet requirements')
-      setLoading(false)
-      return
-    }
-
-    const yearsInBusinessNum = parseInt(formData.yearsInBusiness)
-    if (isNaN(yearsInBusinessNum) || yearsInBusinessNum < 0) {
-      setError('Please enter a valid number for years in business')
-      setLoading(false)
-      return
-    }
-
-    try {
-      const { error } = await signUp(formData.email, formData.password, {
-        first_name: formData.firstName,
-        last_name: formData.lastName,
-        business_name: formData.businessName,
-        business_description: formData.businessDescription,
-        years_in_business: yearsInBusinessNum,
-        website: formData.website || undefined
-      })
-
-      if (error) {
-        setError(error.message || 'An error occurred during signup')
-      } else {
-        navigate('/confirm-email')
-      }
-    } catch (error) {
-      setError('An unexpected error occurred')
-    } finally {
-      setLoading(false)
-    }
+  // Validate password requirements
+  const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/
+  if (!passwordRegex.test(formData.password)) {
+    setError('Password must be at least 8 characters with uppercase, lowercase, number, and special character.')
+    setLoading(false)
+    return
   }
+
+  if (formData.password !== formData.confirmPassword) {
+    setError('Passwords do not match.')
+    setLoading(false)
+    return
+  }
+
+  try {
+    // Sign up user with Supabase Auth
+    const { data: authData, error: authError } = await supabase.auth.signUp({
+      email: formData.email,
+      password: formData.password,
+      options: {
+        emailRedirectTo: `${window.location.origin}/welcome`
+      }
+    })
+
+    if (authError) throw authError
+
+    if (authData.user) {
+      // Create user profile in users table
+      const { error: profileError } = await supabase
+        .from('users')
+        .insert({
+          id: authData.user.id,
+          email: formData.email,
+          first_name: formData.firstName,
+          last_name: formData.lastName,
+          business_name: formData.businessName,
+          business_description: formData.businessDescription,
+          years_in_business: parseInt(formData.yearsInBusiness),
+          website: formData.website,
+          tier: 'basic',
+          email_confirmed: false,
+          daily_searches_used: 0,
+          last_search_date: null
+        })
+
+      if (profileError) throw profileError
+
+      // Navigate to email confirmation page
+      navigate('/confirm-email')
+    }
+  } catch (error: any) {
+    console.error('Signup error:', error)
+    
+    // Handle specific error types with user-friendly messages
+    if (error.message?.includes('duplicate key value') || 
+        error.message?.includes('users_email_key') ||
+        error.message?.includes('User already registered') ||
+        error.message?.includes('already been registered')) {
+      setError('An account with this email already exists. Please try logging in instead.')
+    } else if (error.message?.includes('row-level security')) {
+      setError('There was a security issue creating your account. Please contact support.')
+    } else if (error.message?.includes('Invalid email')) {
+      setError('Please enter a valid email address.')
+    } else if (error.message?.includes('Password should be at least')) {
+      setError('Password must be at least 6 characters long.')
+    } else if (error.message?.includes('Unable to validate email')) {
+      setError('Please enter a valid email address.')
+    } else if (error.message?.includes('Email rate limit')) {
+      setError('Too many signup attempts. Please wait a few minutes and try again.')
+    } else {
+      setError(error.message || 'Failed to create account. Please try again.')
+    }
+  } finally {
+    setLoading(false)
+  }
+}
 
   const passwordValidation = validatePassword(formData.password)
 
