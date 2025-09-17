@@ -1,8 +1,9 @@
-import { supabase } from '../lib/supabase'
 import React, { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { AlertCircle, Eye, EyeOff } from 'lucide-react'
+import { supabase } from '../lib/supabase'
+
 
 export default function SignupPage() {
   const [formData, setFormData] = useState({
