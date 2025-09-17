@@ -160,6 +160,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
+  useEffect(() => {
+  console.log('AuthContext mounting - checking session...')
+  
+  const getSession = async () => {
+    const { data: { session }, error } = await supabase.auth.getSession()
+    console.log('Initial session check:', { session, error })
+    
+    if (session?.user) {
+      console.log('Found existing session for user:', session.user.email)
+      setUser(session.user)
+      await fetchUserProfile(session.user.id)
+    } else {
+      console.log('No existing session found')
+    }
+    setLoading(false)
+  }
+  
+  getSession()
+}, [])
+
   return (
     <AuthContext.Provider value={{
       user,
