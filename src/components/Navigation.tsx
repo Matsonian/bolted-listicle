@@ -7,16 +7,16 @@ export default function Navigation() {
   const [isOpen, setIsOpen] = useState(false)
   const location = useLocation()
   const navigate = useNavigate()
-  const { user, userProfile, loading, signOut } = useAuth()
+const { user, userProfile, loading, logout } = useAuth()
 
-  const handleLogout = async () => {
-    try {
-      await signOut()
-      navigate('/')
-    } catch (error) {
-      console.error('Error signing out:', error)
-    }
+const handleLogout = async () => {
+  try {
+    await logout()
+    navigate('/')
+  } catch (error) {
+    console.error('Error signing out:', error)
   }
+}
 
   if (loading) {
     return (
