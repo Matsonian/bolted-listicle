@@ -22,7 +22,7 @@ interface AuthContextType {
   loading: boolean
   signUp: (email: string, password: string, profileData: Omit<UserProfile, 'id' | 'email' | 'tier' | 'daily_searches_used' | 'last_search_date'>) => Promise<{ error?: any }>
   signIn: (email: string, password: string) => Promise<{ error?: any }>
-  signOut: () => Promise<void>
+  logout: () => Promise<void>
   canSearch: boolean
   incrementSearchUsage: () => Promise<void>
 }
@@ -33,34 +33,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null)
   const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null)
-      if (session?.user) {
-        fetchUserProfile(session.user.id)
-      } else {
-        setLoading(false)
-      }
-    })
-
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        setUser(session?.user ?? null)
-        
-        if (session?.user) {
-          await fetchUserProfile(session.user.id)
-        } else {
-          setUserProfile(null)
-          setLoading(false)
-        }
-      }
-    )
-
-    return () => subscription.unsubscribe()
-  }, [])
 
   const fetchUserProfile = async (userId: string) => {
     try {
@@ -79,6 +51,53 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setLoading(false)
     }
   }
+
+  useEffect(() => {
+    console.log('AuthContext mounting - checking session...')
+    
+    const getSession = async () => {
+      try {
+        console.log('About to call supabase.auth.getSession()')
+        const { data: { session }, error } = await supabase.auth.getSession()
+        console.log('Initial session check result:', { session, error })
+        
+        if (error) {
+          console.error('Session check error:', error)
+        }
+        
+        if (session?.user) {
+          console.log('Found existing session for user:', session.user.email)
+          setUser(session.user)
+          await fetchUserProfile(session.user.id)
+        } else {
+          console.log('No existing session found')
+          setLoading(false)
+        }
+      } catch (err) {
+        console.error('Exception during session check:', err)
+        setLoading(false)
+      }
+    }
+    
+    getSession()
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        console.log('Auth state changed:', event, session?.user?.email)
+        setUser(session?.user ?? null)
+        
+        if (session?.user) {
+          await fetchUserProfile(session.user.id)
+        } else {
+          setUserProfile(null)
+          setLoading(false)
+        }
+      }
+    )
+
+    return () => subscription.unsubscribe()
+  }, [])
 
   const signUp = async (
     email: string, 
@@ -127,7 +146,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
-  const signOut = async () => {
+  const logout = async () => {
     const { error } = await supabase.auth.signOut()
     if (error) throw error
   }
@@ -160,38 +179,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
-useEffect(() => {
-  console.log('AuthContext mounting - checking session...')
-  
-  const getSession = async () => {
-    try {
-      console.log('About to call supabase.auth.getSession()')
-      const { data: { session }, error } = await supabase.auth.getSession()
-      console.log('Initial session check result:', { session, error })
-      
-      if (error) {
-        console.error('Session check error:', error)
-      }
-      
-      if (session?.user) {
-        console.log('Found existing session for user:', session.user.email)
-        setUser(session.user)
-        await fetchUserProfile(session.user.id)
-      } else {
-        console.log('No existing session found')
-      }
-    } catch (err) {
-      console.error('Exception during session check:', err)
-    } finally {
-      console.log('Setting loading to false')
-      setLoading(false)
-    }
+  const value = {
+    user,
+    userProfile,
+    loading,
+    signUp,
+    signIn,
+    logout,
+    canSearch,
+    incrementSearchUsage
   }
-  
-  getSession()
-}, [])
 
-
+  return (
+    <AuthContext.Provider value={value}>
+      {children}
+    </AuthContext.Provider>
+  )
+}
 
 export function useAuth() {
   const context = useContext(AuthContext)
