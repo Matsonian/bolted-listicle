@@ -37,17 +37,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const fetchUserProfile = async (userId: string) => {
   console.log('Fetching profile for user:', userId)
   try {
-    const controller = new AbortController()
-    const timeoutId = setTimeout(() => controller.abort(), 2000) // 2 second timeout
+    // First, let's just test if we can connect to Supabase at all
+    const { data: testData, error: testError } = await supabase
+      .from('users')
+      .select('count')
+      .limit(1)
     
+    console.log('Test query result:', { testData, testError })
+    
+    // Now try the actual query
     const { data, error } = await supabase
       .from('users')
       .select('*')
       .eq('id', userId)
-      .abortSignal(controller.signal)
       .single()
 
-    clearTimeout(timeoutId)
     console.log('Profile fetch result:', { data, error })
 
     if (error) {
