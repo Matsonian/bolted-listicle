@@ -33,6 +33,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null)
   const [loading, setLoading] = useState(true)
+  const [initialized, setInitialized] = useState(false)
 
   const fetchUserProfile = async (userId: string) => {
     try {
@@ -42,70 +43,97 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .eq('id', userId)
         .single()
 
-      if (error) throw error
-
-      setUserProfile(data)
+      if (error) {
+        console.error('Error fetching user profile:', error)
+        setUserProfile(null)
+      } else {
+        setUserProfile(data)
+      }
     } catch (error) {
-      console.error('Error fetching user profile:', error)
-    } finally {
-      setLoading(false)
+      console.error('Exception fetching user profile:', error)
+      setUserProfile(null)
     }
   }
 
   useEffect(() => {
-    console.log('AuthContext mounting - checking session...')
+    // Prevent double initialization in StrictMode
+    if (initialized) return
     
-    const getSession = async () => {
+    console.log('AuthContext initializing...')
+    
+    let mounted = true
+    
+    const initializeAuth = async () => {
       try {
-        console.log('About to call supabase.auth.getSession()')
         const { data: { session }, error } = await supabase.auth.getSession()
-        console.log('Initial session check result:', { session, error })
+        
+        if (!mounted) return
         
         if (error) {
           console.error('Session check error:', error)
-        }
-        
-        if (session?.user) {
+          setUser(null)
+          setUserProfile(null)
+        } else if (session?.user) {
           console.log('Found existing session for user:', session.user.email)
           setUser(session.user)
           await fetchUserProfile(session.user.id)
         } else {
           console.log('No existing session found')
-          setLoading(false)
+          setUser(null)
+          setUserProfile(null)
         }
       } catch (err) {
-        console.error('Exception during session check:', err)
-        setLoading(false)
+        console.error('Exception during auth initialization:', err)
+        if (mounted) {
+          setUser(null)
+          setUserProfile(null)
+        }
+      } finally {
+        if (mounted) {
+          setLoading(false)
+          setInitialized(true)
+        }
       }
     }
-    
-    getSession()
+
+    initializeAuth()
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        if (!mounted) return
+        
         console.log('Auth state changed:', event, session?.user?.email)
+        
         setUser(session?.user ?? null)
         
         if (session?.user) {
           await fetchUserProfile(session.user.id)
         } else {
           setUserProfile(null)
+        }
+        
+        // Only set loading to false after the first auth state change
+        if (!initialized) {
           setLoading(false)
+          setInitialized(true)
         }
       }
     )
 
-    return () => subscription.unsubscribe()
-  }, [])
+    return () => {
+      mounted = false
+      subscription.unsubscribe()
+    }
+  }, [initialized])
 
+  // Rest of your methods remain the same...
   const signUp = async (
     email: string, 
     password: string, 
     profileData: Omit<UserProfile, 'id' | 'email' | 'tier' | 'daily_searches_used' | 'last_search_date'>
   ) => {
     try {
-      // Create auth user
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email,
         password,
@@ -114,7 +142,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (authError) return { error: authError }
 
       if (authData.user) {
-        // Create user profile
         const { error: profileError } = await supabase
           .from('users')
           .insert({
