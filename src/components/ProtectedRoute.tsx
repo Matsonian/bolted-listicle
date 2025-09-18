@@ -7,9 +7,10 @@ interface ProtectedRouteProps {
 }
 
 export default function ProtectedRoute({ children }: ProtectedRouteProps) {
-  const { user, loading } = useAuth()
+  const { user, userProfile, loading } = useAuth()
   const location = useLocation()
 
+  // Still initializing auth
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -21,10 +22,12 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
     )
   }
 
+  // No user - redirect to login
   if (!user) {
-    // Redirect to login page with return URL
     return <Navigate to="/login" state={{ from: location }} replace />
   }
 
+  // User exists but profile failed to load - still allow access
+  // The individual pages can handle missing profile gracefully
   return <>{children}</>
 }
