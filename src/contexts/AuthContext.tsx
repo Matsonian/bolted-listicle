@@ -1,9 +1,7 @@
-import React, { createContext, useContext, useEffect, useState } from 'react'
-import { User } from '@supabase/supabase-js'
-import { supabase } from '../lib/supabase'
+import React, { createContext, useContext, useState } from 'react'
 
 interface AuthContextType {
-  user: User | null
+  user: any
   loading: boolean
   signIn: (email: string, password: string) => Promise<{ error?: any }>
   logout: () => Promise<void>
@@ -12,41 +10,18 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null)
-  const [loading, setLoading] = useState(true)
+  const [user, setUser] = useState(null)
+  const [loading, setLoading] = useState(false)
 
-  useEffect(() => {
-    console.log('Simple AuthContext initializing...')
-    
-    // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      console.log('Session result:', session?.user?.email || 'No user')
-      setUser(session?.user ?? null)
-      setLoading(false)
-    }).catch(error => {
-      console.error('Session error:', error)
-      setLoading(false)
-    })
-
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        console.log('Auth changed:', event, session?.user?.email || 'No user')
-        setUser(session?.user ?? null)
-        setLoading(false)
-      }
-    )
-
-    return () => subscription.unsubscribe()
-  }, [])
+  console.log('Ultra-simple AuthContext - user:', user, 'loading:', loading)
 
   const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({ email, password })
-    return { error }
+    console.log('Mock sign in')
+    return { error: null }
   }
 
   const logout = async () => {
-    await supabase.auth.signOut()
+    console.log('Mock logout')
   }
 
   return (
