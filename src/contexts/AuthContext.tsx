@@ -35,28 +35,34 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true)
 
   const fetchUserProfile = async (userId: string) => {
-    console.log('Fetching profile for user:', userId)
-    try {
-      const { data, error } = await supabase
-        .from('users')
-        .select('*')
-        .eq('id', userId)
-        .single()
+  console.log('Fetching profile for user:', userId)
+  try {
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), 2000) // 2 second timeout
+    
+    const { data, error } = await supabase
+      .from('users')
+      .select('*')
+      .eq('id', userId)
+      .abortSignal(controller.signal)
+      .single()
 
-      console.log('Profile fetch result:', { data, error })
+    clearTimeout(timeoutId)
+    console.log('Profile fetch result:', { data, error })
 
-      if (error) {
-        console.error('Profile fetch error:', error)
-        setUserProfile(null)
-      } else {
-        console.log('Setting user profile:', data)
-        setUserProfile(data)
-      }
-    } catch (error) {
-      console.error('Exception fetching user profile:', error)
+    if (error) {
+      console.error('Profile fetch error:', error)
       setUserProfile(null)
+    } else {
+      console.log('Setting user profile:', data)
+      setUserProfile(data)
     }
+  } catch (error) {
+    console.error('Exception fetching user profile:', error)
+    setUserProfile(null)
   }
+}
+
 
   useEffect(() => {
     console.log('AuthContext mounting...')
@@ -72,7 +78,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             console.log('Auth initialization timeout - forcing loading to false')
             setLoading(false)
           }
-        }, 5000) // 5 second timeout
+        }, 2000) // 2 second timeout
         
         const { data: { session }, error } = await supabase.auth.getSession()
         
