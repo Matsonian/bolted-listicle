@@ -7,16 +7,16 @@ export default function Navigation() {
   const [isOpen, setIsOpen] = useState(false)
   const location = useLocation()
   const navigate = useNavigate()
-const { user, userProfile, loading, logout } = useAuth()
+  const { user, loading, logout } = useAuth()
 
-const handleLogout = async () => {
-  try {
-    await logout()
-    navigate('/')
-  } catch (error) {
-    console.error('Error signing out:', error)
+  const handleLogout = async () => {
+    try {
+      await logout()
+      navigate('/')
+    } catch (error) {
+      console.error('Error signing out:', error)
+    }
   }
-}
 
   if (loading) {
     return (
@@ -97,16 +97,14 @@ const handleLogout = async () => {
             {/* Auth Section */}
             {user ? (
               <div className="flex items-center space-x-4">
-                {userProfile && (
-                  <div className="flex items-center space-x-2">
-                    <span className="text-sm text-gray-600">
-                      {userProfile.first_name}
-                    </span>
-                    <span className="text-xs px-2 py-1 rounded-full font-medium bg-blue-100 text-blue-800">
-                      {userProfile.tier.toUpperCase()}
-                    </span>
-                  </div>
-                )}
+                <div className="flex items-center space-x-2">
+                  <span className="text-sm text-gray-600">
+                    {user.email}
+                  </span>
+                  <span className="text-xs px-2 py-1 rounded-full font-medium bg-blue-100 text-blue-800">
+                    BASIC
+                  </span>
+                </div>
                 <Link 
                   to="/profile" 
                   className="text-gray-700 hover:text-blue-600 transition-colors"
@@ -160,6 +158,9 @@ const handleLogout = async () => {
               
               {user ? (
                 <>
+                  <div className="text-sm text-gray-600 py-2">
+                    Logged in as: {user.email}
+                  </div>
                   <Link to="/profile" onClick={() => setIsOpen(false)}>Profile</Link>
                   <button onClick={() => { handleLogout(); setIsOpen(false) }}>Logout</button>
                 </>
