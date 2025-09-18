@@ -5,16 +5,38 @@ import { User, Building2, Calendar, Globe, Search, BarChart3 } from 'lucide-reac
 export default function ProfilePage() {
   const { user, userProfile, canSearch } = useAuth()
 
-  if (!userProfile) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading your profile...</p>
-        </div>
+if (loading) {
+  return (
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="text-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+        <p className="text-gray-600">Loading your profile...</p>
       </div>
-    )
-  }
+    </div>
+  )
+}
+
+if (!user) {
+  return <Navigate to="/login" />
+}
+
+if (!userProfile) {
+  return (
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="text-center">
+        <div className="text-red-600 mb-4">⚠️ Profile not found</div>
+        <p className="text-gray-600">There was an issue loading your profile.</p>
+        <button 
+          onClick={() => window.location.reload()} 
+          className="mt-4 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+        >
+          Retry
+        </button>
+      </div>
+    </div>
+  )
+}
+
 
   const today = new Date().toISOString().split('T')[0]
   const isToday = userProfile.last_search_date === today
