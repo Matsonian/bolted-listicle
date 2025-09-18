@@ -18,21 +18,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     console.log('AuthContext with Supabase initializing...')
     
+    // Force loading to false after 3 seconds max
+    const timeoutId = setTimeout(() => {
+      console.log('Auth initialization timeout - forcing loading false')
+      setLoading(false)
+    }, 3000)
+    
     // Get initial session
     const getInitialSession = async () => {
       try {
         const { data: { session }, error } = await supabase.auth.getSession()
         console.log('Initial session check:', session?.user?.email || 'No user', error || 'No error')
         
+        clearTimeout(timeoutId) // Clear timeout since we got a response
+        
         if (session?.user) {
           setUser(session.user)
         } else {
           setUser(null)
         }
+        setLoading(false)
       } catch (error) {
         console.error('Session error:', error)
+        clearTimeout(timeoutId)
         setUser(null)
-      } finally {
         setLoading(false)
       }
     }
@@ -41,7 +50,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      (event, session) => {
         console.log('Auth state changed:', event, session?.user?.email || 'No user')
         
         if (event === 'SIGNED_OUT' || !session) {
@@ -49,12 +58,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         } else if (session?.user) {
           setUser(session.user)
         }
-        
         setLoading(false)
       }
     )
 
-    return () => subscription.unsubscribe()
+    return () => {
+      clearTimeout(timeoutId)
+      subscription.unsubscribe()
+    }
   }, [])
 
   const signIn = async (email: string, password: string) => {
@@ -69,18 +80,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
-const logout = async () => {
-  console.log('Force logout - clearing user state immediately')
-  setUser(null)
-  
-  // Try to logout from Supabase in background (don't wait)
-  supabase.auth.signOut().then(result => {
-    console.log('Background logout result:', result.error || 'Success')
-  }).catch(error => {
-    console.log('Background logout failed:', error)
-  })
-}
-
+  const logout = async () => {
+    console.log('Force logout - clearing user state immediately')
+    setUser(null)
+    
+    // Try to logout from Supabase in background
+    supabase.auth.signOut().then(result => {
+      console.log('Background logout result:', result.error || 'Success')
+    }).catch(error => {
+      console.log('Background logout failed:', error)
+    })
+  }
 
   return (
     <AuthContext.Provider value={{ user, loading, signIn, logout }}>
