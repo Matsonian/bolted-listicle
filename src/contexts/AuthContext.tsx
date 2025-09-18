@@ -194,9 +194,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   const logout = async () => {
+  try {
+    console.log('Attempting to sign out...')
     const { error } = await supabase.auth.signOut()
-    if (error) throw error
+    if (error) {
+      console.error('Logout error:', error)
+      throw error
+    }
+    console.log('Logout successful')
+    
+    // Force clear local state
+    setUser(null)
+    setUserProfile(null)
+  } catch (error) {
+    console.error('Exception during logout:', error)
+    // Force clear state even if logout fails
+    setUser(null)
+    setUserProfile(null)
+    throw error
   }
+}
+
 
   const canSearch = userProfile ? (
     userProfile.daily_searches_used < 1 || 
