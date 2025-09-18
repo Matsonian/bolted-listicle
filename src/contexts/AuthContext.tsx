@@ -1,206 +1,178 @@
-import React, { createContext, useContext, useEffect, useState } from 'react'
-import { User } from '@supabase/supabase-js'
-import { supabase } from '../lib/supabase'
+import React, { useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
+import { useAuth } from '../contexts/AuthContext'
 
-interface UserProfile {
-  id: string
-  email: string
-  first_name: string
-  last_name: string
-  business_name: string
-  business_description: string
-  years_in_business: number
-  website?: string
-  tier: 'basic' | 'pro'
-  daily_searches_used: number
-  last_search_date: string
-}
+export default function LoginPage() {
+  const [formData, setFormData] = useState({
+    email: '',
+    password: ''
+  })
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
+  
+  const { signIn } = useAuth()
+  const navigate = useNavigate()
 
-interface AuthContextType {
-  user: User | null
-  userProfile: UserProfile | null
-  loading: boolean
-  signUp: (email: string, password: string, profileData: Omit<UserProfile, 'id' | 'email' | 'tier' | 'daily_searches_used' | 'last_search_date'>) => Promise<{ error?: any }>
-  signIn: (email: string, password: string) => Promise<{ error?: any }>
-  logout: () => Promise<void>
-  canSearch: boolean
-  incrementSearchUsage: () => Promise<void>
-}
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData(prev => ({
+      ...prev,
+      [e.target.name]: e.target.value
+    }))
+  }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined)
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setError('')
+    setLoading(true)
 
-export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null)
-  const [userProfile, setUserProfile] = useState<UserProfile | null>(null)
-  const [loading, setLoading] = useState(true)
-
-  const fetchUserProfile = async (userId: string) => {
     try {
-      const { data, error } = await supabase
-        .from('users')
-        .select('*')
-        .eq('id', userId)
-        .single()
-
-      if (error) throw error
-
-      setUserProfile(data)
-    } catch (error) {
-      console.error('Error fetching user profile:', error)
+      const { error } = await signIn(formData.email, formData.password)
+      
+      if (error) {
+        // Handle specific error types
+        if (error.message?.includes('Invalid login credentials')) {
+          setError('Invalid email or password. Please check your credentials and try again.')
+        } else if (error.message?.includes('Email not confirmed')) {
+          setError('Please check your email and click the confirmation link before signing in.')
+        } else if (error.message?.includes('Too many requests')) {
+          setError('Too many login attempts. Please wait a few minutes and try again.')
+        } else {
+          setError(error.message || 'Login failed. Please try again.')
+        }
+      } else {
+        // Successful login - redirect to profile
+        navigate('/profile')
+      }
+    } catch (err) {
+      console.error('Login error:', err)
+      setError('An unexpected error occurred. Please try again.')
     } finally {
       setLoading(false)
     }
   }
 
-  useEffect(() => {
-    console.log('AuthContext mounting - checking session...')
-    
-    const getSession = async () => {
-      try {
-        console.log('About to call supabase.auth.getSession()')
-        const { data: { session }, error } = await supabase.auth.getSession()
-        console.log('Initial session check result:', { session, error })
-        
-        if (error) {
-          console.error('Session check error:', error)
-        }
-        
-        if (session?.user) {
-          console.log('Found existing session for user:', session.user.email)
-          setUser(session.user)
-          await fetchUserProfile(session.user.id)
-        } else {
-          console.log('No existing session found')
-          setLoading(false)
-        }
-      } catch (err) {
-        console.error('Exception during session check:', err)
-        setLoading(false)
-      }
-    }
-    
-    getSession()
-
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        console.log('Auth state changed:', event, session?.user?.email)
-        setUser(session?.user ?? null)
-        
-        if (session?.user) {
-          await fetchUserProfile(session.user.id)
-        } else {
-          setUserProfile(null)
-          setLoading(false)
-        }
-      }
-    )
-
-    return () => subscription.unsubscribe()
-  }, [])
-
-  const signUp = async (
-    email: string, 
-    password: string, 
-    profileData: Omit<UserProfile, 'id' | 'email' | 'tier' | 'daily_searches_used' | 'last_search_date'>
-  ) => {
-    try {
-      // Create auth user
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email,
-        password,
-      })
-
-      if (authError) return { error: authError }
-
-      if (authData.user) {
-        // Create user profile
-        const { error: profileError } = await supabase
-          .from('users')
-          .insert({
-            id: authData.user.id,
-            email: authData.user.email!,
-            ...profileData,
-            tier: 'basic'
-          })
-
-        if (profileError) return { error: profileError }
-      }
-
-      return {}
-    } catch (error) {
-      return { error }
-    }
-  }
-
-  const signIn = async (email: string, password: string) => {
-    try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      })
-
-      return { error }
-    } catch (error) {
-      return { error }
-    }
-  }
-
-  const logout = async () => {
-    const { error } = await supabase.auth.signOut()
-    if (error) throw error
-  }
-
-  const canSearch = userProfile ? (
-    userProfile.daily_searches_used < 1 || 
-    userProfile.last_search_date !== new Date().toISOString().split('T')[0]
-  ) : false
-
-  const incrementSearchUsage = async () => {
-    if (!userProfile) return
-
-    const today = new Date().toISOString().split('T')[0]
-    const isNewDay = userProfile.last_search_date !== today
-
-    const { error } = await supabase
-      .from('users')
-      .update({
-        daily_searches_used: isNewDay ? 1 : userProfile.daily_searches_used + 1,
-        last_search_date: today
-      })
-      .eq('id', userProfile.id)
-
-    if (!error) {
-      setUserProfile(prev => prev ? {
-        ...prev,
-        daily_searches_used: isNewDay ? 1 : prev.daily_searches_used + 1,
-        last_search_date: today
-      } : null)
-    }
-  }
-
-  const value = {
-    user,
-    userProfile,
-    loading,
-    signUp,
-    signIn,
-    logout,
-    canSearch,
-    incrementSearchUsage
-  }
-
   return (
-    <AuthContext.Provider value={value}>
-      {children}
-    </AuthContext.Provider>
-  )
-}
+    <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+      <div className="sm:mx-auto sm:w-full sm:max-w-md">
+        <Link to="/" className="flex justify-center">
+          <img 
+            src="/GetListicledLogo-BlueGreen.png" 
+            alt="Get Listicled" 
+            className="h-16 w-auto"
+          />
+        </Link>
+        <h2 className="mt-6 text-center text-3xl font-bold tracking-tight text-gray-900">
+          Sign in to your account
+        </h2>
+        <p className="mt-2 text-center text-sm text-gray-600">
+          Or{' '}
+          <Link 
+            to="/signup" 
+            className="font-medium text-blue-600 hover:text-blue-500"
+          >
+            create a new account
+          </Link>
+        </p>
+      </div>
 
-export function useAuth() {
-  const context = useContext(AuthContext)
-  if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider')
-  }
-  return context
+      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
+        <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
+          <form className="space-y-6" onSubmit={handleSubmit}>
+            {error && (
+              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4">
+                {error}
+                {error.includes('confirmation') && (
+                  <div className="mt-2">
+                    <Link 
+                      to="/signup" 
+                      className="text-blue-600 hover:text-blue-700 underline font-medium"
+                    >
+                      Resend confirmation email →
+                    </Link>
+                  </div>
+                )}
+              </div>
+            )}
+
+            <div>
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+                Email address
+              </label>
+              <div className="mt-1">
+                <input
+                  id="email"
+                  name="email"
+                  type="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  required
+                  className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                  placeholder="Enter your email"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+                Password
+              </label>
+              <div className="mt-1">
+                <input
+                  id="password"
+                  name="password"
+                  type="password"
+                  value={formData.password}
+                  onChange={handleChange}
+                  required
+                  className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                  placeholder="Enter your password"
+                />
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between">
+              <div className="text-sm">
+                <Link 
+                  to="/forgot-password" 
+                  className="font-medium text-blue-600 hover:text-blue-500"
+                >
+                  Forgot your password?
+                </Link>
+              </div>
+            </div>
+
+            <div>
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {loading ? 'Signing in...' : 'Sign in'}
+              </button>
+            </div>
+          </form>
+
+          <div className="mt-6">
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-gray-300" />
+              </div>
+              <div className="relative flex justify-center text-sm">
+                <span className="px-2 bg-white text-gray-500">New to GetListicled?</span>
+              </div>
+            </div>
+
+            <div className="mt-6">
+              <Link
+                to="/signup"
+                className="w-full flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              >
+                Create new account
+              </Link>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
 }
