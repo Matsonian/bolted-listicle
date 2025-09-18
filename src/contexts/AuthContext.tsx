@@ -4,12 +4,12 @@ useEffect(() => {
   console.log('AuthContext mounting...')
   
   let mounted = true
-  let timeoutId: NodeJS.Timeout
+  let timeoutId: number // Changed from NodeJS.Timeout to number
   
   const initializeAuth = async () => {
     try {
       // Set a timeout to prevent infinite loading
-      timeoutId = setTimeout(() => {
+      timeoutId = window.setTimeout(() => { // Added window. prefix
         if (mounted) {
           console.log('Auth initialization timeout - forcing loading to false')
           setLoading(false)
@@ -21,7 +21,7 @@ useEffect(() => {
       if (!mounted) return
       
       // Clear timeout since we got a response
-      clearTimeout(timeoutId)
+      window.clearTimeout(timeoutId) // Added window. prefix
       
       if (error) {
         console.error('Session check error:', error)
@@ -73,7 +73,7 @@ useEffect(() => {
 
   return () => {
     mounted = false
-    if (timeoutId) clearTimeout(timeoutId)
+    if (timeoutId) window.clearTimeout(timeoutId) // Added window. prefix
     subscription.unsubscribe()
   }
-}, []) // Remove the initialized dependency
+}, [])
