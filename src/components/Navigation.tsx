@@ -41,18 +41,20 @@ export default function Navigation() {
             
             {/* Auth Section */}
             {user ? (
-              <div className="flex items-center space-x-4">
-                <span className="text-sm text-gray-600">Logged In</span>
-                <button onClick={handleLogout} className="text-red-600 hover:text-red-700">
-                  <LogOut className="w-6 h-6 stroke-2" />
-                </button>
-              </div>
-            ) : (
-              <div className="flex items-center space-x-4">
-                <Link to="/login" className="text-gray-700 hover:text-blue-600 font-medium">Login</Link>
-                <Link to="/signup" className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md">Sign Up</Link>
-              </div>
-            )}
+  <div className="flex items-center space-x-4">
+    <span className="text-sm text-gray-600">{user.email}</span>
+    <span className="text-xs px-2 py-1 rounded-full font-medium bg-blue-100 text-blue-800">BASIC</span>
+    <button onClick={handleLogout} className="text-red-600 hover:text-red-700">
+      <LogOut className="w-6 h-6 stroke-2" />
+    </button>
+  </div>
+) : (
+  <div className="flex items-center space-x-4">
+    <Link to="/login" className="text-gray-700 hover:text-blue-600 font-medium">Login</Link>
+    <Link to="/signup" className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md">Sign Up</Link>
+  </div>
+)}
+
           </div>
         </div>
       </div>
