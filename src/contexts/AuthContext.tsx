@@ -16,15 +16,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    console.log('Simple AuthContext initializing...')
+    
     // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log('Session result:', session?.user?.email || 'No user')
       setUser(session?.user ?? null)
+      setLoading(false)
+    }).catch(error => {
+      console.error('Session error:', error)
       setLoading(false)
     })
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
+        console.log('Auth changed:', event, session?.user?.email || 'No user')
         setUser(session?.user ?? null)
         setLoading(false)
       }
