@@ -69,24 +69,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
-  const logout = async () => {
-    try {
-      console.log('Attempting logout...')
-      const { error } = await supabase.auth.signOut()
-      console.log('Logout result:', error || 'Success')
-      
-      if (error) {
-        console.error('Logout error:', error)
-      }
-      
-      // Force clear user state regardless
-      setUser(null)
-    } catch (error) {
-      console.error('Logout exception:', error)
-      // Force clear user state even on error
-      setUser(null)
-    }
-  }
+const logout = async () => {
+  console.log('Force logout - clearing user state immediately')
+  setUser(null)
+  
+  // Try to logout from Supabase in background (don't wait)
+  supabase.auth.signOut().then(result => {
+    console.log('Background logout result:', result.error || 'Success')
+  }).catch(error => {
+    console.log('Background logout failed:', error)
+  })
+}
+
 
   return (
     <AuthContext.Provider value={{ user, loading, signIn, logout }}>
