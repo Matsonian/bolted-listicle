@@ -12,6 +12,10 @@ import WelcomePage from './pages/WelcomePage'
 import ProfilePage from './pages/ProfilePage'
 import EducationPage from './pages/EducationPage'
 import ProtectedRoute from './components/ProtectedRoute'
+import OutreachTemplatesPage from './pages/blog/OutreachTemplatesPage'
+import SEOImpactPage from './pages/blog/SEOImpactPage'
+import AICitationsPage from './pages/blog/AICitationsPage'
+import WhatAreListiclesPage from './pages/blog/WhatAreListiclesPage'
 
 function App() {
   return (
@@ -27,6 +31,10 @@ function App() {
             <Route path="/login" element={<LoginPage />} />
             <Route path="/confirm-email" element={<ConfirmEmailPage />} />
             <Route path="/welcome" element={<WelcomePage />} />
+            <Route path="/blog/outreach-templates" element={<OutreachTemplatesPage />} />
+<Route path="/blog/seo-impact" element={<SEOImpactPage />} />
+<Route path="/blog/ai-citations" element={<AICitationsPage />} />
+<Route path="/blog/what-are-listicles" element={<WhatAreListiclesPage />} />
             <Route path="/profile" element={
               <ProtectedRoute>
                 <ProfilePage />
