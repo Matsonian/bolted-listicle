@@ -1,8 +1,81 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { Calendar, Clock, ArrowLeft } from 'lucide-react'
 
 export default function SEOImpactPage() {
+  useEffect(() => {
+    const jsonLd = [
+      {
+        "@context": "https://schema.org",
+        "@type": "Article",
+        headline: "How Listicle Features Impact Your SEO and Brand Authority",
+        description: "A practical playbook showing how editorial listicles drive compound SEO gains—backlinks, co-citation, brand mentions—and how to measure the impact.",
+        datePublished: "2025-08-24",
+        dateModified: "2025-08-24",
+        timeRequired: "PT7M",
+        author: { "@type": "Organization", name: "GetListicled" },
+        publisher: { "@type": "Organization", name: "GetListicled" },
+        keywords: [
+          "listicles",
+          "SEO", 
+          "backlinks",
+          "brand authority",
+          "E-E-A-T",
+          "digital PR",
+          "content marketing",
+        ],
+        articleSection: [
+          "SEO benefits beyond backlinks",
+          "Brand authority gains",
+          "Long-term compounding effects", 
+          "Target profile checklist",
+          "Execution playbook",
+          "Measurement framework",
+          "Troubleshooting",
+          "Action checklist",
+        ],
+      },
+      {
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        mainEntity: [
+          {
+            "@type": "Question",
+            name: "Are listicle backlinks better than regular blog backlinks?",
+            acceptedAnswer: {
+              "@type": "Answer",
+              text: "Often, yes. Editorial listicles combine authority, freshness, and structured context, and they naturally attract secondary shares and citations that compound value.",
+            },
+          },
+          {
+            "@type": "Question", 
+            name: "How do listicles help brand authority?",
+            acceptedAnswer: {
+              "@type": "Answer",
+              text: "They position you beside recognized competitors on trusted domains, increasing perceived legitimacy, SERP click-through, and branded search demand.",
+            },
+          },
+          {
+            "@type": "Question",
+            name: "What should I give editors to maximize inclusion?",
+            acceptedAnswer: {
+              "@type": "Answer",
+              text: "A paste-ready card, comparison table row matching their headers, honest pros/cons, test data, compliance docs, and lightweight WebP images plus SVG logo.",
+            },
+          },
+        ],
+      },
+    ]
+
+    const script = document.createElement('script')
+    script.type = 'application/ld+json'
+    script.text = JSON.stringify(jsonLd)
+    document.head.appendChild(script)
+
+    return () => {
+      document.head.removeChild(script)
+    }
+  }, [])
   return (
     <div className="min-h-screen bg-gray-50">
       <main className="py-16">
