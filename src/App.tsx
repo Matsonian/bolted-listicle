@@ -16,6 +16,8 @@ import OutreachTemplatesPage from './pages/blog/OutreachTemplatesPage'
 import SEOImpactPage from './pages/blog/SEOImpactPage'
 import AICitationsPage from './pages/blog/AICitationsPage'
 import WhatAreListiclesPage from './pages/blog/WhatAreListiclesPage'
+import GuestSearchResultsPage from './pages/GuestSearchResultsPage'
+
 
 function App() {
   return (
@@ -35,6 +37,8 @@ function App() {
 <Route path="/blog/seo-impact" element={<SEOImpactPage />} />
 <Route path="/blog/ai-citations" element={<AICitationsPage />} />
 <Route path="/blog/what-are-listicles" element={<WhatAreListiclesPage />} />
+            <Route path="/guest-results" element={<GuestSearchResultsPage />} />
+
             <Route path="/profile" element={
               <ProtectedRoute>
                 <ProfilePage />
