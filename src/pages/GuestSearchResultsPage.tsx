@@ -10,20 +10,11 @@ export default function GuestSearchResultsPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
-      {/* Success Header */}
+      {/* Search Info Header */}
       <div className="bg-white shadow-sm">
-        <div className="container mx-auto px-4 py-6">
-          <div className="flex items-center justify-between">
-            <Link to="/" className="flex items-center space-x-2">
-              <img 
-                src="/GetListicledLogo-BlueGreen.png" 
-                alt="Get Listicled" 
-                className="h-8 w-auto"
-              />
-            </Link>
-            <div className="text-sm text-gray-600">
-              Search: "<span className="font-medium">{query}</span>"
-            </div>
+        <div className="container mx-auto px-4 py-4">
+          <div className="text-center text-sm text-gray-600">
+            Search results for: "<span className="font-medium text-blue-600">{query}</span>"
           </div>
         </div>
       </div>
