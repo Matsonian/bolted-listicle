@@ -162,10 +162,13 @@ export default function GuestSearchResultsPage() {
                 </div>
               </div>
 
-              <button className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-4 px-8 rounded-lg text-lg transition-colors w-full md:w-auto">
+              <Link 
+                to="/signup"
+                className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-4 px-8 rounded-lg text-lg transition-colors w-full md:w-auto inline-flex items-center justify-center"
+              >
                 Start Your Membership
-                <ArrowRight className="w-5 h-5 ml-2 inline" />
-              </button>
+                <ArrowRight className="w-5 h-5 ml-2" />
+              </Link>
               
               <p className="text-sm text-gray-500 mt-4">
                 Cancel anytime • No setup fees • Immediate access
