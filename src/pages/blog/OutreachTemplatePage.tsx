@@ -1,8 +1,39 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { Calendar, Clock, ArrowLeft } from 'lucide-react'
 
 export default function OutreachTemplatesPage() {
+  useEffect(() => {
+    const jsonLd = {
+      "@context": "https://schema.org",
+      "@type": "Article",
+      headline: "5 Proven Email Templates That Get Your Product Featured in Listicles",
+      description: "Five copy-and-paste outreach templates—value-first, update request, data-driven, editor-assist, and expert quote—plus subject lines, follow-ups, and an asset checklist.",
+      author: { "@type": "Organization", name: "GetListicled" },
+      publisher: { "@type": "Organization", name: "GetListicled" },
+      datePublished: "2025-08-24",
+      dateModified: "2025-08-24",
+      articleSection: [
+        "Value-first template",
+        "Update request template", 
+        "Data-driven template",
+        "Editor-assist template",
+        "Expert quote template",
+        "Best practices",
+        "Asset checklist",
+        "Tracking metrics",
+      ],
+    }
+
+    const script = document.createElement('script')
+    script.type = 'application/ld+json'
+    script.text = JSON.stringify(jsonLd)
+    document.head.appendChild(script)
+
+    return () => {
+      document.head.removeChild(script)
+    }
+  }, [])
   return (
     <div className="min-h-screen bg-gray-50">
       <main className="py-16">
