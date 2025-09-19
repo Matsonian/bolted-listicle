@@ -17,6 +17,8 @@ import SEOImpactPage from './pages/blog/SEOImpactPage'
 import AICitationsPage from './pages/blog/AICitationsPage'
 import WhatAreListiclesPage from './pages/blog/WhatAreListiclesPage'
 import GuestSearchResultsPage from './pages/GuestSearchResultsPage'
+import ListicleDetailPage from './pages/ListicleDetailPage'
+
 
 
 function App() {
@@ -38,6 +40,8 @@ function App() {
 <Route path="/blog/ai-citations" element={<AICitationsPage />} />
 <Route path="/blog/what-are-listicles" element={<WhatAreListiclesPage />} />
             <Route path="/guest-results" element={<GuestSearchResultsPage />} />
+            <Route path="/listicle-detail/:url" element={<ListicleDetailPage />} />
+
 
             <Route path="/profile" element={
               <ProtectedRoute>
