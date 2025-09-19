@@ -89,6 +89,15 @@ export default function SearchPage() {
       const [searchResults] = await Promise.all([searchPromise, progressPromise]);
       
       setSearchProgress({ phase: 'complete', progress: 100, message: 'Search complete!' });
+      
+      // NEW: Check if user is guest after search completes
+      if (!user) {
+        // Guest user: redirect to sales page with real count
+        navigate(`/guest-results?q=${encodeURIComponent(searchTerm)}&count=${searchResults.length}`);
+        return;
+      }
+      
+      // Authenticated user: show results as normal
       setResults(searchResults);
       
     } catch (err) {
