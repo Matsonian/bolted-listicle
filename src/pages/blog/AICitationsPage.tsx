@@ -1,8 +1,73 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { Calendar, Clock, ArrowLeft } from 'lucide-react'
 
 export default function AICitationsPage() {
+  useEffect(() => {
+    const jsonLd = [
+      {
+        "@context": "https://schema.org",
+        "@type": "Article",
+        headline: "The Complete Guide to AI Citations: Why Listicles Matter More Than Ever",
+        description: "A practical playbook for earning listicle placements that AI assistants parse and cite—so your products show up in AI recommendations.",
+        author: { "@type": "Organization", name: "GetListicled" },
+        publisher: { "@type": "Organization", name: "GetListicled" },
+        datePublished: "2025-08-24",
+        dateModified: "2025-08-24",
+        articleSection: [
+          "AI discovery shift",
+          "Why listicles work",
+          "AI citations explained",
+          "Anatomy of a winning listicle",
+          "Placement strategy",
+          "Outreach template",
+          "Metrics",
+          "Mistakes to avoid",
+          "Ethics",
+          "Checklist",
+        ],
+      },
+      {
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        mainEntity: [
+          {
+            "@type": "Question",
+            name: "Do AI assistants really rely on listicles for product recommendations?",
+            acceptedAnswer: {
+              "@type": "Answer",
+              text: "Yes. Listicles are structured, comprehensive, and frequently updated, which makes them easy for AI systems to parse and cite for 'best X for Y' queries.",
+            },
+          },
+          {
+            "@type": "Question",
+            name: "Should we create our own listicles or focus on third-party placements?",
+            acceptedAnswer: {
+              "@type": "Answer", 
+              text: "Do both. Publish authoritative listicles on your site and also secure placements on high-authority third-party guides that AIs already trust and cite.",
+            },
+          },
+          {
+            "@type": "Question",
+            name: "How often should a listicle be updated to maintain AI visibility?",
+            acceptedAnswer: {
+              "@type": "Answer",
+              text: "Quarterly is a good baseline. Update sooner if prices, specs, or competitive offerings change. Include an update stamp and a brief change log.",
+            },
+          },
+        ],
+      },
+    ]
+
+    const script = document.createElement('script')
+    script.type = 'application/ld+json'
+    script.text = JSON.stringify(jsonLd)
+    document.head.appendChild(script)
+
+    return () => {
+      document.head.removeChild(script)
+    }
+  }, [])
   return (
     <div className="min-h-screen bg-gray-50">
       <main className="py-16">
