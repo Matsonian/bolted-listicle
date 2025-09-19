@@ -1,29 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Save, ExternalLink, Calendar, User, Mail, Link as LinkIcon, Star, Target, Loader } from 'lucide-react';
-import { supabase } from '../lib/supabase';
+import { openaiService, AnalysisResponse, UserProfile } from '../services/openaiService';
+import { useAuth } from '../contexts/AuthContext';
 
-interface ListicleAnalysis {
-  title: string;
-  url: string;
-  author_name: string | null;
-  author_email: string | null;
-  contact_url: string | null;
-  publication_date: string | null;
-  description: string;
-  llm_quality_rating: 'HIGH' | 'MED' | 'LOW';
-  quality_reasons: string;
-  importance_score: number;
-  importance_breakdown: {
-    auth: number;
-    rel: number;
-    fresh: number;
-    eng: number;
-  };
-  outreach_priority: 'P1' | 'P2' | 'P3';
-  suggested_outreach_angle: string;
-  model_email: string;
-}
+type ListicleAnalysis = AnalysisResponse & { url: string };
 
 export default function ListicleDetailPage() {
   const { url: encodedUrl } = useParams<{ url: string }>();
@@ -33,43 +14,28 @@ export default function ListicleDetailPage() {
   const [analysis, setAnalysis] = useState<ListicleAnalysis | null>(null);
   const [error, setError] = useState<string>('');
   const [targetNumber, setTargetNumber] = useState<number>(0);
-  const [user, setUser] = useState<any>(null);
+  const { user, userProfile } = useAuth();
 
   useEffect(() => {
-    const getCurrentUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        navigate('/login');
-        return;
-      }
-      setUser(user);
-      
-      // Get user's next target number
-      const { data: targets, error } = await supabase
-        .from('listicle_targets')
-        .select('target_number')
-        .eq('user_id', user.id)
-        .order('target_number', { ascending: false })
-        .limit(1);
-      
-      if (!error && targets && targets.length > 0) {
-        setTargetNumber(targets[0].target_number + 1);
-      } else {
-        setTargetNumber(1);
-      }
-    };
-
-    getCurrentUser();
-  }, [navigate]);
+    if (!user) {
+      navigate('/login');
+      return;
+    }
+    
+    // Set target number - you'll need to implement this with your database
+    // For now, using a simple counter
+    setTargetNumber(Date.now()); // Temporary - replace with actual target number logic
+    
+  }, [user, navigate]);
 
   useEffect(() => {
-    if (encodedUrl && user) {
+    if (encodedUrl && user && userProfile) {
       analyzeListicle();
     }
-  }, [encodedUrl, user]);
+  }, [encodedUrl, user, userProfile]);
 
   const analyzeListicle = async () => {
-    if (!encodedUrl) return;
+    if (!encodedUrl || !userProfile) return;
     
     setLoading(true);
     setError('');
@@ -77,55 +43,20 @@ export default function ListicleDetailPage() {
     try {
       const decodedUrl = decodeURIComponent(encodedUrl);
       
-      // TODO: Replace with actual OpenAI API call
-      // For now, we'll simulate the analysis
-      await new Promise(resolve => setTimeout(resolve, 3000));
+      // Use your existing OpenAI service
+      const analysisResult = await openaiService.analyzeListicle(decodedUrl, {
+        first_name: userProfile.first_name || '',
+        last_name: userProfile.last_name || '',
+        business_name: userProfile.business_name || '',
+        business_description: userProfile.business_description || '',
+        website: userProfile.website || '',
+        years_in_business: userProfile.years_in_business || 0
+      });
       
-      // Mock analysis data - replace with actual OpenAI response
-      const mockAnalysis: ListicleAnalysis = {
-        title: "Best Project Management Software of 2025",
-        url: decodedUrl,
-        author_name: "Sarah Johnson",
-        author_email: "sarah@techreview.com",
-        contact_url: null,
-        publication_date: "2025-01-15",
-        description: "Comprehensive review of top project management tools with detailed feature comparisons, pricing analysis, and user feedback from 500+ businesses.",
-        llm_quality_rating: "HIGH",
-        quality_reasons: "• Clear numbered list structure\n• Covers 12+ tools with detailed specs\n• Original testing notes and benchmarks\n• Updated within 30 days\n• Credible tech publication",
-        importance_score: 8,
-        importance_breakdown: {
-          auth: 3,
-          rel: 3,
-          fresh: 2,
-          eng: 0
-        },
-        outreach_priority: "P1",
-        suggested_outreach_angle: "Pitch your project management tool as a rising alternative with unique team collaboration features.",
-        model_email: `Subject: ${user?.business_name || 'Our company'} - Innovative Project Management Solution for Your Next Review
-
-Hi Sarah,
-
-I came across your excellent article "Best Project Management Software of 2025" and was impressed by your thorough analysis of the current market landscape.
-
-I'm ${user?.first_name || 'writing'} from ${user?.business_name || 'our company'}, where we've developed an innovative project management solution that I believe would be valuable for your readers. ${user?.business_description || 'Our platform offers unique features that differentiate it from the traditional options covered in your review.'}
-
-Key differentiators that might interest your audience:
-• Advanced team collaboration features
-• Intuitive user interface designed for non-technical teams  
-• Competitive pricing model
-• Strong customer satisfaction ratings
-
-Would you be interested in learning more about our solution for a potential future review or update to your article? I'd be happy to provide a demo or additional information.
-
-Best regards,
-${user?.first_name || ''} ${user?.last_name || ''}
-${user?.business_name || ''}
-${user?.website || ''}
-
-P.S. I particularly appreciated your insights on the importance of user adoption - it's exactly why we focused so heavily on intuitive design.`
-      };
-
-      setAnalysis(mockAnalysis);
+      setAnalysis({
+        ...analysisResult,
+        url: decodedUrl
+      });
     } catch (err) {
       console.error('Analysis error:', err);
       setError('Failed to analyze the listicle. Please try again.');
@@ -140,33 +71,30 @@ P.S. I particularly appreciated your insights on the importance of user adoption
     setSaving(true);
     
     try {
-      const { error } = await supabase
-        .from('listicle_targets')
-        .insert({
-          user_id: user.id,
-          target_number: targetNumber,
-          title: analysis.title,
-          url: analysis.url,
-          author_name: analysis.author_name,
-          author_email: analysis.author_email,
-          contact_url: analysis.contact_url,
-          publication_date: analysis.publication_date,
-          description: analysis.description,
-          llm_quality_rating: analysis.llm_quality_rating,
-          quality_reasons: analysis.quality_reasons,
-          importance_score: analysis.importance_score,
-          importance_breakdown: analysis.importance_breakdown,
-          outreach_priority: analysis.outreach_priority,
-          suggested_outreach_angle: analysis.suggested_outreach_angle,
-          model_email: analysis.model_email
-        });
+      // TODO: Replace with your database service call
+      // Example:
+      // await yourDatabaseService.saveListicleTarget({
+      //   user_id: user.id,
+      //   target_number: targetNumber,
+      //   title: analysis.title,
+      //   url: analysis.url,
+      //   author_name: analysis.author_name,
+      //   author_email: analysis.author_email,
+      //   contact_url: analysis.contact_url,
+      //   publication_date: analysis.publication_date,
+      //   description: analysis.description,
+      //   llm_quality_rating: analysis.llm_quality_rating,
+      //   quality_reasons: analysis.quality_reasons,
+      //   importance_score: analysis.importance_score,
+      //   importance_breakdown: analysis.importance_breakdown,
+      //   outreach_priority: analysis.outreach_priority,
+      //   suggested_outreach_angle: analysis.suggested_outreach_angle,
+      //   model_email: analysis.model_email
+      // });
 
-      if (error) {
-        console.error('Save error:', error);
-        setError('Failed to save listicle target. Please try again.');
-      } else {
-        // Success feedback could be added here
-      }
+      console.log('Saving listicle target:', analysis);
+      // Temporary success - replace with actual database call
+      
     } catch (err) {
       console.error('Save error:', err);
       setError('Failed to save listicle target. Please try again.');
