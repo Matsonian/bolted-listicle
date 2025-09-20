@@ -1,0 +1,38 @@
+services:
+    - type: web
+      plan: free
+      name: listicle-api
+      runtime: node
+      rootDir: backend
+      buildCommand: |
+          npm ci --include=dev
+          npx prisma generate
+          npm run build
+      startCommand: |
+        npx prisma migrate deploy
+        npm run start
+      healthCheckPath: "/healthz"
+      envVars:
+          - key: DATABASE_URL
+            fromDatabase:
+                name: listicle-db
+                property: connectionString
+          - key: PORT
+            value: 9000
+          - key: NODE_ENV
+            value: production
+          - key: NODE_VERSION
+            value: "24.7.0"
+          - key: APP_SECRET
+            generateValue: true
+          - key: OPENAI_API_KEY
+            sync: false
+          - key: RESENT_API_KEY
+            sync: false
+
+databases:
+    - name: livethroughfaith-db
+      databaseName: livethroughfaith
+      plan: free
+      region: oregon
+      postgresMajorVersion: 17

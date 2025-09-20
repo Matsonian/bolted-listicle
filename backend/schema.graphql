@@ -1,0 +1,164 @@
+type AgentConversation {
+  AgentConversationMessage: [AgentConversationMessage!]
+  createdAt: Date
+  id: ID
+  metaData: JSON
+  title: String
+  updatedAt: Date
+  user: User
+  userId: String
+}
+
+type AgentConversationMessage {
+  content: String
+  contentJson: JSON
+  conversation: AgentConversation
+  conversationId: String
+  createdAt: Date
+  id: ID
+  metaData: JSON
+  role: MessageRole
+  updatedAt: Date
+}
+
+"""payload for authenticated user"""
+type AuthPayload {
+  token: String
+  user: User
+  userId: String
+}
+
+"""
+A date string, such as 2007-12-03, compliant with the `full-date` format outlined in section 5.6 of the RFC 3339 profile of the ISO 8601 standard for representation of dates and times using the Gregorian calendar.
+"""
+scalar Date
+
+enum Denomination {
+  ASSEMBLIES_OF_GOD
+  CATHOLIC
+  EASTERN_ORTHODOX
+  EPISCOPAL
+  LATTER_DAY_SAINTS
+  LUTHERAN
+  METHODIST
+  NATIONAL_BAPTIST
+  OTHER
+  PENTECOSTAL
+  PROTESTANT
+  SEVENTH_DAY_ADVENTIST
+  SOUTHERN_BAPTIST
+}
+
+input EmailPasswordInput {
+  email: String!
+  password: String!
+}
+
+"""
+The `JSON` scalar type represents JSON values as specified by [ECMA-404](http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf).
+"""
+scalar JSON
+
+enum MessageRole {
+  AGENT
+  SYSTEM
+  USER
+}
+
+type Mutation {
+  generateSermon(
+    """
+    Optional name of the church where the sermon will be delivered, defaults to the requestor's church
+    """
+    churchName: String
+
+    """
+    Optional denomination of the church, defaults to the requestor's primary denomination
+    """
+    denomination: Denomination
+
+    """
+    Optional name of the pastor delivering the sermon, defaults to the requestor's name
+    """
+    pastorName: String
+
+    """
+    A prompt describing the desired sermon. This should include the scripture passage(s) to be covered, the intended audience, the occasion (if any), and any specific themes or messages to be conveyed. Be as detailed as possible to help guide the sermon generation. Example: "A 20-minute sermon on faith and perseverance based on James 1:2-4, for a congregation facing challenges."
+    """
+    prompt: String!
+    title: String!
+  ): Sermon
+  sendOtp(email: String!): Boolean
+  signInWithOtp(otpCode: String!): AuthPayload
+  signUpOrInWithPassword(email: String!, password: String!): AuthPayload
+  ssoLogin(accessToken: String!, provider: String!): AuthPayload
+  updateUser(address1: String, address2: String, church: String, city: String, denomination: Denomination, email: String, firstName: String, isOnboarded: Boolean, lastName: String, otherDenomination: String, state: String): User
+  updateUserProfile(church: String, denomination: Denomination, firstName: String, lastName: String): User
+}
+
+type OneTimePassword {
+  code: String
+  createdAt: Date
+  email: String
+  expiresAt: Date
+  id: ID
+  used: Boolean
+}
+
+type Query {
+  sermon(sermonId: String!): Sermon
+  sermons(userId: String!): [Sermon!]
+  user: User
+  users: [User!]
+}
+
+type Sermon {
+  author: User
+  id: ID
+  pastoralNotes: String
+  sections: JSON
+  sermonDate: Date
+  title: String
+  verses: JSON
+}
+
+type User {
+  Conversations: [AgentConversation!]
+  Sermon: [Sermon!]
+  address1: String
+  address2: String
+  church: String
+  city: String
+  createdAt: Date
+  denomination: Denomination
+  email: String
+  firstName: String
+  id: ID
+  isOnboarded: Boolean
+  lastName: String
+  otherDenomination: String
+  provider: String
+  role: UserRole
+  state: String
+  updatedAt: Date
+}
+
+enum UserRole {
+  ADMIN
+  MEMBER
+  PASTOR
+}
+
+input UserUpdateInput {
+  address1: String
+  address2: String
+  church: String
+  city: String
+  denomination: Denomination
+  email: String
+  firstName: String
+  isOnboarded: Boolean
+  lastName: String
+  otherDenomination: String
+  state: String
+}

@@ -1,0 +1,11 @@
+services:
+    postgres:
+        image: postgres:latest
+        restart: always
+        container_name: faith_database
+        environment:
+            POSTGRES_USER: postgres
+            POSTGRES_PASSWORD: password
+            POSTGRES_DB: livethroughfaith
+        ports:
+            - '5432:5432'
