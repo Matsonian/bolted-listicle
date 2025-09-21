@@ -6,10 +6,10 @@ services:
       rootDir: backend
       buildCommand: |
           npm ci --include=dev
+          npx prisma migrate deploy
           npx prisma generate
           npm run build
       startCommand: |
-        npx prisma migrate deploy
         npm run start
       healthCheckPath: "/healthz"
       envVars:
@@ -27,12 +27,12 @@ services:
             generateValue: true
           - key: OPENAI_API_KEY
             sync: false
-          - key: RESENT_API_KEY
+          - key: RESEND_API_KEY
             sync: false
 
 databases:
-    - name: livethroughfaith-db
-      databaseName: livethroughfaith
+    - name: listicle-db
+      databaseName: listicle
       plan: free
       region: oregon
       postgresMajorVersion: 17

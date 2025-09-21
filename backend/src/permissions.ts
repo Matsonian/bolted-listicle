@@ -66,18 +66,6 @@ export const permissions = shield(
             users: 
             allow,
             // and(isAuthenticated, userHasRole(UserRole.ADMIN)),
-            sermon: and(
-                isAuthenticated,
-                or(userHasRole(UserRole.ADMIN)),
-                isNotEmpty('sermonId'),
-            ),
-            sermons: and(
-                isAuthenticated,
-                or(
-                    and(isOwner, userHasRole(UserRole.PASTOR)),
-                    userHasRole(UserRole.ADMIN),
-                ),
-            ),
         },
         Mutation: {
             '*': isAuthenticated,
@@ -90,12 +78,6 @@ export const permissions = shield(
             ),
             ssoLogin: allow,
             updateUserProfile: and(isAuthenticated, isOwner),
-            generateSermon: and(
-                isAuthenticated,
-                // userHasRole(UserRole.PASTOR),
-                isNotEmpty('title'),
-                isNotEmpty('prompt'),
-            ),
         },
     },
     {

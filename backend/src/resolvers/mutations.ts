@@ -5,11 +5,11 @@ import {
     signUpOrInWithPasswordHandler,
     ssoLoginHandler,
 } from '../auth';
-import { Prisma, Sermon } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 import { sendOtpEmail, sendWelcomeEmail } from '../email/emailService';
 import * as jwt from 'jsonwebtoken';
 import { prisma, builder } from '../schemabuilder';
-import { AuthPayloadRef, DenominationEnum } from './types';
+import { AuthPayloadRef } from './types';
 import { SermonAgentResponse } from '../agents/sermonResponseSchema';
 
 export const UserMutations = builder.mutationType({
@@ -147,8 +147,6 @@ export const UserMutations = builder.mutationType({
         updateUserProfile: t.prismaField({
             type: 'User',
             args: {
-                church: t.arg.string(),
-                denomination: t.arg({ type: DenominationEnum }),
                 firstName: t.arg.string(),
                 lastName: t.arg.string(),
             },
@@ -165,8 +163,6 @@ export const UserMutations = builder.mutationType({
                     ...query,
                     where: { id: reqUser.id },
                     data: {
-                        church: args.church ?? undefined,
-                        denomination: args.denomination ?? undefined,
                         firstName: args.firstName ?? undefined,
                         lastName: args.lastName ?? undefined,
                     },
@@ -178,8 +174,6 @@ export const UserMutations = builder.mutationType({
         updateUser: t.prismaField({
             type: 'User',
             args: {
-                church: t.arg.string(),
-                denomination: t.arg({ type: DenominationEnum }),
                 firstName: t.arg.string(),
                 lastName: t.arg.string(),
                 address1: t.arg.string(),
@@ -188,7 +182,6 @@ export const UserMutations = builder.mutationType({
                 state: t.arg.string(),
                 email: t.arg.string(),
                 isOnboarded: t.arg.boolean(),
-                otherDenomination: t.arg.string(),
             },
             // updates the contextual user
             resolve: async (query, _parent, args, ctx) => {
@@ -212,82 +205,3 @@ export const UserMutations = builder.mutationType({
     }),
 });
 
-export const SermonMutations = builder.mutationType({
-    fields: (t) => ({
-        generateSermon: t.prismaField({
-            type: 'Sermon',
-            args: {
-                title: t.arg.string({ required: true }),
-                pastorName: t.arg.string({
-                    required: false,
-                    description:
-                        "Optional name of the pastor delivering the sermon, defaults to the requestor's name",
-                }),
-                churchName: t.arg.string({
-                    required: false,
-                    description:
-                        "Optional name of the church where the sermon will be delivered, defaults to the requestor's church",
-                }),
-                denomination: t.arg({
-                    type: DenominationEnum,
-                    required: false,
-                    description:
-                        "Optional denomination of the church, defaults to the requestor's primary denomination",
-                }),
-                prompt: t.arg.string({
-                    required: true,
-                    description: `A prompt describing the desired sermon. This should include the scripture passage(s) to be covered, the intended audience, the occasion (if any), and any specific themes or messages to be conveyed. Be as detailed as possible to help guide the sermon generation. Example: "A 20-minute sermon on faith and perseverance based on James 1:2-4, for a congregation facing challenges."`,
-                }),
-            },
-            resolve: async (query, _parent, args, ctx) => {
-                const reqUser = ctx.user ?? null;
-
-                if (!reqUser) {
-                    throw new Error(
-                        'Reached illegal state: no user in context',
-                    );
-                }
-
-                const user = await prisma.user.findUnique({
-                    where: { id: reqUser.id },
-                });
-
-                if (!user) {
-                    throw new Error(
-                        'Reached illegal state: contextual user not found',
-                    );
-                }
-
-                // todo: Pull in more contextual info to guide sermon generation
-                const sermonAgent = new SermonAgent({
-                    pastorName: `${user.firstName} ${user.lastName}`,
-                    churchName: `${user.church}`,
-                    denomination: `${user.denomination}`,
-                });
-
-                let sermonResponse: SermonAgentResponse;
-
-                try {
-                    sermonResponse = await sermonAgent.requestSermon(
-                        args.prompt,
-                    );
-                } catch (e) {
-                    throw new GraphQLError('Failed to generate sermon');
-                }
-
-                if (!sermonResponse) {
-                    throw new GraphQLError('Failed to generate sermon');
-                }
-
-                const result = prisma.sermon.create({
-                    data: {
-                        authorId: user.id,
-                        ...sermonResponse,
-                    },
-                });
-
-                return result;
-            },
-        }),
-    }),
-});

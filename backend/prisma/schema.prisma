@@ -17,14 +17,11 @@ generator pothos {
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
-  schemas  = ["public", "list"]
 }
 
 enum UserRole {
   USER
   ADMIN
-
-  @@schema("list")
 }
 
 model User {
@@ -43,8 +40,6 @@ model User {
   provider      String?
   role          UserRole            @default(USER)
   Conversations AgentConversation[]
-
-  @@schema("list")
 }
 
 model OneTimePassword {
@@ -54,8 +49,6 @@ model OneTimePassword {
   expiresAt DateTime
   used      Boolean  @default(false)
   createdAt DateTime @default(now())
-
-  @@schema("list")
 }
 
 // AgentConversation is a recorded conversation with agent AI and the user
@@ -73,9 +66,6 @@ model AgentConversation {
 
   user                     User                       @relation(fields: [userId], references: [id])
   AgentConversationMessage AgentConversationMessage[]
-  // Sermon                   Sermon[]
-
-  @@schema("list")
 }
 
 enum MessageRole {
@@ -85,8 +75,6 @@ enum MessageRole {
   USER
   // messages received from the agent
   AGENT
-
-  @@schema("list")
 }
 
 model AgentConversationMessage {
@@ -107,5 +95,4 @@ model AgentConversationMessage {
   conversation AgentConversation @relation(fields: [conversationId], references: [id])
 
   @@index([conversationId, id(sort: Desc)])
-  @@schema("list")
 }

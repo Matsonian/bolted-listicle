@@ -1,4 +1,8 @@
 import * as dotenv from 'dotenv';
+
+// Load environment variables FIRST before any other imports
+dotenv.config();
+
 import { ApolloServer } from '@apollo/server';
 import {
     expressMiddleware,
@@ -15,8 +19,6 @@ import http from 'http';
 import { prisma } from './schemabuilder';
 import { schema } from './schema';
 import { healthz } from './routes/healthz';
-
-dotenv.config();
 
 const port = process.env.PORT || 4000;
 const startServer = async () => {

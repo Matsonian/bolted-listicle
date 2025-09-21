@@ -1,4 +1,4 @@
-import { UserRole, Denomination, MessageRole, User } from '@prisma/client';
+import { UserRole, MessageRole } from '@prisma/client';
 import { builder } from '../schemabuilder';
 
 export const UserRoleEnum = builder.enumType(UserRole, {
