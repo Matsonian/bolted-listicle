@@ -2,7 +2,7 @@ import * as jwt from 'jsonwebtoken';
 import { PrismaClient, User } from '@prisma/client';
 import { GraphQLError } from 'graphql';
 import * as argon2 from 'argon2';
-import { sendWelcomeEmail } from './email/emailService';
+// import { sendWelcomeEmail } from './email/emailService';
 
 export const APP_SECRET = process.env.APP_SECRET;
 
@@ -97,7 +97,7 @@ export async function ssoLoginHandler({
                 provider,
             },
         });
-        await sendWelcomeEmail(userProfile.email, userProfile.name);
+        // await sendWelcomeEmail(userProfile.email, userProfile.name);
     }
 
     const token = jwt.sign({ userId: user.id }, APP_SECRET!);
@@ -144,7 +144,7 @@ export async function signUpOrInWithPasswordHandler({
                 provider: 'emailPassword',
             },
         });
-        await sendWelcomeEmail(email);
+        // await sendWelcomeEmail(email);
     }
 
     const token = jwt.sign({ userId: user.id }, APP_SECRET!);

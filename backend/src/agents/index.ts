@@ -1,1 +1,1 @@
-export * from './sermonAgent';
+export * from './';

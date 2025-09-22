@@ -1,16 +1,14 @@
 import { GraphQLError } from 'graphql';
-import { SermonAgent } from '../agents';
 import {
     APP_SECRET,
     signUpOrInWithPasswordHandler,
     ssoLoginHandler,
 } from '../auth';
 import { Prisma } from '@prisma/client';
-import { sendOtpEmail, sendWelcomeEmail } from '../email/emailService';
+// import { sendOtpEmail, sendWelcomeEmail } from '../email/emailService';
 import * as jwt from 'jsonwebtoken';
 import { prisma, builder } from '../schemabuilder';
 import { AuthPayloadRef } from './types';
-import { SermonAgentResponse } from '../agents/sermonResponseSchema';
 
 export const UserMutations = builder.mutationType({
     fields: (t) => ({
@@ -46,7 +44,7 @@ export const UserMutations = builder.mutationType({
 
                 // Send the OTP via the email service
                 try {
-                    await sendOtpEmail(args.email, otpCode);
+                    // await sendOtpEmail(args.email, otpCode);
                     return true;
                 } catch (error) {
                     console.error('Failed to send OTP email:', error);
@@ -104,7 +102,7 @@ export const UserMutations = builder.mutationType({
                             provider: 'otp',
                         },
                     });
-                    await sendWelcomeEmail(otpRecord.email);
+                    // await sendWelcomeEmail(otpRecord.email);
                 }
 
                 // Generate JWT token
