@@ -1,6 +1,6 @@
 services:
     - type: web
-      plan: starter
+      plan: free
       name: listicle-api
       runtime: node
       rootDir: backend
@@ -33,6 +33,6 @@ services:
 databases:
     - name: listicle-db
       databaseName: listicle
-      plan: free
+      plan: starter
       region: oregon
       postgresMajorVersion: 17
