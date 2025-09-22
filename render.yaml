@@ -33,6 +33,6 @@ services:
 databases:
     - name: listicle-db
       databaseName: listicle
-      plan: starter
+      plan: Basic-256mb
       region: oregon
       postgresMajorVersion: 17
