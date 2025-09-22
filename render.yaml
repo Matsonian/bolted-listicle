@@ -1,6 +1,6 @@
 services:
     - type: web
-      plan: starter
+      plan: free
       name: listicle-api
       runtime: node
       rootDir: backend
