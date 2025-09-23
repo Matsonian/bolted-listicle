@@ -1,9 +1,39 @@
 import React, { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { useAuth } from '../contexts/AuthContext'
-import { AlertCircle, Eye, EyeOff } from 'lucide-react'
-import { supabase } from '../lib/supabase'
 
+import { AlertCircle, Eye, EyeOff } from 'lucide-react'
+import { useMutation, gql } from '@apollo/client'
+
+// GraphQL mutation for user signup
+const SIGNUP_MUTATION = gql`
+  mutation SignUpOrInWithPassword($email: String!, $password: String!) {
+    signUpOrInWithPassword(email: $email, password: $password) {
+      token
+      userId
+    }
+  }
+`
+
+// GraphQL mutation for updating user profile
+const UPDATE_USER_PROFILE_MUTATION = gql`
+  mutation UpdateUser(
+    $firstName: String
+    $lastName: String
+    $isOnboarded: Boolean
+  ) {
+    updateUser(
+      firstName: $firstName
+      lastName: $lastName
+      isOnboarded: $isOnboarded
+    ) {
+      id
+      firstName
+      lastName
+      email
+      isOnboarded
+    }
+  }
+`
 
 export default function SignupPage() {
   const [formData, setFormData] = useState({
@@ -22,8 +52,11 @@ export default function SignupPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
-  const { signUp } = useAuth()
   const navigate = useNavigate()
+  
+  // GraphQL mutations
+  const [signUpMutation] = useMutation(SIGNUP_MUTATION)
+  const [updateUserMutation] = useMutation(UPDATE_USER_PROFILE_MUTATION)
 
   const validatePassword = (password: string) => {
     const minLength = password.length >= 8
@@ -50,86 +83,82 @@ export default function SignupPage() {
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault()
-  setError('')
-  setLoading(true)
+    e.preventDefault()
+    setError('')
+    setLoading(true)
 
-  // Validate password requirements
-  const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/
-  if (!passwordRegex.test(formData.password)) {
-    setError('Password must be at least 8 characters with uppercase, lowercase, number, and special character.')
-    setLoading(false)
-    return
-  }
+    // Validate password requirements
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/
+    if (!passwordRegex.test(formData.password)) {
+      setError('Password must be at least 8 characters with uppercase, lowercase, number, and special character.')
+      setLoading(false)
+      return
+    }
 
-  if (formData.password !== formData.confirmPassword) {
-    setError('Passwords do not match.')
-    setLoading(false)
-    return
-  }
+    if (formData.password !== formData.confirmPassword) {
+      setError('Passwords do not match.')
+      setLoading(false)
+      return
+    }
 
-  try {
-    // Sign up user with Supabase Auth
-    const { data: authData, error: authError } = await supabase.auth.signUp({
-      email: formData.email,
-      password: formData.password,
-      options: {
-        emailRedirectTo: `${window.location.origin}/welcome`
-      }
-    })
-
-    if (authError) throw authError
-
-    if (authData.user) {
-      // Create user profile in users table
-      const { error: profileError } = await supabase
-        .from('users')
-        .insert({
-          id: authData.user.id,
+    try {
+      // Step 1: Create user account with GraphQL
+      const { data: signupData, errors: signupErrors } = await signUpMutation({
+        variables: {
           email: formData.email,
-          first_name: formData.firstName,
-          last_name: formData.lastName,
-          business_name: formData.businessName,
-          business_description: formData.businessDescription,
-          years_in_business: parseInt(formData.yearsInBusiness),
-          website: formData.website,
-          tier: 'basic',
-          email_confirmed: false,
-          daily_searches_used: 0,
-          last_search_date: null
-        })
+          password: formData.password
+        }
+      })
 
-      if (profileError) throw profileError
+      if (signupErrors || !signupData?.signUpOrInWithPassword?.token) {
+        const error = signupErrors ? signupErrors[0] : new Error('Account creation failed.')
+        throw error
+      }
 
-      // Navigate to email confirmation page
-      navigate('/confirm-email')
+      // Step 2: Store the token and update user profile
+      const { token } = signupData.signUpOrInWithPassword
+      localStorage.setItem('authToken', token)
+
+      // Step 3: Update user profile with additional information
+      const { errors: updateErrors } = await updateUserMutation({
+        variables: {
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          isOnboarded: false // User still needs to complete onboarding
+        }
+      })
+
+      if (updateErrors) {
+        console.error('Profile update errors:', updateErrors)
+        // Don't fail the signup for profile update errors, just log them
+      }
+
+      // Step 4: Navigate to confirmation or welcome page
+      // Since we don't have email confirmation in GraphQL yet, go directly to welcome
+      navigate('/welcome')
+
+    } catch (error: unknown) {
+      console.error('Signup error:', error)
+      
+      // Handle specific error types with user-friendly messages
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred'
+      if (errorMessage.includes('duplicate') || 
+          errorMessage.includes('already exists') ||
+          errorMessage.includes('User already registered')) {
+        setError('An account with this email already exists. Please try logging in instead.')
+      } else if (errorMessage.includes('Invalid email')) {
+        setError('Please enter a valid email address.')
+      } else if (errorMessage.includes('Password')) {
+        setError('Password must meet the requirements shown below.')
+      } else if (errorMessage.includes('rate limit')) {
+        setError('Too many signup attempts. Please wait a few minutes and try again.')
+      } else {
+        setError(errorMessage || 'Failed to create account. Please try again.')
+      }
+    } finally {
+      setLoading(false)
     }
-  } catch (error: any) {
-    console.error('Signup error:', error)
-    
-    // Handle specific error types with user-friendly messages
-    if (error.message?.includes('duplicate key value') || 
-        error.message?.includes('users_email_key') ||
-        error.message?.includes('User already registered') ||
-        error.message?.includes('already been registered')) {
-      setError('An account with this email already exists. Please try logging in instead.')
-    } else if (error.message?.includes('row-level security')) {
-      setError('There was a security issue creating your account. Please contact support.')
-    } else if (error.message?.includes('Invalid email')) {
-      setError('Please enter a valid email address.')
-    } else if (error.message?.includes('Password should be at least')) {
-      setError('Password must be at least 6 characters long.')
-    } else if (error.message?.includes('Unable to validate email')) {
-      setError('Please enter a valid email address.')
-    } else if (error.message?.includes('Email rate limit')) {
-      setError('Too many signup attempts. Please wait a few minutes and try again.')
-    } else {
-      setError(error.message || 'Failed to create account. Please try again.')
-    }
-  } finally {
-    setLoading(false)
   }
-}
 
   const passwordValidation = validatePassword(formData.password)
 
