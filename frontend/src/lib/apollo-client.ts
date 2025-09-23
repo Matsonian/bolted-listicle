@@ -8,8 +8,9 @@ import {
   HttpLink,
 } from "@apollo/client"
 import { onError, ErrorResponse } from "@apollo/client/link/error"
+import { setContext } from '@apollo/client/link/context'
 
-let apolloClient: ApolloClient<NormalizedCacheObject> | null
+let apolloClient: ApolloClient<NormalizedCacheObject> | null = null
 
 // --- Links ---
 
@@ -20,6 +21,19 @@ const httpLink = new HttpLink({
   uri,
 })
 
+// Auth link to add authorization headers
+const authLink = setContext((_, { headers }) => {
+  // Get the authentication token from local storage if it exists
+  const token = localStorage.getItem('authToken')
+  
+  // Return the headers to the context so httpLink can read them
+  return {
+    headers: {
+      ...headers,
+      authorization: token ? `Bearer ${token}` : "",
+    }
+  }
+})
 
 // Error link for handling GraphQL and network errors
 const errorLink = onError(({ graphQLErrors, networkError }: ErrorResponse) => {
@@ -28,11 +42,26 @@ const errorLink = onError(({ graphQLErrors, networkError }: ErrorResponse) => {
       console.error(
         `[GraphQL error]: Message: ${message}, Location: ${locations}, Path: ${path}`,
       )
+      
+      // Handle authentication errors
+      if (message.includes('Unauthorized') || message.includes('Authentication')) {
+        // Clear invalid token
+        localStorage.removeItem('authToken')
+        // Optionally redirect to login
+        // window.location.href = '/login'
+      }
     })
   }
 
   if (networkError) {
     console.error(`[Network error]: ${networkError}`)
+    
+    // Handle 401 Unauthorized responses
+    if ('statusCode' in networkError && networkError.statusCode === 401) {
+      localStorage.removeItem('authToken')
+      // Optionally redirect to login
+      // window.location.href = '/login'
+    }
   }
 })
 
@@ -88,7 +117,12 @@ const cache = new InMemoryCache({
 function createApolloClient() {
   return new ApolloClient({
     ssrMode: typeof window === "undefined",
-    link: from([createOmitTypenameLink(), errorLink, httpLink]),
+    link: from([
+      createOmitTypenameLink(), 
+      errorLink, 
+      authLink, 
+      httpLink
+    ]),
     cache,
     defaultOptions: {
       watchQuery: {
@@ -134,3 +168,6 @@ export const clearCache = () => {
   const client = initializeApollo()
   client.cache.reset()
 }
+
+// Export a function to get the client instance for use in AuthContext
+export const getApolloClient = () => initializeApollo()
