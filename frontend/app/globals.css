@@ -1,0 +1,9 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+  .card {
+    @apply bg-white rounded-xl shadow-lg border border-gray-100 hover:shadow-xl transition-shadow duration-200;
+  }
+}
