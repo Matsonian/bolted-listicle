@@ -129,17 +129,12 @@ export default function Navigation() {
               </div>
             ) : (
               <div className="flex items-center space-x-4">
+                
                 <Link 
                   to="/login" 
-                  className="text-gray-700 hover:text-blue-600 font-medium transition-colors"
-                >
-                  Login
-                </Link>
-                <Link 
-                  to="/signup" 
                   className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md transition-colors"
                 >
-                  Sign Up
+                  Sign Up / Login
                 </Link>
               </div>
             )}

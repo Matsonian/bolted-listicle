@@ -6,7 +6,6 @@ import Footer from './components/Footer'
 import HomePage from './pages/HomePage'
 import SearchPage from './pages/SearchPage'
 import BlogPage from './pages/BlogPage'
-import SignupPage from './pages/SignupPage'
 import LoginPage from './pages/LoginPage'
 import ConfirmEmailPage from './pages/ConfirmEmailPage'
 import WelcomePage from './pages/WelcomePage'
@@ -31,7 +30,6 @@ function App() {
               <Route path="/" element={<HomePage />} />
               <Route path="/search" element={<SearchPage />} />
               <Route path="/blog" element={<BlogPage />} />
-              <Route path="/signup" element={<SignupPage />} />
               <Route path="/login" element={<LoginPage />} />
               <Route path="/confirm-email" element={<ConfirmEmailPage />} />
               <Route path="/welcome" element={<WelcomePage />} />
