@@ -35,8 +35,6 @@ export const authOptions: NextAuthOptions = {
                   signInWithOtp(otpCode: $otpCode) {
                     token
                     user {
-                      church
-                      denomination
                       firstName
                       lastName
                       id
@@ -60,12 +58,10 @@ export const authOptions: NextAuthOptions = {
                   signUpOrInWithPassword(email: $email, password: $password) {
                     token
                     user {
-                      church
                       email
                       firstName
                       id
                       lastName
-                      denomination
                     }
                   }
                 }
@@ -89,11 +85,9 @@ export const authOptions: NextAuthOptions = {
           if (loginData?.token && loginData?.user) {
             return {
               id: loginData.user.id,
-              church: loginData.user.church,
               email: loginData.user.email,
               firstName: loginData.user.firstName,
               lastName: loginData.user.lastName,
-              denomination: loginData.user.denomination,
               accessToken: loginData.token,
             }
           }
@@ -119,8 +113,6 @@ export const authOptions: NextAuthOptions = {
                   ssoLogin(accessToken: $accessToken, provider: $provider) {
                     token
                     user {
-                      church
-                      denomination
                       email
                       id
                       lastName
@@ -141,8 +133,6 @@ export const authOptions: NextAuthOptions = {
           if (ssoData?.token && ssoData?.user) {
             token.accessToken = ssoData.token
             token.id = ssoData.user.id
-            token.church = ssoData.user.church
-            token.denomination = ssoData.user.denomination
           }
         } catch (error) {
           console.error("SSO login error:", error)
@@ -151,8 +141,6 @@ export const authOptions: NextAuthOptions = {
         // For credentials login
         token.accessToken = (user as any).accessToken
         token.id = user.id
-        token.church = (user as any).church
-        token.denomination = (user as any).denomination
       }
 
       return token
@@ -161,8 +149,6 @@ export const authOptions: NextAuthOptions = {
       ;(session as any).accessToken = token.accessToken
       if (session.user) {
         ;(session.user as any).id = token.id as string
-        ;(session.user as any).church = token.church
-        ;(session.user as any).denomination = token.denomination
       }
       return session
     },

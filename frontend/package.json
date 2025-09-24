@@ -7,23 +7,27 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "codegen": "graphql-codegen --config codegen.yml",
+    "codegen:watch": "graphql-codegen --config codegen.yml --watch"
   },
   "dependencies": {
     "@apollo/client": "^3.14.0",
     "@types/node": "^24.3.1",
+    "graphql": "^16.8.1",
+    "graphql-tag": "^2.12.6",
     "lucide-react": "^0.344.0",
+    "next-auth": "^4.24.11",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "react-router-dom": "^7.8.2",
-    "graphql": "^16.8.1"
+    "react-router-dom": "^7.8.2"
   },
   "devDependencies": {
+    "@eslint/js": "^9.9.1",
     "@graphql-codegen/cli": "^5.0.7",
     "@graphql-codegen/typescript": "^4.1.6",
     "@graphql-codegen/typescript-operations": "^4.6.1",
     "@graphql-codegen/typescript-react-apollo": "^4.3.3",
-    "@eslint/js": "^9.9.1",
     "@types/react": "^18.3.5",
     "@types/react-dom": "^18.3.0",
     "@vitejs/plugin-react": "^4.3.1",
