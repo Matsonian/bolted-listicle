@@ -32,6 +32,26 @@ export default function Navigation() {
               Home
             </Link>
             <Link
+              href="/search"
+              className={`px-3 py-2 rounded-md text-sm font-medium ${
+                pathname === '/search'
+                  ? 'text-blue-600 bg-blue-50'
+                  : 'text-gray-700 hover:text-blue-600 hover:bg-gray-50'
+              }`}
+            >
+              Search
+            </Link>
+            <Link
+              href="/blog"
+              className={`px-3 py-2 rounded-md text-sm font-medium ${
+                pathname === '/blog'
+                  ? 'text-blue-600 bg-blue-50'
+                  : 'text-gray-700 hover:text-blue-600 hover:bg-gray-50'
+              }`}
+            >
+              Blog
+            </Link>
+            <Link
               href="/login"
               className={`px-3 py-2 rounded-md text-sm font-medium ${
                 pathname === '/login'
@@ -39,7 +59,7 @@ export default function Navigation() {
                   : 'text-gray-700 hover:text-blue-600 hover:bg-gray-50'
               }`}
             >
-              Sign In
+              Sign In/Login
             </Link>
           </div>
         </div>

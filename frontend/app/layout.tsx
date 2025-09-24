@@ -3,6 +3,7 @@ import { Inter } from 'next/font/google'
 import './globals.css'
 import { ApolloProvider } from '../lib/apollo-provider'
 import Navigation from '../components/Navigation'
+import Footer from '../components/Footer'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -18,12 +19,13 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={inter.className}>
+      <body className={`${inter.className} min-h-screen flex flex-col`}>
         <ApolloProvider>
           <Navigation />
-          <main>
+          <main className="flex-grow">
             {children}
           </main>
+          <Footer />
         </ApolloProvider>
       </body>
     </html>
