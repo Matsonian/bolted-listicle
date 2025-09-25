@@ -12,7 +12,7 @@ dependencies:
     specifier: ^24.3.1
     version: 24.3.1
   graphql:
-    specifier: ^16.8.1
+    specifier: ^16.11.0
     version: 16.11.0
   graphql-tag:
     specifier: ^2.12.6
@@ -68,7 +68,7 @@ devDependencies:
     specifier: ^9.9.1
     version: 9.9.1
   eslint-plugin-react-hooks:
-    specifier: ^5.1.0-rc.0
+    specifier: 5.1.0-rc.0
     version: 5.1.0-rc.0(eslint@9.9.1)
   eslint-plugin-react-refresh:
     specifier: ^0.4.11
@@ -3164,8 +3164,8 @@ packages:
     engines: {node: '>=8'}
     dev: true
 
-  /detect-libc@2.1.0:
-    resolution: {integrity: sha512-vEtk+OcP7VBRtQZ1EJ3bdgzSfBjgnEalLTp5zjJrS+2Z1w2KZly4SBdac/WDU3hhsNAZ9E8SC96ME4Ey8MZ7cg==}
+  /detect-libc@2.1.1:
+    resolution: {integrity: sha512-ecqj/sy1jcK1uWrwpR67UhYrIFQ+5WlGxth34WquCbamhFA6hkkwiu37o6J5xCHdo1oixJRfVRw+ywV+Hq/0Aw==}
     engines: {node: '>=8'}
     requiresBuild: true
     dev: false
@@ -4956,7 +4956,7 @@ packages:
     requiresBuild: true
     dependencies:
       '@img/colour': 1.0.0
-      detect-libc: 2.1.0
+      detect-libc: 2.1.1
       semver: 7.7.2
     optionalDependencies:
       '@img/sharp-darwin-arm64': 0.34.4

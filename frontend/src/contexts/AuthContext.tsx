@@ -24,6 +24,30 @@ const ME_QUERY = gql`
   }
 `;
 
+const SEND_OTP_MUTATION = gql`
+  mutation SendOtp($email: String!) {
+    sendOtp(email: $email)
+  }
+`;
+
+const SIGN_IN_WITH_OTP_MUTATION = gql`
+  mutation SignInWithOtp($otpCode: String!) {
+    signInWithOtp(otpCode: $otpCode) {
+      token
+      userId
+    }
+  }
+`;
+
+const SSO_LOGIN_MUTATION = gql`
+  mutation SsoLogin($provider: String!, $accessToken: String!) {
+    ssoLogin(provider: $provider, accessToken: $accessToken) {
+      token
+      userId
+    }
+  }
+`;
+
 // User type that matches the backend User model
 interface User {
   id: string;
@@ -37,6 +61,9 @@ interface AuthContextType {
   user: User | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<{ error?: Error }>;
+  signInWithOtp: (otpCode: string) => Promise<{ error?: Error }>;
+  sendOtp: (email: string) => Promise<{ error?: Error }>;
+  ssoLogin: (provider: string, accessToken: string) => Promise<{ error?: Error }>;
   logout: () => Promise<void>;
 }
 
@@ -46,8 +73,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Use Apollo Client's mutation hook for signing in
+  // Use Apollo Client's mutation hooks
   const [signInMutation] = useMutation(SIGN_IN_MUTATION);
+  const [sendOtpMutation] = useMutation(SEND_OTP_MUTATION);
+  const [signInWithOtpMutation] = useMutation(SIGN_IN_WITH_OTP_MUTATION);
+  const [ssoLoginMutation] = useMutation(SSO_LOGIN_MUTATION);
 
   // Function to fetch the current user and update state
   const fetchUser = useCallback(async () => {
@@ -91,19 +121,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signIn = async (email: string, password: string) => {
     setLoading(true);
     try {
-      const { data, errors } = await signInMutation({ 
-        variables: { email, password } 
+      const { data, errors } = await signInMutation({
+        variables: { email, password }
       });
 
       if (errors || !data?.signUpOrInWithPassword?.token) {
-        const error = errors ? errors[0] : new Error('Authentication failed.');
+        const error = errors ? new Error(errors[0].message) : new Error('Authentication failed.');
         console.error('Sign in error:', error.message);
         return { error };
       }
 
       const { token } = data.signUpOrInWithPassword;
       localStorage.setItem('authToken', token);
-      
+
       // Fetch the user data after successful login
       await fetchUser();
 
@@ -116,18 +146,92 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const sendOtp = async (email: string) => {
+    try {
+      const { data, errors } = await sendOtpMutation({
+        variables: { email }
+      });
+
+      if (errors || !data?.sendOtp) {
+        const error = errors ? new Error(errors[0].message) : new Error('Failed to send OTP.');
+        return { error };
+      }
+
+      return {};
+    } catch (error) {
+      console.error('Send OTP exception:', error);
+      return { error };
+    }
+  };
+
+  const signInWithOtp = async (otpCode: string) => {
+    setLoading(true);
+    try {
+      const { data, errors } = await signInWithOtpMutation({
+        variables: { otpCode }
+      });
+
+      if (errors || !data?.signInWithOtp?.token) {
+        const error = errors ? new Error(errors[0].message) : new Error('Invalid OTP.');
+        console.error('Sign in with OTP error:', error.message);
+        return { error };
+      }
+
+      const { token } = data.signInWithOtp;
+      localStorage.setItem('authToken', token);
+
+      // Fetch the user data after successful login
+      await fetchUser();
+
+      setLoading(false);
+      return {};
+    } catch (error) {
+      console.error('Sign in with OTP exception:', error);
+      setLoading(false);
+      return { error };
+    }
+  };
+
+  const ssoLogin = async (provider: string, accessToken: string) => {
+    setLoading(true);
+    try {
+      const { data, errors } = await ssoLoginMutation({
+        variables: { provider, accessToken }
+      });
+
+      if (errors || !data?.ssoLogin?.token) {
+        const error = errors ? new Error(errors[0].message) : new Error('SSO login failed.');
+        console.error('SSO login error:', error.message);
+        return { error };
+      }
+
+      const { token } = data.ssoLogin;
+      localStorage.setItem('authToken', token);
+
+      // Fetch the user data after successful login
+      await fetchUser();
+
+      setLoading(false);
+      return {};
+    } catch (error) {
+      console.error('SSO login exception:', error);
+      setLoading(false);
+      return { error };
+    }
+  };
+
   const logout = async () => {
     setUser(null);
     localStorage.removeItem('authToken');
-    
+
     // Reset Apollo Client store to clear cached data
     await getApolloClient().resetStore();
-    
+
     console.log('User logged out successfully.');
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, signIn, logout }}>
+    <AuthContext.Provider value={{ user, loading, signIn, signInWithOtp, sendOtp, ssoLogin, logout }}>
       {children}
     </AuthContext.Provider>
   );

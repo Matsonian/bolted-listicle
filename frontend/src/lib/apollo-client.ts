@@ -14,8 +14,8 @@ let apolloClient: ApolloClient<NormalizedCacheObject> | null = null
 
 // --- Links ---
 
-// All GraphQL requests will be proxied through this local route
-const uri = "/api/graphql"
+// All GraphQL requests go to the backend
+const uri = "http://localhost:4000/graphql"
 
 const httpLink = new HttpLink({
   uri,
@@ -25,7 +25,7 @@ const httpLink = new HttpLink({
 const authLink = setContext((_, { headers }) => {
   // Get the authentication token from local storage if it exists
   const token = localStorage.getItem('authToken')
-  
+
   // Return the headers to the context so httpLink can read them
   return {
     headers: {
