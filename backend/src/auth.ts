@@ -1,7 +1,7 @@
 import * as jwt from 'jsonwebtoken';
 import { PrismaClient, User } from '@prisma/client';
 import { GraphQLError } from 'graphql';
-import * as argon2 from 'argon2';
+import * as bcrypt from 'bcrypt';
 // import { sendWelcomeEmail } from './email/emailService';
 
 export const APP_SECRET = process.env.APP_SECRET;
@@ -121,6 +121,8 @@ export async function signUpOrInWithPasswordHandler({
         where: { email },
     });
 
+    console.log("uesr: ", user)
+
     if (user) {
         if (!user.password) {
             // User exists but created via SSO, so we can't compare passwords.
@@ -131,12 +133,12 @@ export async function signUpOrInWithPasswordHandler({
             );
         }
 
-        const passwordMatch = await argon2.verify(password!, user.password);
+        const passwordMatch = await bcrypt.compare(password!, user.password);
         if (!passwordMatch) {
             throw new GraphQLError('Invalid password.');
         }
     } else {
-        const hashedPassword = await argon2.hash(password!);
+        const hashedPassword = await bcrypt.hash(password!, 10);
         user = await prisma.user.create({
             data: {
                 email,

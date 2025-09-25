@@ -44,3 +44,22 @@ mutation SignInWithOtp($otpCode: String!) {
   }
 }
 `;
+
+
+
+
+export const SEND_OTP_MUTATION = gql`
+  mutation SendOtp($email: String!) {
+    sendOtp(email: $email)
+  }
+`;
+
+
+export const SSO_LOGIN_MUTATION = gql`
+  mutation SsoLogin($provider: String!, $accessToken: String!) {
+    ssoLogin(provider: $provider, accessToken: $accessToken) {
+      token
+      userId
+    }
+  }
+`;

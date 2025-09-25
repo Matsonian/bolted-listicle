@@ -199,6 +199,14 @@ export type SignInWithOtpMutationVariables = Exact<{
 
 export type SignInWithOtpMutation = { __typename?: 'Mutation', signInWithOtp?: { __typename?: 'AuthPayload', token?: string | null, userId?: string | null, user?: { __typename?: 'User', id?: string | null, email?: string | null } | null } | null };
 
+export type SsoLoginMutationVariables = Exact<{
+  provider: Scalars['String']['input'];
+  accessToken: Scalars['String']['input'];
+}>;
+
+
+export type SsoLoginMutation = { __typename?: 'Mutation', ssoLogin?: { __typename?: 'AuthPayload', token?: string | null, userId?: string | null } | null };
+
 export type UserQueryVariables = Exact<{ [key: string]: never; }>;
 
 
@@ -366,6 +374,41 @@ export function useSignInWithOtpMutation(baseOptions?: Apollo.MutationHookOption
 export type SignInWithOtpMutationHookResult = ReturnType<typeof useSignInWithOtpMutation>;
 export type SignInWithOtpMutationResult = Apollo.MutationResult<SignInWithOtpMutation>;
 export type SignInWithOtpMutationOptions = Apollo.BaseMutationOptions<SignInWithOtpMutation, SignInWithOtpMutationVariables>;
+export const SsoLoginDocument = gql`
+    mutation SsoLogin($provider: String!, $accessToken: String!) {
+  ssoLogin(provider: $provider, accessToken: $accessToken) {
+    token
+    userId
+  }
+}
+    `;
+export type SsoLoginMutationFn = Apollo.MutationFunction<SsoLoginMutation, SsoLoginMutationVariables>;
+
+/**
+ * __useSsoLoginMutation__
+ *
+ * To run a mutation, you first call `useSsoLoginMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useSsoLoginMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [ssoLoginMutation, { data, loading, error }] = useSsoLoginMutation({
+ *   variables: {
+ *      provider: // value for 'provider'
+ *      accessToken: // value for 'accessToken'
+ *   },
+ * });
+ */
+export function useSsoLoginMutation(baseOptions?: Apollo.MutationHookOptions<SsoLoginMutation, SsoLoginMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<SsoLoginMutation, SsoLoginMutationVariables>(SsoLoginDocument, options);
+      }
+export type SsoLoginMutationHookResult = ReturnType<typeof useSsoLoginMutation>;
+export type SsoLoginMutationResult = Apollo.MutationResult<SsoLoginMutation>;
+export type SsoLoginMutationOptions = Apollo.BaseMutationOptions<SsoLoginMutation, SsoLoginMutationVariables>;
 export const UserDocument = gql`
     query User {
   user {
