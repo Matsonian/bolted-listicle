@@ -1,61 +1,13 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
-import { useMutation, gql } from '@apollo/client';
 import { getApolloClient } from '../lib/apollo-client';
-
-// Define GraphQL queries and mutations that match the backend
-const SIGN_IN_MUTATION = gql`
-  mutation SignUpOrInWithPassword($email: String!, $password: String!) {
-    signUpOrInWithPassword(email: $email, password: $password) {
-      token
-      userId
-    }
-  }
-`;
-
-const ME_QUERY = gql`
-  query User {
-    user {
-      id
-      email
-      firstName
-      lastName
-      isOnboarded
-    }
-  }
-`;
-
-const SEND_OTP_MUTATION = gql`
-  mutation SendOtp($email: String!) {
-    sendOtp(email: $email)
-  }
-`;
-
-const SIGN_IN_WITH_OTP_MUTATION = gql`
-  mutation SignInWithOtp($otpCode: String!) {
-    signInWithOtp(otpCode: $otpCode) {
-      token
-      userId
-    }
-  }
-`;
-
-const SSO_LOGIN_MUTATION = gql`
-  mutation SsoLogin($provider: String!, $accessToken: String!) {
-    ssoLogin(provider: $provider, accessToken: $accessToken) {
-      token
-      userId
-    }
-  }
-`;
-
-// User type that matches the backend User model
-interface User {
-  id: string;
-  email?: string;
-  firstName?: string;
-  lastName?: string;
-  isOnboarded?: boolean;
-}
+import {
+  useSignUpOrInWithPasswordMutation,
+  useSendOtpMutation,
+  useSignInWithOtpMutation,
+  useSsoLoginMutation,
+  User,
+  UserDocument,
+} from '../../generated/graphql';
 
 interface AuthContextType {
   user: User | null;
@@ -73,11 +25,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Use Apollo Client's mutation hooks
-  const [signInMutation] = useMutation(SIGN_IN_MUTATION);
-  const [sendOtpMutation] = useMutation(SEND_OTP_MUTATION);
-  const [signInWithOtpMutation] = useMutation(SIGN_IN_WITH_OTP_MUTATION);
-  const [ssoLoginMutation] = useMutation(SSO_LOGIN_MUTATION);
+  // Use generated mutation hooks
+  const [signInMutation] = useSignUpOrInWithPasswordMutation();
+  const [sendOtpMutation] = useSendOtpMutation();
+  const [signInWithOtpMutation] = useSignInWithOtpMutation();
+  const [ssoLoginMutation] = useSsoLoginMutation();
 
   // Function to fetch the current user and update state
   const fetchUser = useCallback(async () => {
@@ -91,7 +43,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       // Use the Apollo Client to make the query
       const { data, error } = await getApolloClient().query({
-        query: ME_QUERY,
+        query: UserDocument,
         fetchPolicy: 'network-only', // Always fetch fresh data
       });
 
@@ -142,7 +94,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch (error) {
       console.error('Sign in exception:', error);
       setLoading(false);
-      return { error };
+      return { error: error as Error };
     }
   };
 
@@ -160,7 +112,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return {};
     } catch (error) {
       console.error('Send OTP exception:', error);
-      return { error };
+      return { error: error as Error };
     }
   };
 
@@ -188,7 +140,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch (error) {
       console.error('Sign in with OTP exception:', error);
       setLoading(false);
-      return { error };
+      return { error: error as Error };
     }
   };
 
@@ -216,7 +168,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch (error) {
       console.error('SSO login exception:', error);
       setLoading(false);
-      return { error };
+      return { error: error as Error };
     }
   };
 
