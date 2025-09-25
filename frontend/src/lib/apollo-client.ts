@@ -15,7 +15,7 @@ let apolloClient: ApolloClient<NormalizedCacheObject> | null = null
 // --- Links ---
 
 // All GraphQL requests go to the backend
-const uri = "http://localhost:4000/graphql"
+const uri = "https://listicle-api.onrender.com/graphql"
 
 const httpLink = new HttpLink({
   uri,
