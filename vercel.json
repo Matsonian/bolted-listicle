@@ -5,7 +5,7 @@
       "destination": "https://listicle-api.onrender.com/$1"
     },
     {
-      "source": "/(.* )",
+      "source": "/(.*)",
       "destination": "/index.html"
     }
   ]
