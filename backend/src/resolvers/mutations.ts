@@ -180,6 +180,12 @@ export const UserMutations = builder.mutationType({
                 state: t.arg.string(),
                 email: t.arg.string(),
                 isOnboarded: t.arg.boolean(),
+                businessName: t.arg.string(),
+                businessDescription: t.arg.string(),
+                yearOfFounding: t.arg.int(),
+                website: t.arg.string(),
+                tier: t.arg.string(),
+                dailySearchesUsed: t.arg.int()
             },
             // updates the contextual user
             resolve: async (query, _parent, args, ctx) => {

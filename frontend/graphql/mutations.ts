@@ -2,13 +2,23 @@ import { gql } from "graphql-tag";
 
 
 export const UPDATE_USER = gql`
-mutation UpdateUser($isOnboarded: Boolean, $firstName: String, $lastName: String, $address1: String, $address2: String, $city: String, $state: String, $email: String) {
-  updateUser(isOnboarded: $isOnboarded, firstName: $firstName, lastName: $lastName, address1: $address1, address2: $address2, city: $city, state: $state, email: $email) {
+mutation UpdateUser($address1: String, $address2: String, $city: String, $email: String, $firstName: String, $businessDescription: String, $businessName: String, $dailySearchesUsed: Int, $isOnboarded: Boolean, $lastName: String, $state: String, $tier: String, $website: String, $yearOfFounding: Int) {
+  updateUser(address1: $address1, address2: $address2, city: $city, email: $email, firstName: $firstName, businessDescription: $businessDescription, businessName: $businessName, dailySearchesUsed: $dailySearchesUsed, isOnboarded: $isOnboarded, lastName: $lastName, state: $state, tier: $tier, website: $website, yearOfFounding: $yearOfFounding) {
+    address1
+    address2
+    businessDescription
+    businessName
+    city
+    dailySearchesUsed
+    email
     id
-      firstName
-      lastName
-      email
-      isOnboarded
+    isOnboarded
+    lastName
+    role
+    state
+    tier
+    website
+    yearOfFounding
   }
 }
 `;
@@ -18,8 +28,21 @@ mutation SignUpOrInWithPassword($email: String!, $password: String!) {
   signUpOrInWithPassword(email: $email, password: $password) {
     token
     user {
-      id
-      email
+      address1
+    address2
+    businessDescription
+    businessName
+    city
+    dailySearchesUsed
+    email
+    id
+    isOnboarded
+    lastName
+    role
+    state
+    tier
+    website
+    yearOfFounding
     }
     userId
   }
@@ -37,8 +60,21 @@ mutation SignInWithOtp($otpCode: String!) {
   signInWithOtp(otpCode: $otpCode) {
     token
     user {
-      id
-      email
+      address1
+    address2
+    businessDescription
+    businessName
+    city
+    dailySearchesUsed
+    email
+    id
+    isOnboarded
+    lastName
+    role
+    state
+    tier
+    website
+    yearOfFounding
     }
     userId
   }

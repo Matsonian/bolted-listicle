@@ -5,13 +5,19 @@ query User {
   user {
     address1
     address2
+    businessDescription
+    businessName
     city
+    dailySearchesUsed
     email
-    firstName
     id
     isOnboarded
     lastName
+    role
     state
+    tier
+    website
+    yearOfFounding
   }
 }
 `;

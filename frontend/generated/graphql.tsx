@@ -99,12 +99,18 @@ export type MutationSsoLoginArgs = {
 export type MutationUpdateUserArgs = {
   address1?: InputMaybe<Scalars['String']['input']>;
   address2?: InputMaybe<Scalars['String']['input']>;
+  businessDescription?: InputMaybe<Scalars['String']['input']>;
+  businessName?: InputMaybe<Scalars['String']['input']>;
   city?: InputMaybe<Scalars['String']['input']>;
+  dailySearchesUsed?: InputMaybe<Scalars['Int']['input']>;
   email?: InputMaybe<Scalars['String']['input']>;
   firstName?: InputMaybe<Scalars['String']['input']>;
   isOnboarded?: InputMaybe<Scalars['Boolean']['input']>;
   lastName?: InputMaybe<Scalars['String']['input']>;
   state?: InputMaybe<Scalars['String']['input']>;
+  tier?: InputMaybe<Scalars['String']['input']>;
+  website?: InputMaybe<Scalars['String']['input']>;
+  yearOfFounding?: InputMaybe<Scalars['Int']['input']>;
 };
 
 
@@ -134,8 +140,11 @@ export type User = {
   Conversations?: Maybe<Array<AgentConversation>>;
   address1?: Maybe<Scalars['String']['output']>;
   address2?: Maybe<Scalars['String']['output']>;
+  businessDescription?: Maybe<Scalars['String']['output']>;
+  businessName?: Maybe<Scalars['String']['output']>;
   city?: Maybe<Scalars['String']['output']>;
   createdAt?: Maybe<Scalars['Date']['output']>;
+  dailySearchesUsed?: Maybe<Scalars['Int']['output']>;
   email?: Maybe<Scalars['String']['output']>;
   firstName?: Maybe<Scalars['String']['output']>;
   id?: Maybe<Scalars['ID']['output']>;
@@ -144,7 +153,10 @@ export type User = {
   provider?: Maybe<Scalars['String']['output']>;
   role?: Maybe<UserRole>;
   state?: Maybe<Scalars['String']['output']>;
+  tier?: Maybe<Scalars['String']['output']>;
   updatedAt?: Maybe<Scalars['Date']['output']>;
+  website?: Maybe<Scalars['String']['output']>;
+  yearOfFounding?: Maybe<Scalars['Int']['output']>;
 };
 
 export enum UserRole {
@@ -155,27 +167,39 @@ export enum UserRole {
 export type UserUpdateInput = {
   address1?: InputMaybe<Scalars['String']['input']>;
   address2?: InputMaybe<Scalars['String']['input']>;
+  businessDescription?: InputMaybe<Scalars['String']['input']>;
+  businessName?: InputMaybe<Scalars['String']['input']>;
   city?: InputMaybe<Scalars['String']['input']>;
+  dailySearchesUsed?: InputMaybe<Scalars['Int']['input']>;
   email?: InputMaybe<Scalars['String']['input']>;
   firstName?: InputMaybe<Scalars['String']['input']>;
   isOnboarded?: InputMaybe<Scalars['Boolean']['input']>;
   lastName?: InputMaybe<Scalars['String']['input']>;
   state?: InputMaybe<Scalars['String']['input']>;
+  tier?: InputMaybe<Scalars['String']['input']>;
+  website?: InputMaybe<Scalars['String']['input']>;
+  yearOfFounding?: InputMaybe<Scalars['Int']['input']>;
 };
 
 export type UpdateUserMutationVariables = Exact<{
-  isOnboarded?: InputMaybe<Scalars['Boolean']['input']>;
-  firstName?: InputMaybe<Scalars['String']['input']>;
-  lastName?: InputMaybe<Scalars['String']['input']>;
   address1?: InputMaybe<Scalars['String']['input']>;
   address2?: InputMaybe<Scalars['String']['input']>;
   city?: InputMaybe<Scalars['String']['input']>;
-  state?: InputMaybe<Scalars['String']['input']>;
   email?: InputMaybe<Scalars['String']['input']>;
+  firstName?: InputMaybe<Scalars['String']['input']>;
+  businessDescription?: InputMaybe<Scalars['String']['input']>;
+  businessName?: InputMaybe<Scalars['String']['input']>;
+  dailySearchesUsed?: InputMaybe<Scalars['Int']['input']>;
+  isOnboarded?: InputMaybe<Scalars['Boolean']['input']>;
+  lastName?: InputMaybe<Scalars['String']['input']>;
+  state?: InputMaybe<Scalars['String']['input']>;
+  tier?: InputMaybe<Scalars['String']['input']>;
+  website?: InputMaybe<Scalars['String']['input']>;
+  yearOfFounding?: InputMaybe<Scalars['Int']['input']>;
 }>;
 
 
-export type UpdateUserMutation = { __typename?: 'Mutation', updateUser?: { __typename?: 'User', id?: string | null, firstName?: string | null, lastName?: string | null, email?: string | null, isOnboarded?: boolean | null } | null };
+export type UpdateUserMutation = { __typename?: 'Mutation', updateUser?: { __typename?: 'User', address1?: string | null, address2?: string | null, businessDescription?: string | null, businessName?: string | null, city?: string | null, dailySearchesUsed?: number | null, email?: string | null, id?: string | null, isOnboarded?: boolean | null, lastName?: string | null, role?: UserRole | null, state?: string | null, tier?: string | null, website?: string | null, yearOfFounding?: number | null } | null };
 
 export type SignUpOrInWithPasswordMutationVariables = Exact<{
   email: Scalars['String']['input'];
@@ -183,7 +207,7 @@ export type SignUpOrInWithPasswordMutationVariables = Exact<{
 }>;
 
 
-export type SignUpOrInWithPasswordMutation = { __typename?: 'Mutation', signUpOrInWithPassword?: { __typename?: 'AuthPayload', token?: string | null, userId?: string | null, user?: { __typename?: 'User', id?: string | null, email?: string | null } | null } | null };
+export type SignUpOrInWithPasswordMutation = { __typename?: 'Mutation', signUpOrInWithPassword?: { __typename?: 'AuthPayload', token?: string | null, userId?: string | null, user?: { __typename?: 'User', address1?: string | null, address2?: string | null, businessDescription?: string | null, businessName?: string | null, city?: string | null, dailySearchesUsed?: number | null, email?: string | null, id?: string | null, isOnboarded?: boolean | null, lastName?: string | null, role?: UserRole | null, state?: string | null, tier?: string | null, website?: string | null, yearOfFounding?: number | null } | null } | null };
 
 export type SendOtpMutationVariables = Exact<{
   email: Scalars['String']['input'];
@@ -197,7 +221,7 @@ export type SignInWithOtpMutationVariables = Exact<{
 }>;
 
 
-export type SignInWithOtpMutation = { __typename?: 'Mutation', signInWithOtp?: { __typename?: 'AuthPayload', token?: string | null, userId?: string | null, user?: { __typename?: 'User', id?: string | null, email?: string | null } | null } | null };
+export type SignInWithOtpMutation = { __typename?: 'Mutation', signInWithOtp?: { __typename?: 'AuthPayload', token?: string | null, userId?: string | null, user?: { __typename?: 'User', address1?: string | null, address2?: string | null, businessDescription?: string | null, businessName?: string | null, city?: string | null, dailySearchesUsed?: number | null, email?: string | null, id?: string | null, isOnboarded?: boolean | null, lastName?: string | null, role?: UserRole | null, state?: string | null, tier?: string | null, website?: string | null, yearOfFounding?: number | null } | null } | null };
 
 export type SsoLoginMutationVariables = Exact<{
   provider: Scalars['String']['input'];
@@ -210,26 +234,42 @@ export type SsoLoginMutation = { __typename?: 'Mutation', ssoLogin?: { __typenam
 export type UserQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type UserQuery = { __typename?: 'Query', user?: { __typename?: 'User', address1?: string | null, address2?: string | null, city?: string | null, email?: string | null, firstName?: string | null, id?: string | null, isOnboarded?: boolean | null, lastName?: string | null, state?: string | null } | null };
+export type UserQuery = { __typename?: 'Query', user?: { __typename?: 'User', address1?: string | null, address2?: string | null, businessDescription?: string | null, businessName?: string | null, city?: string | null, dailySearchesUsed?: number | null, email?: string | null, id?: string | null, isOnboarded?: boolean | null, lastName?: string | null, role?: UserRole | null, state?: string | null, tier?: string | null, website?: string | null, yearOfFounding?: number | null } | null };
 
 
 export const UpdateUserDocument = gql`
-    mutation UpdateUser($isOnboarded: Boolean, $firstName: String, $lastName: String, $address1: String, $address2: String, $city: String, $state: String, $email: String) {
+    mutation UpdateUser($address1: String, $address2: String, $city: String, $email: String, $firstName: String, $businessDescription: String, $businessName: String, $dailySearchesUsed: Int, $isOnboarded: Boolean, $lastName: String, $state: String, $tier: String, $website: String, $yearOfFounding: Int) {
   updateUser(
-    isOnboarded: $isOnboarded
-    firstName: $firstName
-    lastName: $lastName
     address1: $address1
     address2: $address2
     city: $city
-    state: $state
     email: $email
+    firstName: $firstName
+    businessDescription: $businessDescription
+    businessName: $businessName
+    dailySearchesUsed: $dailySearchesUsed
+    isOnboarded: $isOnboarded
+    lastName: $lastName
+    state: $state
+    tier: $tier
+    website: $website
+    yearOfFounding: $yearOfFounding
   ) {
-    id
-    firstName
-    lastName
+    address1
+    address2
+    businessDescription
+    businessName
+    city
+    dailySearchesUsed
     email
+    id
     isOnboarded
+    lastName
+    role
+    state
+    tier
+    website
+    yearOfFounding
   }
 }
     `;
@@ -248,14 +288,20 @@ export type UpdateUserMutationFn = Apollo.MutationFunction<UpdateUserMutation, U
  * @example
  * const [updateUserMutation, { data, loading, error }] = useUpdateUserMutation({
  *   variables: {
- *      isOnboarded: // value for 'isOnboarded'
- *      firstName: // value for 'firstName'
- *      lastName: // value for 'lastName'
  *      address1: // value for 'address1'
  *      address2: // value for 'address2'
  *      city: // value for 'city'
- *      state: // value for 'state'
  *      email: // value for 'email'
+ *      firstName: // value for 'firstName'
+ *      businessDescription: // value for 'businessDescription'
+ *      businessName: // value for 'businessName'
+ *      dailySearchesUsed: // value for 'dailySearchesUsed'
+ *      isOnboarded: // value for 'isOnboarded'
+ *      lastName: // value for 'lastName'
+ *      state: // value for 'state'
+ *      tier: // value for 'tier'
+ *      website: // value for 'website'
+ *      yearOfFounding: // value for 'yearOfFounding'
  *   },
  * });
  */
@@ -271,8 +317,21 @@ export const SignUpOrInWithPasswordDocument = gql`
   signUpOrInWithPassword(email: $email, password: $password) {
     token
     user {
-      id
+      address1
+      address2
+      businessDescription
+      businessName
+      city
+      dailySearchesUsed
       email
+      id
+      isOnboarded
+      lastName
+      role
+      state
+      tier
+      website
+      yearOfFounding
     }
     userId
   }
@@ -341,8 +400,21 @@ export const SignInWithOtpDocument = gql`
   signInWithOtp(otpCode: $otpCode) {
     token
     user {
-      id
+      address1
+      address2
+      businessDescription
+      businessName
+      city
+      dailySearchesUsed
       email
+      id
+      isOnboarded
+      lastName
+      role
+      state
+      tier
+      website
+      yearOfFounding
     }
     userId
   }
@@ -414,13 +486,19 @@ export const UserDocument = gql`
   user {
     address1
     address2
+    businessDescription
+    businessName
     city
+    dailySearchesUsed
     email
-    firstName
     id
     isOnboarded
     lastName
+    role
     state
+    tier
+    website
+    yearOfFounding
   }
 }
     `;

@@ -3,7 +3,7 @@ import { Navigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 
 export default function ProfilePage() {
-  const { user, userProfile, loading } = useAuth()
+  const { user, loading } = useAuth()
 
   if (loading) {
     return (
@@ -20,7 +20,7 @@ export default function ProfilePage() {
     return <Navigate to="/login" />
   }
 
-  if (!userProfile) {
+  if (!user) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
@@ -47,44 +47,44 @@ export default function ProfilePage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700">First Name</label>
-                <p className="mt-1 text-sm text-gray-900">{userProfile.first_name}</p>
+                <p className="mt-1 text-sm text-gray-900">{user.firstName}</p>
               </div>
               
               <div>
                 <label className="block text-sm font-medium text-gray-700">Last Name</label>
-                <p className="mt-1 text-sm text-gray-900">{userProfile.last_name}</p>
+                <p className="mt-1 text-sm text-gray-900">{user.lastName}</p>
               </div>
               
               <div>
                 <label className="block text-sm font-medium text-gray-700">Email</label>
-                <p className="mt-1 text-sm text-gray-900">{userProfile.email}</p>
+                <p className="mt-1 text-sm text-gray-900">{user.email}</p>
               </div>
               
               <div>
                 <label className="block text-sm font-medium text-gray-700">Business Name</label>
-                <p className="mt-1 text-sm text-gray-900">{userProfile.business_name}</p>
+                <p className="mt-1 text-sm text-gray-900">{user.businessName}</p>
               </div>
               
               <div className="md:col-span-2">
                 <label className="block text-sm font-medium text-gray-700">Business Description</label>
-                <p className="mt-1 text-sm text-gray-900">{userProfile.business_description}</p>
+                <p className="mt-1 text-sm text-gray-900">{user.businessDescription}</p>
               </div>
               
               <div>
                 <label className="block text-sm font-medium text-gray-700">Years in Business</label>
-                <p className="mt-1 text-sm text-gray-900">{userProfile.years_in_business}</p>
+                <p className="mt-1 text-sm text-gray-900">{user.yearOfFounding}</p>
               </div>
               
-              {userProfile.website && (
+              {user.website && (
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Website</label>
                   <a 
-                    href={userProfile.website} 
+                    href={user.website} 
                     target="_blank" 
                     rel="noopener noreferrer"
                     className="mt-1 text-sm text-blue-600 hover:text-blue-500"
                   >
-                    {userProfile.website}
+                    {user.website}
                   </a>
                 </div>
               )}
@@ -92,13 +92,13 @@ export default function ProfilePage() {
               <div>
                 <label className="block text-sm font-medium text-gray-700">Account Tier</label>
                 <span className="mt-1 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                  {userProfile.tier.toUpperCase()}
+                  {user.tier?.toUpperCase()}
                 </span>
               </div>
               
               <div>
                 <label className="block text-sm font-medium text-gray-700">Daily Searches Used</label>
-                <p className="mt-1 text-sm text-gray-900">{userProfile.daily_searches_used}</p>
+                <p className="mt-1 text-sm text-gray-900">{user.dailySearchesUsed}</p>
               </div>
             </div>
           </div>

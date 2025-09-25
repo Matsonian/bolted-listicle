@@ -10,6 +10,12 @@ export const UserUpdateInput = builder.inputType('UserUpdateInput', {
       state: t.string(),
       email: t.string(),
       isOnboarded: t.boolean(),
+      businessName: t.string(),
+        businessDescription: t.string(),
+        yearOfFounding: t.int(),
+        website: t.string(),
+        tier: t.string(),
+        dailySearchesUsed: t.int()
     }),
 });
 

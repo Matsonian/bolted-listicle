@@ -35,6 +35,12 @@ export const UserType = builder.prismaObject('User', {
         provider: true,
         role: true,
         Conversations: true,
+        businessName: true,
+        businessDescription: true,
+        yearOfFounding: true,
+        website:             true,
+        tier:               true,
+        dailySearchesUsed:   true
     },
     fields: (t) => ({
         id: t.exposeID('id'),
@@ -50,6 +56,12 @@ export const UserType = builder.prismaObject('User', {
         state: t.exposeString('state', { nullable: true }),
         provider: t.exposeString('provider', { nullable: true }),
         role: t.expose('role', { type: UserRoleEnum }),
+        businessName: t.exposeString('businessName', { nullable: true }),
+        businessDescription: t.exposeString('businessDescription', { nullable: true }),
+        yearOfFounding: t.exposeInt('yearOfFounding', { nullable: true }),
+        website: t.exposeString('website', { nullable: true }),
+        tier: t.exposeString('tier', { nullable: true }),
+        dailySearchesUsed: t.exposeInt('dailySearchesUsed', { nullable: true }),
         Conversations: t.relation('Conversations'),
     }),
 });
