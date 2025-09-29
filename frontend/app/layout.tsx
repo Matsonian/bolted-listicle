@@ -3,7 +3,7 @@ import { Inter } from 'next/font/google'
 import './globals.css'
 import { getServerSession } from "next-auth/next";
 import type { Session } from "next-auth";
-import { authOptions } from "./api/auth/[...nextauth]/route";
+import { authOptions } from '@/lib/auth'
 import { AuthProvider } from "../components/auth-provider";
 import { ApolloProviderWrapper } from "../components/apollo-provider";
 import Navigation from '../components/Navigation'
