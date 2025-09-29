@@ -1,5 +1,5 @@
-// api/analyze-listicle.ts
-import type { NextRequest } from 'next/server';
+// app/api/analyze-listicle/route.ts
+import { NextRequest, NextResponse } from 'next/server'
 
 interface UserProfile {
   first_name: string;
@@ -31,23 +31,24 @@ interface AnalysisResponse {
   model_email: string;
 }
 
-export default async function handler(req: VercelRequest, res: VercelResponse) {
-  // Only allow POST requests
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
-  }
-
+export async function POST(req: NextRequest) {
   try {
-    const { url, userProfile }: { url: string; userProfile: UserProfile } = req.body;
+    const { url, userProfile }: { url: string; userProfile: UserProfile } = await req.json();
 
     if (!url || !userProfile) {
-      return res.status(400).json({ error: 'Missing required fields' });
+      return NextResponse.json(
+        { error: 'Missing required fields' },
+        { status: 400 }
+      );
     }
 
     // Get OpenAI API key from environment (server-side only)
     const openaiKey = process.env.OPENAI_API_KEY;
     if (!openaiKey) {
-      return res.status(500).json({ error: 'OpenAI API key not configured' });
+      return NextResponse.json(
+        { error: 'OpenAI API key not configured' },
+        { status: 500 }
+      );
     }
 
     // Build the analysis prompt
@@ -80,14 +81,20 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (!openaiResponse.ok) {
       const errorText = await openaiResponse.text();
       console.error('OpenAI API error:', openaiResponse.status, errorText);
-      return res.status(500).json({ error: 'Failed to analyze listicle' });
+      return NextResponse.json(
+        { error: 'Failed to analyze listicle' },
+        { status: 500 }
+      );
     }
 
     const openaiData = await openaiResponse.json();
     const content = openaiData.choices[0]?.message?.content;
 
     if (!content) {
-      return res.status(500).json({ error: 'No content received from OpenAI' });
+      return NextResponse.json(
+        { error: 'No content received from OpenAI' },
+        { status: 500 }
+      );
     }
 
     // Parse the JSON response
@@ -96,17 +103,23 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       parsedResponse = JSON.parse(content);
     } catch (parseError) {
       console.error('Failed to parse OpenAI response:', content);
-      return res.status(500).json({ error: 'Invalid response from AI' });
+      return NextResponse.json(
+        { error: 'Invalid response from AI' },
+        { status: 500 }
+      );
     }
 
     // Validate and format the response
     const validatedResponse = validateAndFormatResponse(parsedResponse);
 
-    return res.status(200).json(validatedResponse);
+    return NextResponse.json(validatedResponse, { status: 200 });
 
   } catch (error) {
     console.error('API error:', error);
-    return res.status(500).json({ error: 'Internal server error' });
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
   }
 }
 
