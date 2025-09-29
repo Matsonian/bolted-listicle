@@ -2,9 +2,9 @@
 
 import React, { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { signIn } from "next-auth/react"
 import { useRouter } from 'next/navigation'
-import { useSignUpOrInWithPasswordMutation, useSendOtpMutation, useSignInWithOtpMutation } from '../../generated/graphql'
-import { BookOpen, Mail, Lock, Loader2, AlertCircle, Shield, Clock, Eye, EyeOff } from 'lucide-react'
+import { Mail, Lock, Loader2, AlertCircle, Shield, Clock, Eye, EyeOff } from 'lucide-react'
 
 export default function LoginPage() {
   const router = useRouter()
@@ -30,11 +30,14 @@ export default function LoginPage() {
   })
   const [activeTab, setActiveTab] = useState<'signin' | 'otp' | 'signup'>('signin')
 
-  const [signUpOrInWithPasswordMutation] = useSignUpOrInWithPasswordMutation()
-  const [sendOtpMutation] = useSendOtpMutation()
-  const [signInWithOtpMutation] = useSignInWithOtpMutation()
+
+  // Social sign-in temporarily disabled - OAuth providers not configured
+  const handleSocialSignIn = async (provider: string) => {
+    setError(`${provider} sign-in is not available. Please use email/password or OTP.`)
+  }
 
   const handleSignUp = async (e: React.FormEvent) => {
+     
     e.preventDefault()
     setIsLoading(true)
     setError("")
@@ -51,16 +54,19 @@ export default function LoginPage() {
       return
     }
 
-    try {
-      const { data, errors } = await signUpOrInWithPasswordMutation({
-        variables: { email: signUpData.email, password: signUpData.password }
-      })
+   
 
-      if (errors || !data?.signUpOrInWithPassword?.token) {
-        setError("Account creation failed. Please try again.")
-      } else {
-        // Store token and navigate
-        localStorage.setItem('authToken', data.signUpOrInWithPassword.token)
+    try {
+      const result = await signIn("credentials", {
+        email: signUpData.email,
+        password: signUpData.password,
+        redirect: false,
+      })
+      console.log("result",result)
+
+      if (result?.error) {
+        setError("Account created but sign-in failed. Please try signing in manually.")
+      } else if (result?.ok) {
         router.push("/welcome")
       }
     } catch (error: any) {
@@ -76,14 +82,15 @@ export default function LoginPage() {
     setError("")
 
     try {
-      const { data, errors } = await signUpOrInWithPasswordMutation({
-        variables: { email: signInData.email, password: signInData.password }
+      const result = await signIn("credentials", {
+        email: signInData.email,
+        password: signInData.password,
+        redirect: false,
       })
 
-      if (errors || !data?.signUpOrInWithPassword?.token) {
+      if (result?.error) {
         setError("Invalid email or password")
-      } else {
-        localStorage.setItem('authToken', data.signUpOrInWithPassword.token)
+      } else if (result?.ok) {
         router.push("/welcome")
       }
     } catch (error) {
@@ -99,16 +106,34 @@ export default function LoginPage() {
     setError("")
 
     try {
-      const { data, errors } = await sendOtpMutation({
-        variables: { email: otpData.email }
+      const response = await fetch("/api/auth/otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "send",
+          email: otpData.email,
+        }),
       })
 
-      if (errors || !data?.sendOtp) {
-        setError("Failed to send OTP. Please try again.")
-      } else {
+      const result = await response.json()
+
+      if (result.success) {
         setOtpSent(true)
         setOtpEmail(otpData.email)
-        setCountdown(300) // 5 minutes
+        setCountdown(60)
+
+        // Start countdown timer
+        const timer = setInterval(() => {
+          setCountdown((prev) => {
+            if (prev <= 1) {
+              clearInterval(timer)
+              return 0
+            }
+            return prev - 1
+          })
+        }, 1000)
+      } else {
+        setError(result.error || "Failed to send OTP")
       }
     } catch (error) {
       setError("An unexpected error occurred. Please try again.")
@@ -117,21 +142,65 @@ export default function LoginPage() {
     }
   }
 
-  const handleOtpSignIn = async (e: React.FormEvent) => {
+  const handleVerifyOtp = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
     setError("")
 
     try {
-      const { data, errors } = await signInWithOtpMutation({
-        variables: { otpCode: otpData.otpCode }
+      // Create a custom sign-in with the token
+      const signInResult = await signIn("credentials", {
+        email: otpData.email,
+        password: "otp-signin", // Special flag for OTP signin
+        otp: otpData.otpCode,
+        callbackUrl: "/welcome",
+      })
+      console.log("signInResult", JSON.stringify(signInResult))
+      if (signInResult?.ok) {
+        router.push("/welcome")
+      } else {
+        setError("Sign-in failed after OTP verification, try logging in with a different method.")
+      }
+    } catch (error) {
+      setError("An unexpected error occurred. Please try again.")
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleResendOtp = async () => {
+    if (countdown > 0) return
+
+    setIsLoading(true)
+    setError("")
+
+    try {
+      const response = await fetch("/api/auth/otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "send",
+          email: otpEmail,
+        }),
       })
 
-      if (errors || !data?.signInWithOtp?.token) {
-        setError("Invalid OTP code. Please try again.")
+      const result = await response.json()
+
+      if (result.success) {
+        setCountdown(60)
+
+        // Start countdown timer
+        const timer = setInterval(() => {
+          setCountdown((prev) => {
+            if (prev <= 1) {
+              clearInterval(timer)
+              return 0
+            }
+            return prev - 1
+          })
+        }, 1000)
       } else {
-        localStorage.setItem('authToken', data.signInWithOtp.token)
-        router.push("/welcome")
+        setError(result.error || "Failed to resend OTP")
       }
     } catch (error) {
       setError("An unexpected error occurred. Please try again.")
@@ -396,7 +465,7 @@ export default function LoginPage() {
                   </button>
                 </form>
               ) : (
-                <form onSubmit={handleOtpSignIn} className="space-y-4">
+                <form onSubmit={handleVerifyOtp} className="space-y-4">
                   <div className="text-center mb-4">
                     <div className="bg-green-50 border border-green-200 rounded-md p-3 mb-4">
                       <p className="text-sm text-green-600">

@@ -5,21 +5,26 @@ import type { NextRequest } from 'next/server'
 const protectedRoutes = ['/profile', '/education', '/welcome']
 
 export function middleware(request: NextRequest) {
-  const { pathname } = request.nextUrl
+  // Get the pathname of the request (e.g. /, /protected)
+  const path = request.nextUrl.pathname;
 
-  // Check if the current path is a protected route
-  const isProtectedRoute = protectedRoutes.some(route => pathname.startsWith(route))
+  // Define paths that require authentication
+  const protectedPaths = ["/exercise", "/profile"];
 
-  if (isProtectedRoute) {
-    // Check for auth token in cookies or headers
-    const authToken = request.cookies.get('authToken')?.value || 
-                     request.headers.get('authorization')?.replace('Bearer ', '')
+  // Check if the current path is protected
+  const isProtectedPath = protectedPaths.some((protectedPath) =>
+    path.startsWith(protectedPath)
+  );
 
-    if (!authToken) {
-      // Redirect to login if no token is found
-      const loginUrl = new URL('/login', request.url)
-      loginUrl.searchParams.set('redirect', pathname)
-      return NextResponse.redirect(loginUrl)
+  if (isProtectedPath) {
+    // Check for session token in cookies
+    const token =
+      request.cookies.get("next-auth.session-token") ||
+      request.cookies.get("__Secure-next-auth.session-token");
+
+    if (!token) {
+      // Redirect to auth page if no token found
+      return NextResponse.redirect(new URL("/auth", request.url));
     }
   }
 
