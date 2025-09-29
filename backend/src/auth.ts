@@ -121,8 +121,6 @@ export async function signUpOrInWithPasswordHandler({
         where: { email },
     });
 
-    console.log("uesr: ", user)
-
     if (user) {
         if (!user.password) {
             // User exists but created via SSO, so we can't compare passwords.

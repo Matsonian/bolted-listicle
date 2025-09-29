@@ -21,7 +21,6 @@ export const authOptions: NextAuthOptions =  {
         otp: { label: "Otp", type: "otp" },
       },
       async authorize(credentials) {
-        console.log(credentials, 'credentials')
         if (!credentials?.email || !credentials?.password) return null;
 
         try {
@@ -60,7 +59,6 @@ export const authOptions: NextAuthOptions =  {
               }),
             });
           } else {
-            console.log(`${process.env.GRAPHQL_URL}/graphql`)
             res = await fetch(`${process.env.GRAPHQL_URL}/graphql`, {
               method: "POST",
               headers: { "Content-Type": "application/json" },
@@ -206,7 +204,7 @@ export const authOptions: NextAuthOptions =  {
             (session.user as any).firstName = token?.firstName;
             (session.user as any).tier = token?.tier
       }
-      console.log("session data",session, token)
+  
       return session;
     },
   },
