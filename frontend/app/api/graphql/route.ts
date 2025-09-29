@@ -1,6 +1,6 @@
 import { getServerSession } from "next-auth/next"
 import { type NextRequest, NextResponse } from "next/server"
-import { authOptions } from "../auth/[...nextauth]/route"
+import { authOptions } from '@/lib/auth'
 
 export async function POST(request: NextRequest) {
   try {
