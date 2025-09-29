@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import Link from "next/link"
 import { Search } from 'lucide-react';
 
 export default function Footer() {
@@ -9,7 +9,7 @@ export default function Footer() {
         <div className="grid md:grid-cols-4 gap-8">
           {/* Brand */}
           <div className="md:col-span-2">
-            <Link to="/" className="flex items-center space-x-2 mb-4">
+            <Link href="/" className="flex items-center space-x-2 mb-4">
               <img 
                 src="/GetListicled-Logo-White.png" 
                 alt="Get Listicled" 
@@ -29,22 +29,22 @@ export default function Footer() {
             <h3 className="font-semibold mb-4">Company</h3>
             <ul className="space-y-2">
               <li>
-                <Link to="/about" className="text-gray-400 hover:text-white transition-colors">
+                <Link href="/about" className="text-gray-400 hover:text-white transition-colors">
                   About
                 </Link>
               </li>
               <li>
-                <Link to="/blog" className="text-gray-400 hover:text-white transition-colors">
+                <Link href="/blog" className="text-gray-400 hover:text-white transition-colors">
                   Blog
                 </Link>
               </li>
               <li>
-                <Link to="/contact" className="text-gray-400 hover:text-white transition-colors">
+                <Link href="/contact" className="text-gray-400 hover:text-white transition-colors">
                   Contact
                 </Link>
               </li>
               <li>
-                <Link to="/privacy" className="text-gray-400 hover:text-white transition-colors">
+                <Link href="/privacy" className="text-gray-400 hover:text-white transition-colors">
                   Privacy Policy
                 </Link>
               </li>
@@ -71,17 +71,17 @@ export default function Footer() {
                 </a>
               </li>
               <li>
-                <Link to="/search" className="text-gray-400 hover:text-white transition-colors">
+                <Link href="/search" className="text-gray-400 hover:text-white transition-colors">
                   Search
                 </Link>
               </li>
               <li>
-                <Link to="/education" className="text-gray-400 hover:text-white transition-colors">
+                <Link href="/education" className="text-gray-400 hover:text-white transition-colors">
                   Education
                 </Link>
               </li>
               <li>
-                <Link to="/maker" className="text-gray-400 hover:text-white transition-colors">
+                <Link href="/maker" className="text-gray-400 hover:text-white transition-colors">
                   Maker
                 </Link>
               </li>

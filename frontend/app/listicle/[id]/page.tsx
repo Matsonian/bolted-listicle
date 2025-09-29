@@ -4,7 +4,7 @@
 import React, { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { ArrowLeft, Save, ExternalLink, Calendar, User, Mail, Link as LinkIcon, Star, Target, Loader } from 'lucide-react'
-import { useAuth } from '../../../contexts/AuthContext'
+import { useSession } from 'next-auth/react'
 
 // Types for the analysis data
 interface ImportanceBreakdown {
@@ -41,25 +41,27 @@ export default function ListicleDetailPage() {
   const [analysis, setAnalysis] = useState<ListicleAnalysis | null>(null)
   const [error, setError] = useState<string>('')
   const [targetNumber, setTargetNumber] = useState<number>(0)
-  const { user } = useAuth()
+  const { data: session, status } = useSession()
 
   useEffect(() => {
-    if (!user) {
+    if (status === 'loading') return
+
+    if (!session?.user) {
       router.push('/login')
       return
     }
-    
+
     // Set target number - you'll need to implement this with your database
     // For now, using a simple counter
     setTargetNumber(Date.now()) // Temporary - replace with actual target number logic
-    
-  }, [user, router])
+
+  }, [session, status, router])
 
   useEffect(() => {
-    if (encodedUrl && user) {
+    if (encodedUrl && session?.user) {
       analyzeListicle()
     }
-  }, [encodedUrl, user])
+  }, [encodedUrl, session?.user])
 
   const analyzeListicle = async () => {
     if (!encodedUrl) return
@@ -116,7 +118,7 @@ Best regards,
   }
 
   const handleSave = async () => {
-    if (!analysis || !user) return
+    if (!analysis || !session?.user) return
     
     setSaving(true)
     

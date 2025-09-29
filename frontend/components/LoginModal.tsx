@@ -1,6 +1,6 @@
 import React from 'react'
 import { X, Users, TrendingUp } from 'lucide-react'
-import { Link } from 'react-router-dom'
+import Link from "next/link";
 
 interface LoginModalProps {
   isOpen: boolean
@@ -67,7 +67,7 @@ export default function LoginModal({ isOpen, onClose, resultsCount, searchQuery 
         {/* Action buttons */}
         <div className="space-y-3">
           <Link
-            to="/login"
+            href="/login"
             className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg transition-colors text-center block"
           >
             Sign In to View Results

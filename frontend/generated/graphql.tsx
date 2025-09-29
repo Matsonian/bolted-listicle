@@ -234,7 +234,7 @@ export type SsoLoginMutation = { __typename?: 'Mutation', ssoLogin?: { __typenam
 export type UserQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type UserQuery = { __typename?: 'Query', user?: { __typename?: 'User', address1?: string | null, address2?: string | null, businessDescription?: string | null, businessName?: string | null, city?: string | null, dailySearchesUsed?: number | null, email?: string | null, id?: string | null, isOnboarded?: boolean | null, lastName?: string | null, role?: UserRole | null, state?: string | null, tier?: string | null, website?: string | null, yearOfFounding?: number | null } | null };
+export type UserQuery = { __typename?: 'Query', user?: { __typename?: 'User', address1?: string | null, address2?: string | null, businessDescription?: string | null, businessName?: string | null, city?: string | null, createdAt?: any | null, dailySearchesUsed?: number | null, email?: string | null, firstName?: string | null, id?: string | null, isOnboarded?: boolean | null, lastName?: string | null, role?: UserRole | null, state?: string | null, tier?: string | null, website?: string | null, yearOfFounding?: number | null } | null };
 
 
 export const UpdateUserDocument = gql`
@@ -489,8 +489,10 @@ export const UserDocument = gql`
     businessDescription
     businessName
     city
+    createdAt
     dailySearchesUsed
     email
+    firstName
     id
     isOnboarded
     lastName

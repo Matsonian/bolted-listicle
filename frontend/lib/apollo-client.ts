@@ -8,39 +8,18 @@ import {
   HttpLink,
 } from "@apollo/client"
 import { onError, ErrorResponse } from "@apollo/client/link/error"
-import { setContext } from '@apollo/client/link/context'
 
-let apolloClient: ApolloClient<NormalizedCacheObject> | null = null
+let apolloClient: ApolloClient<NormalizedCacheObject> | null
 
 // --- Links ---
 
-// All GraphQL requests go to the backend
-const uri = process.env.NODE_ENV === 'production' 
-  ? "/api/graphql" 
-  : "https://listicle-api.onrender.com/graphql"
+// All GraphQL requests will be proxied through this local route
+const uri = "/api/graphql"
 
 const httpLink = new HttpLink({
   uri,
 })
 
-// Auth link to add authorization headers
-const authLink = setContext((_, { headers }) => {
-  // Only access localStorage on the client side
-  if (typeof window === 'undefined') {
-    return { headers }
-  }
-
-  // Get the authentication token from local storage if it exists
-  const token = localStorage.getItem('authToken')
-
-  // Return the headers to the context so httpLink can read them
-  return {
-    headers: {
-      ...headers,
-      authorization: token ? `Bearer ${token}` : "",
-    }
-  }
-})
 
 // Error link for handling GraphQL and network errors
 const errorLink = onError(({ graphQLErrors, networkError }: ErrorResponse) => {
@@ -49,26 +28,11 @@ const errorLink = onError(({ graphQLErrors, networkError }: ErrorResponse) => {
       console.error(
         `[GraphQL error]: Message: ${message}, Location: ${locations}, Path: ${path}`,
       )
-      
-      // Handle authentication errors (only on client side)
-      if (typeof window !== 'undefined' && (message.includes('Unauthorized') || message.includes('Authentication'))) {
-        // Clear invalid token
-        localStorage.removeItem('authToken')
-        // Optionally redirect to login
-        // window.location.href = '/login'
-      }
     })
   }
 
   if (networkError) {
     console.error(`[Network error]: ${networkError}`)
-    
-    // Handle 401 Unauthorized responses (only on client side)
-    if (typeof window !== 'undefined' && 'statusCode' in networkError && networkError.statusCode === 401) {
-      localStorage.removeItem('authToken')
-      // Optionally redirect to login
-      // window.location.href = '/login'
-    }
   }
 })
 
@@ -124,12 +88,7 @@ const cache = new InMemoryCache({
 function createApolloClient() {
   return new ApolloClient({
     ssrMode: typeof window === "undefined",
-    link: from([
-      createOmitTypenameLink(), 
-      errorLink, 
-      authLink, 
-      httpLink
-    ]),
+    link: from([createOmitTypenameLink(), errorLink, httpLink]),
     cache,
     defaultOptions: {
       watchQuery: {
@@ -144,9 +103,7 @@ function createApolloClient() {
         errorPolicy: "all",
       },
     },
-    devtools: {
-      enabled: process.env.NODE_ENV === "development",
-    },
+    connectToDevTools: process.env.NODE_ENV === "development",
   })
 }
 
@@ -177,6 +134,3 @@ export const clearCache = () => {
   const client = initializeApollo()
   client.cache.reset()
 }
-
-// Export a function to get the client instance for use in AuthContext
-export const getApolloClient = () => initializeApollo()

@@ -3,10 +3,13 @@
 import React from 'react'
 import Link from 'next/link'
 import { Search, BookOpen, CheckCircle } from 'lucide-react'
-import { useAuth } from '../../contexts/AuthContext'
+import { useSession } from 'next-auth/react'
+import { useUserQuery } from '../../generated/graphql'
 
 export default function WelcomePage() {
-  const { user } = useAuth()
+  const { data: session } = useSession()
+  const { data: userData } = useUserQuery()
+  const user = userData?.user
 
   return (
     <div className="min-h-screen bg-gray-50 py-12">

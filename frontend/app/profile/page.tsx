@@ -1,13 +1,15 @@
 'use client'
 
 import React from 'react'
-import { useAuth } from '../../contexts/AuthContext'
+import { useSession } from 'next-auth/react'
+import { useUserQuery } from '../../generated/graphql'
 import { User, Mail, Calendar, Shield } from 'lucide-react'
 
 export default function ProfilePage() {
-  const { user, loading } = useAuth()
+  const { data: session, status } = useSession()
+  const { data: userData, loading: userLoading } = useUserQuery()
 
-  if (loading) {
+  if (status === 'loading' || userLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
@@ -18,7 +20,7 @@ export default function ProfilePage() {
     )
   }
 
-  if (!user) {
+  if (!session?.user || !userData?.user) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
@@ -27,6 +29,8 @@ export default function ProfilePage() {
       </div>
     )
   }
+
+  const user = userData.user
 
   return (
     <div className="min-h-screen bg-gray-50 py-12">
@@ -40,8 +44,8 @@ export default function ProfilePage() {
               </div>
               <div>
                 <h1 className="text-2xl font-bold text-white">
-                  {user.firstName && user.lastName 
-                    ? `${user.firstName} ${user.lastName}` 
+                  {user.firstName && user.lastName
+                    ? `${user.firstName} ${user.lastName}`
                     : user.email}
                 </h1>
                 <p className="text-blue-100">GetListicled Member</p>

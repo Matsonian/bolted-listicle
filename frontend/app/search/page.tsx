@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { Search, ExternalLink, Globe, Brain, Zap, Filter, BarChart3, ArrowUpRight } from 'lucide-react';
 import { perplexityService, ListicleResult } from '../../services/perplexityApi';
-import { useAuth } from '../../contexts/AuthContext';
+import { useSession } from 'next-auth/react';
 import LoginModal from '../../components/LoginModal';
 
 interface SearchProgress {
@@ -22,7 +22,7 @@ export default function SearchPage() {
   const [searchProgress, setSearchProgress] = useState<SearchProgress>({ phase: '', progress: 0, message: '' });
   const [error, setError] = useState<string>('');
   const [showLoginModal, setShowLoginModal] = useState(false);
-  const { user } = useAuth();
+  const { data: session, status } = useSession();
 
   const query = searchParams?.get('q');
 
@@ -87,7 +87,7 @@ export default function SearchPage() {
       setSearchProgress({ phase: 'complete', progress: 100, message: 'Search complete!' });
       
       // Check user status after search completes
-      if (!user) {
+      if (!session?.user) {
         // Show login modal for non-authenticated users
         setResults(searchResults);
         setShowLoginModal(true);
@@ -149,7 +149,7 @@ export default function SearchPage() {
           {query && (
             <div className="flex items-center justify-between">
               <p className="text-gray-600">
-                {loading ? 'Searching...' : user ? `Found ${results.length} listicles for "${query}"` : `Search complete for "${query}"`}
+                {loading ? 'Searching...' : session?.user ? `Found ${results.length} listicles for "${query}"` : `Search complete for "${query}"`}
               </p>
             </div>
           )}
@@ -236,7 +236,7 @@ export default function SearchPage() {
         )}
 
         {/* Results - Only show if user is authenticated */}
-        {!loading && user && results.length > 0 && (
+        {!loading && session?.user && results.length > 0 && (
           <div className="relative">
             <div className="space-y-6">
               {results.map((article, index) => (

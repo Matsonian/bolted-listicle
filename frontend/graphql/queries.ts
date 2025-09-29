@@ -8,8 +8,10 @@ query User {
     businessDescription
     businessName
     city
+    createdAt
     dailySearchesUsed
     email
+    firstName
     id
     isOnboarded
     lastName

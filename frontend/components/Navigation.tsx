@@ -3,29 +3,26 @@
 import React, { useState } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
+import { signOut, useSession } from 'next-auth/react'
 import { Menu, X, User, LogOut } from 'lucide-react'
-import { useAuth } from '../contexts/AuthContext'
 
 export default function Navigation() {
   const [isOpen, setIsOpen] = useState(false)
   const pathname = usePathname()
   const router = useRouter()
-  const { user, loading, logout } = useAuth()
-
-  console.log('Navigation rendering - user:', user?.email || 'null', 'loading:', loading)
+  const { data: session, status } = useSession()
 
   const handleLogout = async () => {
     try {
       console.log('Navigation: Starting logout...')
-      await logout()
-      console.log('Navigation: Logout completed, navigating to home')
-      router.push('/')
+      await signOut({ callbackUrl: '/' })
+      console.log('Navigation: Logout completed')
     } catch (error) {
       console.error('Navigation: Error during logout:', error)
     }
   }
 
-  if (loading) {
+  if (status === 'loading') {
     return (
       <nav className="bg-white shadow-sm border-b border-gray-100 sticky top-0 z-50">
         <div className="container mx-auto px-4">
@@ -91,25 +88,25 @@ export default function Navigation() {
             </Link>
             
             {/* Show Education when user is logged in */}
-            {user && (
-              <Link 
-                href="/education" 
+            {session?.user && (
+              <Link
+                href="/education"
                 className={`font-medium transition-colors ${
-                  pathname === '/education' 
-                    ? 'text-blue-600' 
+                  pathname === '/education'
+                    ? 'text-blue-600'
                     : 'text-gray-700 hover:text-blue-600'
                 }`}
               >
                 Education
               </Link>
             )}
-            
+
             {/* Auth Section */}
-            {user ? (
+            {session?.user ? (
               <div className="flex items-center space-x-4">
                 <div className="flex items-center space-x-2">
                   <span className="text-sm text-gray-600">
-                    {user.email}
+                    {session.user.email}
                   </span>
                   <span className="text-xs px-2 py-1 rounded-full font-medium bg-blue-100 text-blue-800">
                     BASIC
@@ -178,20 +175,20 @@ export default function Navigation() {
                 Blog
               </Link>
               
-              {user && (
-                <Link 
-                  href="/education" 
+              {session?.user && (
+                <Link
+                  href="/education"
                   onClick={() => setIsOpen(false)}
                   className="text-gray-700 hover:text-blue-600"
                 >
                   Education
                 </Link>
               )}
-              
-              {user ? (
+
+              {session?.user ? (
                 <>
                   <div className="text-sm text-gray-600 py-2 border-t border-gray-100">
-                    Logged in as: {user.email}
+                    Logged in as: {session.user.email}
                   </div>
                   <Link 
                     href="/profile" 
