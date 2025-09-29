@@ -165,7 +165,7 @@ export default function HomePage() {
           <p className="text-xl text-gray-300 mb-8">
             Start searching for amazing listicles in your favorite niches today
           </p>
-          <form onSubmit={handleSearch} className="max-w-lg mx-auto">
+          <form onSubmit={handleSubmit} className="max-w-lg mx-auto">
             <div className="flex flex-col sm:flex-row gap-4">
               <input
                 type="text"
