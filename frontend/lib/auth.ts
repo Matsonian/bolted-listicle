@@ -1,18 +1,18 @@
 import { type NextAuthOptions } from "next-auth"
-import GoogleProvider from "next-auth/providers/google"
-import FacebookProvider from "next-auth/providers/facebook"
+// import GoogleProvider from "next-auth/providers/google"
+// import FacebookProvider from "next-auth/providers/facebook"
 import CredentialsProvider from "next-auth/providers/credentials"
 
 export const authOptions: NextAuthOptions = {
   providers: [
-    GoogleProvider({
-      clientId: process.env.GOOGLE_CLIENT_ID!,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-    }),
-    FacebookProvider({
-      clientId: process.env.FACEBOOK_CLIENT_ID!,
-      clientSecret: process.env.FACEBOOK_CLIENT_SECRET!,
-    }),
+   // GoogleProvider({
+   //   clientId: process.env.GOOGLE_CLIENT_ID!,
+   //   clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+   //  }),
+   // FacebookProvider({
+   //   clientId: process.env.FACEBOOK_CLIENT_ID!,
+   //   clientSecret: process.env.FACEBOOK_CLIENT_SECRET!,
+   // }),
     CredentialsProvider({
       name: "credentials",
       credentials: {
@@ -135,61 +135,64 @@ export const authOptions: NextAuthOptions = {
   ],
   callbacks: {
     async jwt({ token, user, account }) {
-      if (account?.provider === "google" || account?.provider === "facebook") {
-        try {
-          const res = await fetch(`${process.env.GRAPHQL_URL}/graphql`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              query: `
-                mutation SsoLogin($provider: String!, $accessToken: String!) {
-                  ssoLogin(provider: $provider, accessToken: $accessToken) {
-                    token
-                    user {
-                      businessDescription
-                      businessName
-                      city
-                      createdAt
-                      dailySearchesUsed
-                      email
-                      firstName
-                      id
-                      isOnboarded
-                      lastName
-                      role
-                      state
-                      tier
-                      website
-                      yearOfFounding
-                    }
-                  }
-                }
-              `,
-              variables: {
-                provider: account.provider,
-                accessToken: account.access_token,
-              },
-            }),
-          });
-
-          const result = await res.json();
-          const ssoData = result?.data?.ssoLogin;
-
-          if (ssoData?.token && ssoData?.user) {
-            token.accessToken= ssoData.token;
-            token.id = ssoData.user.id;
-            token.email = ssoData.user.email;
-            token.firstName = ssoData.user.firstName;
-            token.isOnboarded = ssoData.user.isOnboarded
-            token.lastName = ssoData.user.lastName
-            token.role = ssoData.user.role
-            token.state = ssoData.user.state
-            token.tier = ssoData.user.tier
-          }
-        } catch (error) {
-          console.error("SSO login error:", error);
-        }
-      } else if (user) {
+      // OAuth SSO logic commented out since we're not using OAuth providers yet
+      // if (account?.provider === "google" || account?.provider === "facebook") {
+      //   try {
+      //     const res = await fetch(`${process.env.GRAPHQL_URL}/graphql`, {
+      //       method: "POST",
+      //       headers: { "Content-Type": "application/json" },
+      //       body: JSON.stringify({
+      //         query: `
+      //           mutation SsoLogin($provider: String!, $accessToken: String!) {
+      //             ssoLogin(provider: $provider, accessToken: $accessToken) {
+      //               token
+      //               user {
+      //                 businessDescription
+      //                 businessName
+      //                 city
+      //                 createdAt
+      //                 dailySearchesUsed
+      //                 email
+      //                 firstName
+      //                 id
+      //                 isOnboarded
+      //                 lastName
+      //                 role
+      //                 state
+      //                 tier
+      //                 website
+      //                 yearOfFounding
+      //               }
+      //             }
+      //           }
+      //         `,
+      //         variables: {
+      //           provider: account.provider,
+      //           accessToken: account.access_token,
+      //         },
+      //       }),
+      //     });
+      //
+      //     const result = await res.json();
+      //     const ssoData = result?.data?.ssoLogin;
+      //
+      //     if (ssoData?.token && ssoData?.user) {
+      //       token.accessToken= ssoData.token;
+      //       token.id = ssoData.user.id;
+      //       token.email = ssoData.user.email;
+      //       token.firstName = ssoData.user.firstName;
+      //       token.isOnboarded = ssoData.user.isOnboarded
+      //       token.lastName = ssoData.user.lastName
+      //       token.role = ssoData.user.role
+      //       token.state = ssoData.user.state
+      //       token.tier = ssoData.user.tier
+      //     }
+      //   } catch (error) {
+      //     console.error("SSO login error:", error);
+      //   }
+      // } else 
+      
+      if (user) {
         token.accessToken = (user as any).accessToken;
         token.id = user.id;
         token.email = user.email;
