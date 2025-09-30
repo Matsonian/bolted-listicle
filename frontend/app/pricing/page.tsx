@@ -50,12 +50,13 @@ export default function PricingPage() {
   }
 
   const monthlyFeatures = [
-    'Unlimited listicle searches',
+    'Comprehensive search results',
     'AI-powered outreach analysis',
     'Contact information extraction',
     'Personalized email templates',
     'Quality scoring & priority ranking',
     'Real-time opportunity tracking',
+    'Access to SEO, GEO, LLMO Masterclasses',
     'Email support'
   ]
 
