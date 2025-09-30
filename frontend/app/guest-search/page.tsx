@@ -1,15 +1,59 @@
-// FILE: app/guest-search/page.tsx - Guest Search Results Page
 'use client'
 
-import React from 'react'
+import React, { useState } from 'react'
 import Link from 'next/link'
-import { useSearchParams } from 'next/navigation'
-import { CheckCircle, Search, Users, BookOpen, MessageCircle, ArrowRight } from 'lucide-react'
+import { useSearchParams, useRouter } from 'next/navigation'
+import { useSession } from 'next-auth/react'
+import { loadStripe } from '@stripe/stripe-js'
+import { CheckCircle, Search, Users, BookOpen, MessageCircle, ArrowRight, Loader2 } from 'lucide-react'
+
+const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!)
 
 export default function GuestSearchResultsPage() {
   const searchParams = useSearchParams()
+  const router = useRouter()
+  const { data: session } = useSession()
   const query = searchParams?.get('q') || 'your search'
   const resultsCount = searchParams?.get('count') || '0'
+  const [isLoading, setIsLoading] = useState(false)
+
+  const handleStartMembership = async () => {
+    // If not logged in, redirect to auth
+    if (!session) {
+      router.push('/auth?callbackUrl=' + encodeURIComponent(window.location.href))
+      return
+    }
+
+    setIsLoading(true)
+
+    try {
+      // Create checkout session
+      const response = await fetch('/api/create-checkout-session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          priceId: process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_MONTHLY
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to create checkout session')
+      }
+
+      const { sessionId } = await response.json()
+
+      // Redirect to Stripe Checkout
+      const stripe = await stripePromise
+      if (stripe) {
+        await stripe.redirectToCheckout({ sessionId })
+      }
+    } catch (error) {
+      console.error('Checkout error:', error)
+      alert('Failed to start checkout. Please try again.')
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -165,13 +209,23 @@ export default function GuestSearchResultsPage() {
                 </div>
               </div>
 
-              <Link 
-                href="/login"
-                className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-4 px-8 rounded-lg text-lg transition-colors w-full md:w-auto inline-flex items-center justify-center"
+              <button 
+                onClick={handleStartMembership}
+                disabled={isLoading}
+                className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-4 px-8 rounded-lg text-lg transition-colors w-full md:w-auto inline-flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Start Your Membership
-                <ArrowRight className="w-5 h-5 ml-2" />
-              </Link>
+                {isLoading ? (
+                  <>
+                    <Loader2 className="w-5 h-5 animate-spin mr-2" />
+                    Processing...
+                  </>
+                ) : (
+                  <>
+                    Start Your Membership
+                    <ArrowRight className="w-5 h-5 ml-2" />
+                  </>
+                )}
+              </button>
               
               <p className="text-sm text-gray-500 mt-4">
                 Cancel anytime • No setup fees • Immediate access
