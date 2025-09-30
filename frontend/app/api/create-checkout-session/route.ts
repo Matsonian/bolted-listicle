@@ -37,7 +37,7 @@ export async function POST(request: NextRequest) {
       ],
       customer_email: session.user.email || undefined,
       client_reference_id: (session.user as any).id,
-      success_url: `${origin}/dashboard?success=true`,
+      success_url: `${origin}/welcome?success=true`,
       cancel_url: `${origin}/guest-search?canceled=true`,
       metadata: {
         userId: (session.user as any).id,
