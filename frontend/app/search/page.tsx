@@ -197,15 +197,16 @@ export default function SearchPage() {
 
               <div className="grid grid-cols-5 gap-2 mb-6">
                 {[
-                  { key: 'analyzing', label: 'Analyze', icon: <Brain className="w-5 h-5" />, threshold: 10 },
-                  { key: 'generating', label: 'Generate', icon: <Zap className="w-5 h-5" />, threshold: 20 },
-                  { key: 'searching', label: 'Search', icon: <Globe className="w-5 h-5" />, threshold: 35 },
-                  { key: 'filtering', label: 'Filter', icon: <Filter className="w-5 h-5" />, threshold: 75 },
-                  { key: 'organizing', label: 'Organize', icon: <BarChart3 className="w-5 h-5" />, threshold: 90 }
+                  { key: 'analyzing', label: 'Analyze', icon: Brain, threshold: 10 },
+                  { key: 'generating', label: 'Generate', icon: Zap, threshold: 20 },
+                  { key: 'searching', label: 'Search', icon: Globe, threshold: 35 },
+                  { key: 'filtering', label: 'Filter', icon: Filter, threshold: 75 },
+                  { key: 'organizing', label: 'Organize', icon: BarChart3, threshold: 90 }
                 ].map((phase) => {
                   const isCompleted = searchProgress.progress > phase.threshold
                   const isActive = searchProgress.phase === phase.key || 
                                  (phase.key === 'organizing' && searchProgress.progress >= phase.threshold && searchProgress.progress < 100)
+                  const Icon = phase.icon
                   
                   return (
                     <div 
@@ -219,7 +220,7 @@ export default function SearchPage() {
                       }`}
                     >
                       <div className={`flex justify-center mb-1 ${isActive ? 'animate-bounce' : ''}`}>
-                        {phase.icon}
+                        <Icon className="w-5 h-5" />
                       </div>
                       <div className="text-xs font-medium">{phase.label}</div>
                     </div>
