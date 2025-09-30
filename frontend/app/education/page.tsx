@@ -2,166 +2,222 @@
 
 import React from 'react'
 import Link from 'next/link'
-import { BookOpen, Target, Users, TrendingUp, Mail, CheckCircle } from 'lucide-react'
+import { BookOpen, GraduationCap, Wrench, ArrowRight, Clock, Users, Brain, Zap, Mail, TrendingUp } from 'lucide-react'
 
 export default function EducationPage() {
+  const masterclasses = [
+    {
+      id: 'media-relationships',
+      title: 'How to Find and Build Relationships with Media, Press, and Listicle Authors',
+      description: 'Learn how to identify, contact, and build lasting relationships with the writers who can feature your brand in high-impact listicles and press coverage.',
+      duration: '25-50 min',
+      modules: 5,
+      icon: <Users className="w-6 h-6" />,
+      color: 'blue',
+      slug: '/education/masterclasses/media-relationships'
+    },
+    {
+      id: 'press-release',
+      title: 'From Listicle to Legacy: Why Press Releases Supercharge AI Discovery',
+      description: 'Discover how to turn your listicles into lasting authority by combining them with AI-focused press distribution strategies.',
+      duration: '30 min',
+      modules: 6,
+      icon: <Zap className="w-6 h-6" />,
+      color: 'green',
+      slug: '/education/masterclasses/press-release-strategy'
+    },
+    {
+      id: 'ai-seo',
+      title: 'Understanding AI in a World of GEO, AEO, and LLMO',
+      description: 'Master the evolution of SEO into AI-driven optimization. Learn GEO, AEO, and LLMO strategies to ensure your brand gets cited by AI systems.',
+      duration: '30 min',
+      modules: 5,
+      icon: <Brain className="w-6 h-6" />,
+      color: 'purple',
+      slug: '/education/masterclasses/ai-seo-evolution'
+    }
+  ]
+
+  const tools = [
+    {
+      id: 'outreach-templates',
+      title: '30 Proven Templates for Contacting Listicle Writers',
+      description: 'Copy-and-paste email templates for reaching out to writers across email, LinkedIn, Facebook, Instagram, and more. Each template includes why it works.',
+      icon: <Mail className="w-6 h-6" />,
+      color: 'orange',
+      slug: '/education/tools/outreach-templates'
+    }
+  ]
+
+  const getColorClasses = (color: string) => {
+    const colors: Record<string, { bg: string; text: string; border: string; hover: string }> = {
+      blue: { bg: 'bg-blue-50', text: 'text-blue-600', border: 'border-blue-200', hover: 'hover:border-blue-300' },
+      green: { bg: 'bg-green-50', text: 'text-green-600', border: 'border-green-200', hover: 'hover:border-green-300' },
+      purple: { bg: 'bg-purple-50', text: 'text-purple-600', border: 'border-purple-200', hover: 'hover:border-purple-300' },
+      orange: { bg: 'bg-orange-50', text: 'text-orange-600', border: 'border-orange-200', hover: 'hover:border-orange-300' }
+    }
+    return colors[color] || colors.blue
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 py-12">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
-        <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">
-            Master Listicle Marketing
+        <div className="text-center mb-16">
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-100 rounded-full mb-6">
+            <GraduationCap className="w-8 h-8 text-blue-600" />
+          </div>
+          <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
+            Education Center
           </h1>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-            Learn proven strategies to get your product featured in high-impact listicles and grow your business visibility
+            Master the art of listicle marketing with comprehensive masterclasses, practical guides, and proven templates 
+            to get your brand featured in high-authority publications.
           </p>
         </div>
 
-        {/* Learning Modules */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 mb-16">
-          <div className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow">
-            <div className="bg-blue-100 rounded-full p-3 w-12 h-12 flex items-center justify-center mb-4">
-              <Target className="h-6 w-6 text-blue-600" />
+        {/* MasterClasses Section */}
+        <div className="mb-16">
+          <div className="flex items-center mb-8">
+            <div className="bg-blue-100 rounded-lg p-2 mr-3">
+              <BookOpen className="w-6 h-6 text-blue-600" />
             </div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-3">
-              Finding the Right Listicles
-            </h3>
-            <p className="text-gray-600 mb-4">
-              Learn how to identify high-impact listicles in your industry and evaluate which ones are worth pursuing.
-            </p>
-            <Link href="/blog/content-angles" className="text-blue-600 hover:text-blue-500 font-medium">
-              Read Guide →
-            </Link>
+            <div>
+              <h2 className="text-3xl font-bold text-gray-900">MasterClasses</h2>
+              <p className="text-gray-600">Structured learning paths with exercises and actionable takeaways</p>
+            </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow">
-            <div className="bg-green-100 rounded-full p-3 w-12 h-12 flex items-center justify-center mb-4">
-              <Mail className="h-6 w-6 text-green-600" />
-            </div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-3">
-              Outreach That Works
-            </h3>
-            <p className="text-gray-600 mb-4">
-              Master the art of editor outreach with proven email templates and follow-up strategies that get responses.
-            </p>
-            <Link href="/blog/outreach-templates" className="text-blue-600 hover:text-blue-500 font-medium">
-              Get Templates →
-            </Link>
-          </div>
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {masterclasses.map((course) => {
+              const colors = getColorClasses(course.color)
+              return (
+                <Link 
+                  key={course.id}
+                  href={course.slug}
+                  className={`bg-white rounded-lg border-2 ${colors.border} ${colors.hover} p-6 transition-all hover:shadow-lg group`}
+                >
+                  <div className={`${colors.bg} ${colors.text} rounded-lg p-3 w-12 h-12 flex items-center justify-center mb-4`}>
+                    {course.icon}
+                  </div>
+                  
+                  <h3 className="text-xl font-bold text-gray-900 mb-3 group-hover:text-blue-600 transition-colors">
+                    {course.title}
+                  </h3>
+                  
+                  <p className="text-gray-600 mb-4 text-sm leading-relaxed">
+                    {course.description}
+                  </p>
+                  
+                  <div className="flex items-center justify-between text-sm text-gray-500 mb-4">
+                    <div className="flex items-center">
+                      <Clock className="w-4 h-4 mr-1" />
+                      <span>{course.duration}</span>
+                    </div>
+                    <span>{course.modules} modules</span>
+                  </div>
 
-          <div className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow">
-            <div className="bg-purple-100 rounded-full p-3 w-12 h-12 flex items-center justify-center mb-4">
-              <Users className="h-6 w-6 text-purple-600" />
-            </div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-3">
-              Building Relationships
-            </h3>
-            <p className="text-gray-600 mb-4">
-              Transform one-time placements into ongoing partnerships with editors and content creators.
-            </p>
-            <Link href="/blog/relationship-building" className="text-blue-600 hover:text-blue-500 font-medium">
-              Learn More →
-            </Link>
-          </div>
-
-          <div className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow">
-            <div className="bg-orange-100 rounded-full p-3 w-12 h-12 flex items-center justify-center mb-4">
-              <TrendingUp className="h-6 w-6 text-orange-600" />
-            </div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-3">
-              Measuring Success
-            </h3>
-            <p className="text-gray-600 mb-4">
-              Track the right metrics and optimize your listicle marketing campaigns for maximum ROI.
-            </p>
-            <Link href="/blog/metrics-tracking" className="text-blue-600 hover:text-blue-500 font-medium">
-              View Metrics →
-            </Link>
-          </div>
-
-          <div className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow">
-            <div className="bg-indigo-100 rounded-full p-3 w-12 h-12 flex items-center justify-center mb-4">
-              <BookOpen className="h-6 w-6 text-indigo-600" />
-            </div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-3">
-              SEO Benefits
-            </h3>
-            <p className="text-gray-600 mb-4">
-              Understand how listicle features impact your SEO rankings and brand authority over time.
-            </p>
-            <Link href="/blog/seo-impact" className="text-blue-600 hover:text-blue-500 font-medium">
-              Learn SEO →
-            </Link>
-          </div>
-
-          <div className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow">
-            <div className="bg-pink-100 rounded-full p-3 w-12 h-12 flex items-center justify-center mb-4">
-              <CheckCircle className="h-6 w-6 text-pink-600" />
-            </div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-3">
-              Timing Your Pitches
-            </h3>
-            <p className="text-gray-600 mb-4">
-              Learn the optimal timing for pitching editors and aligning with publication schedules.
-            </p>
-            <Link href="/blog/pitch-timing" className="text-blue-600 hover:text-blue-500 font-medium">
-              Perfect Timing →
-            </Link>
+                  <div className="flex items-center text-blue-600 font-medium text-sm group-hover:translate-x-1 transition-transform">
+                    Start Learning
+                    <ArrowRight className="w-4 h-4 ml-1" />
+                  </div>
+                </Link>
+              )
+            })}
           </div>
         </div>
 
-        {/* Quick Start Guide */}
-        <div className="bg-white rounded-lg shadow-lg p-8 mb-12">
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">Quick Start Guide</h2>
+        {/* Tools Section */}
+        <div className="mb-16">
+          <div className="flex items-center mb-8">
+            <div className="bg-orange-100 rounded-lg p-2 mr-3">
+              <Wrench className="w-6 h-6 text-orange-600" />
+            </div>
+            <div>
+              <h2 className="text-3xl font-bold text-gray-900">Tools & Templates</h2>
+              <p className="text-gray-600">Ready-to-use resources for immediate implementation</p>
+            </div>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-6">
+            {tools.map((tool) => {
+              const colors = getColorClasses(tool.color)
+              return (
+                <Link 
+                  key={tool.id}
+                  href={tool.slug}
+                  className={`bg-white rounded-lg border-2 ${colors.border} ${colors.hover} p-6 transition-all hover:shadow-lg group`}
+                >
+                  <div className={`${colors.bg} ${colors.text} rounded-lg p-3 w-12 h-12 flex items-center justify-center mb-4`}>
+                    {tool.icon}
+                  </div>
+                  
+                  <h3 className="text-xl font-bold text-gray-900 mb-3 group-hover:text-blue-600 transition-colors">
+                    {tool.title}
+                  </h3>
+                  
+                  <p className="text-gray-600 mb-4 text-sm leading-relaxed">
+                    {tool.description}
+                  </p>
+
+                  <div className="flex items-center text-blue-600 font-medium text-sm group-hover:translate-x-1 transition-transform">
+                    View Templates
+                    <ArrowRight className="w-4 h-4 ml-1" />
+                  </div>
+                </Link>
+              )
+            })}
+          </div>
+        </div>
+
+        {/* Learning Path */}
+        <div className="bg-gradient-to-br from-blue-600 to-purple-600 rounded-2xl p-8 md:p-12 text-white">
+          <h2 className="text-3xl font-bold mb-4">Recommended Learning Path</h2>
+          <p className="text-blue-100 mb-8 text-lg">
+            Get the most from our education center by following this structured learning path
+          </p>
           
-          <div className="grid md:grid-cols-3 gap-8">
-            <div className="text-center">
-              <div className="bg-blue-600 text-white rounded-full w-8 h-8 flex items-center justify-center mx-auto mb-4 text-sm font-bold">
+          <div className="space-y-4">
+            <div className="flex items-start">
+              <div className="bg-white text-blue-600 rounded-full w-8 h-8 flex items-center justify-center font-bold flex-shrink-0 mr-4">
                 1
               </div>
-              <h3 className="font-semibold text-gray-900 mb-2">Search & Discover</h3>
-              <p className="text-gray-600 text-sm">
-                Use GetListicled to find relevant listicles in your industry and analyze your competition.
-              </p>
+              <div>
+                <h4 className="font-semibold mb-1">Start with AI & SEO Fundamentals</h4>
+                <p className="text-blue-100 text-sm">Understand how AI is changing search and discovery</p>
+              </div>
             </div>
             
-            <div className="text-center">
-              <div className="bg-blue-600 text-white rounded-full w-8 h-8 flex items-center justify-center mx-auto mb-4 text-sm font-bold">
+            <div className="flex items-start">
+              <div className="bg-white text-blue-600 rounded-full w-8 h-8 flex items-center justify-center font-bold flex-shrink-0 mr-4">
                 2
               </div>
-              <h3 className="font-semibold text-gray-900 mb-2">Craft Your Pitch</h3>
-              <p className="text-gray-600 text-sm">
-                Use our proven email templates to reach out to editors with compelling product information.
-              </p>
+              <div>
+                <h4 className="font-semibold mb-1">Learn Media Relationship Building</h4>
+                <p className="text-blue-100 text-sm">Build your media list and master outreach strategies</p>
+              </div>
             </div>
             
-            <div className="text-center">
-              <div className="bg-blue-600 text-white rounded-full w-8 h-8 flex items-center justify-center mx-auto mb-4 text-sm font-bold">
+            <div className="flex items-start">
+              <div className="bg-white text-blue-600 rounded-full w-8 h-8 flex items-center justify-center font-bold flex-shrink-0 mr-4">
                 3
               </div>
-              <h3 className="font-semibold text-gray-900 mb-2">Track & Optimize</h3>
-              <p className="text-gray-600 text-sm">
-                Monitor your results and build lasting relationships with editors for ongoing features.
-              </p>
+              <div>
+                <h4 className="font-semibold mb-1">Use Outreach Templates</h4>
+                <p className="text-blue-100 text-sm">Apply proven templates to contact writers and editors</p>
+              </div>
+            </div>
+            
+            <div className="flex items-start">
+              <div className="bg-white text-blue-600 rounded-full w-8 h-8 flex items-center justify-center font-bold flex-shrink-0 mr-4">
+                4
+              </div>
+              <div>
+                <h4 className="font-semibold mb-1">Amplify with Press Distribution</h4>
+                <p className="text-blue-100 text-sm">Turn listicle placements into lasting AI authority</p>
+              </div>
             </div>
           </div>
-        </div>
-
-        {/* CTA Section */}
-        <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg p-8 text-center">
-          <h2 className="text-2xl font-bold text-white mb-4">
-            Ready to Get Featured?
-          </h2>
-          <p className="text-blue-100 mb-6 max-w-2xl mx-auto">
-            Put your knowledge into action. Start searching for listicle opportunities in your industry today.
-          </p>
-          <Link 
-            href="/search" 
-            className="bg-white text-blue-600 hover:bg-gray-100 font-medium py-3 px-6 rounded-lg transition-colors inline-block"
-          >
-            Start Searching Now
-          </Link>
         </div>
       </div>
     </div>
