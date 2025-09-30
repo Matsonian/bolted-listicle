@@ -32,7 +32,6 @@ export default function SearchPage() {
   const query = searchParams?.get('q')
 
   useEffect(() => {
-    // Only search if we have a query, haven't searched yet, and auth is loaded
     if (query && !hasSearched.current && status !== 'loading') {
       hasSearched.current = true
       setSearchQuery(query)
@@ -45,7 +44,6 @@ export default function SearchPage() {
     setError('')
 
     try {
-      // Start the actual API call immediately
       const searchPromise = fetch('/api/search', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -55,7 +53,6 @@ export default function SearchPage() {
         return res.json()
       })
       
-      // Run visual progress alongside the real search
       const phases = [
         { phase: 'analyzing', progress: 10, message: 'Analyzing your search query...', delay: 10000 },
         { phase: 'generating', progress: 20, message: 'Generating 10+ search variations...', delay: 10000 },
@@ -64,16 +61,13 @@ export default function SearchPage() {
         { phase: 'organizing', progress: 90, message: 'Organizing and ranking results...', delay: 10000 }
       ]
 
-      // Start with initializing immediately
       setSearchProgress({ phase: 'initializing', progress: 0, message: 'Initializing search...' })
       
-      // Show progress phases while search runs
       const progressPromise = (async () => {
         for (let i = 0; i < phases.length; i++) {
           const phaseData = phases[i]
           
           if (phaseData.phase === 'searching') {
-            // Special handling for search phase - move 1/6 every 10 seconds
             const searchStartProgress = 20
             const searchEndProgress = 75
             const searchRange = searchEndProgress - searchStartProgress
@@ -96,18 +90,14 @@ export default function SearchPage() {
         setSearchProgress({ phase: 'finalizing', progress: 95, message: 'Finalizing results...' })
       })()
 
-      // Wait for both the search and progress to complete
       const [searchData] = await Promise.all([searchPromise, progressPromise])
       
       setSearchProgress({ phase: 'complete', progress: 100, message: 'Search complete!' })
       
-      // Check user status after search completes
       if (!session) {
-        // Redirect non-authenticated users to guest search
         const estimateCount = searchData.results?.length || 0
         router.push(`/guest-search?q=${encodeURIComponent(searchTerm)}&count=${estimateCount}`)
       } else {
-        // Show results for authenticated users (limit to 20)
         const limitedResults = searchData.results?.slice(0, 20) || []
         setResults(limitedResults)
       }
@@ -125,7 +115,7 @@ export default function SearchPage() {
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
     if (searchQuery.trim()) {
-      hasSearched.current = false // Reset so new search can run
+      hasSearched.current = false
       router.push(`/search?q=${encodeURIComponent(searchQuery.trim())}`)
     }
   }
@@ -138,7 +128,6 @@ export default function SearchPage() {
   return (
     <div className="min-h-screen py-8 px-4">
       <div className="container mx-auto max-w-4xl">
-        {/* Search Header */}
         <div className="mb-8">
           <form onSubmit={handleSearch} className="mb-6">
             <div className="relative">
@@ -154,7 +143,6 @@ export default function SearchPage() {
             </div>
           </form>
 
-          {/* Error Message */}
           {error && (
             <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg mb-6">
               <p className="font-medium">Search Error</p>
@@ -171,7 +159,6 @@ export default function SearchPage() {
           )}
         </div>
 
-        {/* Loading State */}
         {loading && (
           <div className="max-w-2xl mx-auto">
             <div className="bg-white rounded-lg shadow-sm border p-8 text-center">
@@ -192,7 +179,6 @@ export default function SearchPage() {
                 </div>
               </div>
 
-              {/* Progress Bar */}
               <div className="relative mb-6">
                 <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
                   <div 
@@ -209,7 +195,6 @@ export default function SearchPage() {
                 </div>
               </div>
 
-              {/* Search Phases */}
               <div className="grid grid-cols-5 gap-2 mb-6">
                 {[
                   { key: 'analyzing', label: 'Analyze', icon: <Brain className="w-5 h-5" />, threshold: 10 },
@@ -233,7 +218,7 @@ export default function SearchPage() {
                           : 'bg-gray-50 text-gray-400'
                       }`}
                     >
-                      <div className={`text-lg mb-1 ${isActive ? 'animate-bounce' : ''}`}>
+                      <div className={`flex justify-center mb-1 ${isActive ? 'animate-bounce' : ''}`}>
                         {phase.icon}
                       </div>
                       <div className="text-xs font-medium">{phase.label}</div>
@@ -242,7 +227,6 @@ export default function SearchPage() {
                 })}
               </div>
 
-              {/* Fun Facts */}
               <div className="text-sm text-gray-500">
                 <p className="mb-2">💡 <strong>Did you know?</strong> We search across 10+ different query variations</p>
                 <p>🎯 Finding the best listicles from major publications and niche experts</p>
@@ -251,7 +235,6 @@ export default function SearchPage() {
           </div>
         )}
 
-        {/* Results - Only show if user is authenticated */}
         {!loading && session && results.length > 0 && (
           <div className="relative">
             <div className="space-y-6">
@@ -296,7 +279,6 @@ export default function SearchPage() {
           </div>
         )}
 
-        {/* No Results */}
         {!loading && query && results.length === 0 && !error && session && (
           <div className="text-center py-12">
             <div className="mb-6">
@@ -318,7 +300,6 @@ export default function SearchPage() {
           </div>
         )}
 
-        {/* Empty State */}
         {!loading && !query && !error && (
           <div className="text-center py-12">
             <Search className="w-16 h-16 text-gray-400 mx-auto mb-4" />
