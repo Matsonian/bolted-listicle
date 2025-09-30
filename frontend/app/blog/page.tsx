@@ -55,56 +55,30 @@ export default function BlogPage() {
       image: 'https://images.pexels.com/photos/270637/pexels-photo-270637.jpeg?auto=compress&cs=tinysrgb&w=800'
     },
     {
-      id: 'pitch-timing',
-      title: 'The Best Times to Pitch Your Product for Listicle Inclusion',
-      subtitle: 'Timing is everything in editorial outreach',
-      description: 'Discover the optimal timing for pitching editors, seasonal content calendars, and how to align your outreach with publication schedules for maximum success.',
-      category: 'Strategy',
+      id: 'ai-citations',
+      title: 'The Complete Guide to AI Citations and Listicles',
+      subtitle: 'How AI models use listicles for recommendations',
+      description: 'Discover how AI systems like ChatGPT, Claude, and Perplexity cite listicles when answering questions, and learn how to position your brand for AI-powered discovery.',
+      category: 'AI & Technology',
       categoryColor: 'bg-purple-100 text-purple-800',
       author: 'GetListicled Team',
       publishDate: '2025-08-23',
-      readTime: '6 min read',
-      slug: '/blog/pitch-timing',
-      image: 'https://images.pexels.com/photos/1181298/pexels-photo-1181298.jpeg?auto=compress&cs=tinysrgb&w=800'
+      readTime: '15 min read',
+      slug: '/blog/ai-citations',
+      image: 'https://images.pexels.com/photos/8386440/pexels-photo-8386440.jpeg?auto=compress&cs=tinysrgb&w=800'
     },
     {
-      id: 'content-angles',
-      title: 'Finding the Perfect Angle: How to Position Your Product in Any Listicle',
-      subtitle: 'Make your product fit naturally into any list',
-      description: 'Master the art of positioning. Learn how to identify content angles, craft compelling product narratives, and make your solution the obvious choice for any listicle.',
-      category: 'Content',
+      id: 'what-are-listicles',
+      title: 'What Are Listicles? A Comprehensive Guide to List-Based Content',
+      subtitle: 'Understanding the power of numbered lists',
+      description: 'Everything you need to know about listicles: what they are, why they work, and how getting featured in them can transform your business visibility and authority.',
+      category: 'Fundamentals',
       categoryColor: 'bg-orange-100 text-orange-800',
       author: 'GetListicled Team',
       publishDate: '2025-08-22',
       readTime: '10 min read',
-      slug: '/blog/content-angles',
+      slug: '/blog/what-are-listicles',
       image: 'https://images.pexels.com/photos/3184291/pexels-photo-3184291.jpeg?auto=compress&cs=tinysrgb&w=800'
-    },
-    {
-      id: 'relationship-building',
-      title: 'Building Long-Term Relationships with Editors and Content Creators',
-      subtitle: 'Beyond the one-time feature',
-      description: 'Transform single placements into ongoing partnerships. Learn how to nurture editor relationships, provide ongoing value, and become their go-to source.',
-      category: 'Relationships',
-      categoryColor: 'bg-pink-100 text-pink-800',
-      author: 'GetListicled Team',
-      publishDate: '2025-08-21',
-      readTime: '9 min read',
-      slug: '/blog/relationship-building',
-      image: 'https://images.pexels.com/photos/3184338/pexels-photo-3184338.jpeg?auto=compress&cs=tinysrgb&w=800'
-    },
-    {
-      id: 'metrics-tracking',
-      title: 'Measuring Success: Key Metrics for Listicle Marketing Campaigns',
-      subtitle: 'What to track and how to optimize',
-      description: 'Set up proper tracking for your listicle marketing efforts. Learn which metrics matter, how to measure ROI, and optimize your campaigns for better results.',
-      category: 'Analytics',
-      categoryColor: 'bg-indigo-100 text-indigo-800',
-      author: 'GetListicled Team',
-      publishDate: '2025-08-20',
-      readTime: '7 min read',
-      slug: '/blog/metrics-tracking',
-      image: 'https://images.pexels.com/photos/590022/pexels-photo-590022.jpeg?auto=compress&cs=tinysrgb&w=800'
     }
   ]
 
