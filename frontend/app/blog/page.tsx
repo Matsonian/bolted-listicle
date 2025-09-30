@@ -29,7 +29,7 @@ export default function BlogPage() {
 
   const blogPosts: BlogPost[] = [
     {
-      id: 'outreach-templates',
+      id: 'five-templates',
       title: '5 Proven Email Templates That Get Your Product Featured in Listicles',
       subtitle: 'Copy-and-paste templates that actually work',
       description: 'Land listicle placements fast. Copy these 5 email templates, subject lines, and follow-ups—plus an asset checklist editors can paste in seconds.',
@@ -38,7 +38,7 @@ export default function BlogPage() {
       author: 'GetListicled Team',
       publishDate: '2025-08-24',
       readTime: '12 min read',
-      slug: '/blog/outreach-templates',
+      slug: '/blog/five-templates',
       image: 'https://images.pexels.com/photos/590020/pexels-photo-590020.jpeg?auto=compress&cs=tinysrgb&w=800'
     },
     {
