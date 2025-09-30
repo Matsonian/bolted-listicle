@@ -50,21 +50,19 @@ export default function PricingPage() {
   }
 
   const monthlyFeatures = [
-    'Comprehensive search results',
+    '2 AI powered searches daily',
+    '20 Curated results per search',
     'AI-powered outreach analysis',
     'Contact information extraction',
     'Personalized email templates',
     'Quality scoring & priority ranking',
-    'Real-time opportunity tracking',
-    'Access to SEO, GEO, LLMO Masterclasses',
+    'Exclusive access to SEO, GEO, LLMO Masterclasses',
     'Email support'
   ]
 
   const annualFeatures = [
     ...monthlyFeatures,
-    '2 months free (save $58)',
-    'Priority email support',
-    'Early access to new features'
+    '2 months free (save $58)'
   ]
 
   return (
@@ -76,7 +74,7 @@ export default function PricingPage() {
             Choose Your GetListicled Plan
           </h1>
           <p className="text-xl text-gray-600 mb-8">
-            Unlock unlimited access to premium listicle opportunities
+            Unlock premium access to incredible listicle opportunities
           </p>
           
           {/* Plan Toggle */}
