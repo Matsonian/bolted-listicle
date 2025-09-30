@@ -5,6 +5,32 @@ import React, { useState } from 'react'
 import Link from 'next/link'
 import { ArrowLeft, Mail, Linkedin, Facebook, Instagram, Globe, Building2, Copy, CheckCircle } from 'lucide-react'
 
+// Define types for templates
+type EmailTemplate = {
+  id: string
+  name: string
+  subject: string
+  body: string
+  why: string
+}
+
+type SocialTemplate = {
+  id: string
+  name: string
+  body: string
+  why: string
+}
+
+type Template = EmailTemplate | SocialTemplate
+
+type Section = {
+  id: string
+  title: string
+  icon: React.ReactNode
+  color: string
+  templates: Template[]
+}
+
 export default function OutreachTemplatesPage() {
   const [copiedId, setCopiedId] = useState<string | null>(null)
 
@@ -14,7 +40,11 @@ export default function OutreachTemplatesPage() {
     setTimeout(() => setCopiedId(null), 2000)
   }
 
-  const sections = [
+  const isEmailTemplate = (template: Template): template is EmailTemplate => {
+    return 'subject' in template
+  }
+
+  const sections: Section[] = [
     {
       id: 'email',
       title: 'Email Outreach Templates',
@@ -324,7 +354,12 @@ DM: "We make [Your Product], which might be a fit for your audience if you revis
                     <div className="flex items-start justify-between mb-4">
                       <h3 className="text-lg font-semibold text-gray-900">{template.name}</h3>
                       <button
-                        onClick={() => handleCopy(template.subject ? `Subject: ${template.subject}\n\n${template.body}` : template.body, template.id)}
+                        onClick={() => {
+                          const textToCopy = isEmailTemplate(template) 
+                            ? `Subject: ${template.subject}\n\n${template.body}` 
+                            : template.body
+                          handleCopy(textToCopy, template.id)
+                        }}
                         className="flex items-center space-x-2 text-blue-600 hover:text-blue-700 text-sm font-medium"
                       >
                         {copiedId === template.id ? (
@@ -341,7 +376,7 @@ DM: "We make [Your Product], which might be a fit for your audience if you revis
                       </button>
                     </div>
 
-                    {template.subject && (
+                    {isEmailTemplate(template) && (
                       <div className="mb-3">
                         <span className="text-sm font-medium text-gray-700">Subject: </span>
                         <span className="text-sm text-gray-600">{template.subject}</span>
