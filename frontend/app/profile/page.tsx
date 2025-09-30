@@ -70,10 +70,10 @@ export default function ProfilePage() {
 
   const businessInfo = {
     name: user.businessName || '',
-    location: user.businessLocation || '',
+    location: (user as any).businessLocation || '',
     description: user.businessDescription || '',
-    product: user.primaryProduct || '',
-    website: user.businessWebsite || ''
+    product: (user as any).primaryProduct || '',
+    website: (user as any).businessWebsite || ''
   }
 
   const searchHistory = [
