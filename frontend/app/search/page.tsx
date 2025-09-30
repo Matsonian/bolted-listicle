@@ -252,7 +252,7 @@ export default function SearchPage() {
                 
                 <div className="flex items-center justify-between">
                   
-                    href={article.url}
+                 <a href={article.url}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="inline-flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors duration-200"
