@@ -53,6 +53,8 @@ export default function SearchPage() {
         return res.json()
       })
       
+      setSearchProgress({ phase: 'initializing', progress: 0, message: 'Initializing search...' })
+      
       const phases = [
         { phase: 'analyzing', progress: 10, message: 'Analyzing your search query...', delay: 10000 },
         { phase: 'generating', progress: 20, message: 'Generating 10+ search variations...', delay: 10000 },
@@ -61,12 +63,8 @@ export default function SearchPage() {
         { phase: 'organizing', progress: 90, message: 'Organizing and ranking results...', delay: 10000 }
       ]
 
-      setSearchProgress({ phase: 'initializing', progress: 0, message: 'Initializing search...' })
-      
       const progressPromise = (async () => {
-        for (let i = 0; i < phases.length; i++) {
-          const phaseData = phases[i]
-          
+        for (const phaseData of phases) {
           if (phaseData.phase === 'searching') {
             const searchStartProgress = 20
             const searchEndProgress = 75
@@ -163,20 +161,18 @@ export default function SearchPage() {
           <div className="max-w-2xl mx-auto">
             <div className="bg-white rounded-lg shadow-sm border p-8 text-center">
               <div className="mb-6">
-                <div className="relative">
-                  <div className="flex items-center justify-center mb-4">
-                    <Search className="w-8 h-8 text-blue-600 animate-pulse" />
-                  </div>
-                  <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                    Searching for Amazing Listicles
-                  </h3>
-                  <p className="text-gray-600 mb-6">
-                    {searchProgress.message}
-                  </p>
-                  <p className="text-sm text-blue-600 font-medium mb-4">
-                    This may take several minutes, sit back, relax and be amazed.
-                  </p>
+                <div className="flex items-center justify-center mb-4">
+                  <Search className="w-8 h-8 text-blue-600 animate-pulse" />
                 </div>
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                  Searching for Amazing Listicles
+                </h3>
+                <p className="text-gray-600 mb-6">
+                  {searchProgress.message}
+                </p>
+                <p className="text-sm text-blue-600 font-medium mb-4">
+                  This may take several minutes, sit back, relax and be amazed.
+                </p>
               </div>
 
               <div className="relative mb-6">
@@ -196,36 +192,36 @@ export default function SearchPage() {
               </div>
 
               <div className="grid grid-cols-5 gap-2 mb-6">
-                {[
-                  { key: 'analyzing', label: 'Analyze', icon: Brain, threshold: 10 },
-                  { key: 'generating', label: 'Generate', icon: Zap, threshold: 20 },
-                  { key: 'searching', label: 'Search', icon: Globe, threshold: 35 },
-                  { key: 'filtering', label: 'Filter', icon: Filter, threshold: 75 },
-                  { key: 'organizing', label: 'Organize', icon: BarChart3, threshold: 90 }
-                ].map((phase) => {
-                  const isCompleted = searchProgress.progress > phase.threshold
-                  const isActive = searchProgress.phase === phase.key || 
-                                 (phase.key === 'organizing' && searchProgress.progress >= phase.threshold && searchProgress.progress < 100)
-                  const Icon = phase.icon
-                  
-                  return (
-                    <div 
-                      key={phase.key}
-                      className={`p-3 rounded-lg text-center transition-all duration-500 ${
-                        isCompleted
-                          ? 'bg-blue-100 text-blue-700 scale-105' 
-                          : isActive
-                          ? 'bg-blue-50 text-blue-600 scale-110 ring-2 ring-blue-200'
-                          : 'bg-gray-50 text-gray-400'
-                      }`}
-                    >
-                      <div className={`flex justify-center mb-1 ${isActive ? 'animate-bounce' : ''}`}>
-                        <Icon className="w-5 h-5" />
-                      </div>
-                      <div className="text-xs font-medium">{phase.label}</div>
-                    </div>
-                  )
-                })}
+                <div className={`p-3 rounded-lg text-center transition-all duration-500 ${searchProgress.progress > 10 ? 'bg-blue-100 text-blue-700 scale-105' : searchProgress.phase === 'analyzing' ? 'bg-blue-50 text-blue-600 scale-110 ring-2 ring-blue-200' : 'bg-gray-50 text-gray-400'}`}>
+                  <div className={`flex justify-center mb-1 ${searchProgress.phase === 'analyzing' ? 'animate-bounce' : ''}`}>
+                    <Brain className="w-5 h-5" />
+                  </div>
+                  <div className="text-xs font-medium">Analyze</div>
+                </div>
+                <div className={`p-3 rounded-lg text-center transition-all duration-500 ${searchProgress.progress > 20 ? 'bg-blue-100 text-blue-700 scale-105' : searchProgress.phase === 'generating' ? 'bg-blue-50 text-blue-600 scale-110 ring-2 ring-blue-200' : 'bg-gray-50 text-gray-400'}`}>
+                  <div className={`flex justify-center mb-1 ${searchProgress.phase === 'generating' ? 'animate-bounce' : ''}`}>
+                    <Zap className="w-5 h-5" />
+                  </div>
+                  <div className="text-xs font-medium">Generate</div>
+                </div>
+                <div className={`p-3 rounded-lg text-center transition-all duration-500 ${searchProgress.progress > 35 ? 'bg-blue-100 text-blue-700 scale-105' : searchProgress.phase === 'searching' ? 'bg-blue-50 text-blue-600 scale-110 ring-2 ring-blue-200' : 'bg-gray-50 text-gray-400'}`}>
+                  <div className={`flex justify-center mb-1 ${searchProgress.phase === 'searching' ? 'animate-bounce' : ''}`}>
+                    <Globe className="w-5 h-5" />
+                  </div>
+                  <div className="text-xs font-medium">Search</div>
+                </div>
+                <div className={`p-3 rounded-lg text-center transition-all duration-500 ${searchProgress.progress > 75 ? 'bg-blue-100 text-blue-700 scale-105' : searchProgress.phase === 'filtering' ? 'bg-blue-50 text-blue-600 scale-110 ring-2 ring-blue-200' : 'bg-gray-50 text-gray-400'}`}>
+                  <div className={`flex justify-center mb-1 ${searchProgress.phase === 'filtering' ? 'animate-bounce' : ''}`}>
+                    <Filter className="w-5 h-5" />
+                  </div>
+                  <div className="text-xs font-medium">Filter</div>
+                </div>
+                <div className={`p-3 rounded-lg text-center transition-all duration-500 ${searchProgress.progress >= 90 ? 'bg-blue-100 text-blue-700 scale-105' : searchProgress.phase === 'organizing' ? 'bg-blue-50 text-blue-600 scale-110 ring-2 ring-blue-200' : 'bg-gray-50 text-gray-400'}`}>
+                  <div className={`flex justify-center mb-1 ${searchProgress.phase === 'organizing' ? 'animate-bounce' : ''}`}>
+                    <BarChart3 className="w-5 h-5" />
+                  </div>
+                  <div className="text-xs font-medium">Organize</div>
+                </div>
               </div>
 
               <div className="text-sm text-gray-500">
@@ -237,67 +233,63 @@ export default function SearchPage() {
         )}
 
         {!loading && session && results.length > 0 && (
-          <div className="relative">
-            <div className="space-y-6">
-              {results.map((article) => (
-                <div 
-                  key={article.id} 
-                  className="bg-white rounded-lg shadow-sm border p-6 transition-all duration-200 hover:shadow-lg"
-                >
-                  <h2 className="text-xl font-semibold text-gray-900 mb-3 hover:text-blue-600 transition-colors">
-                    {article.title}
-                  </h2>
-                  
-                  <div className="flex items-center space-x-4 text-sm text-gray-500 mb-4">
-                    <div className="flex items-center space-x-1">
-                      <Globe className="w-4 h-4" />
-                      <span>{article.domain}</span>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-center justify-between">
-                    
-                      href={article.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors duration-200"
-                    >
-                      <span>View Listicle</span>
-                      <ExternalLink className="w-4 h-4" />
-                    </a>
-                    
-                    <button
-                      onClick={() => handleGetListicled(article)}
-                      className="inline-flex items-center space-x-2 bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-all duration-200 shadow-md hover:shadow-lg"
-                    >
-                      <span>GetListicled</span>
-                      <ArrowUpRight className="w-4 h-4" />
-                    </button>
+          <div className="space-y-6">
+            {results.map((article) => (
+              <div 
+                key={article.id} 
+                className="bg-white rounded-lg shadow-sm border p-6 transition-all duration-200 hover:shadow-lg"
+              >
+                <h2 className="text-xl font-semibold text-gray-900 mb-3 hover:text-blue-600 transition-colors">
+                  {article.title}
+                </h2>
+                
+                <div className="flex items-center space-x-4 text-sm text-gray-500 mb-4">
+                  <div className="flex items-center space-x-1">
+                    <Globe className="w-4 h-4" />
+                    <span>{article.domain}</span>
                   </div>
                 </div>
-              ))}
-            </div>
+                
+                <div className="flex items-center justify-between">
+                  
+                    href={article.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors duration-200"
+                  >
+                    <span>View Listicle</span>
+                    <ExternalLink className="w-4 h-4" />
+                  </a>
+                  
+                  <button
+                    onClick={() => handleGetListicled(article)}
+                    className="inline-flex items-center space-x-2 bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-all duration-200 shadow-md hover:shadow-lg"
+                  >
+                    <span>GetListicled</span>
+                    <ArrowUpRight className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            ))}
           </div>
         )}
 
         {!loading && query && results.length === 0 && !error && session && (
           <div className="text-center py-12">
-            <div className="mb-6">
-              <Search className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-              <h2 className="text-2xl font-semibold text-gray-900 mb-2">No Results Found</h2>
-              <p className="text-gray-600 mb-6">
-                We couldn't find any listicles matching "{query}". Try different keywords or check your spelling.
-              </p>
-              <button
-                onClick={() => {
-                  setSearchQuery('')
-                  hasSearched.current = false
-                }}
-                className="bg-blue-600 hover:bg-blue-700 text-white font-medium px-6 py-2 rounded-lg transition-colors"
-              >
-                Try New Search
-              </button>
-            </div>
+            <Search className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+            <h2 className="text-2xl font-semibold text-gray-900 mb-2">No Results Found</h2>
+            <p className="text-gray-600 mb-6">
+              We couldn't find any listicles matching "{query}". Try different keywords or check your spelling.
+            </p>
+            <button
+              onClick={() => {
+                setSearchQuery('')
+                hasSearched.current = false
+              }}
+              className="bg-blue-600 hover:bg-blue-700 text-white font-medium px-6 py-2 rounded-lg transition-colors"
+            >
+              Try New Search
+            </button>
           </div>
         )}
 
