@@ -68,7 +68,7 @@ export default function EducationPage() {
             <GraduationCap className="w-8 h-8 text-blue-600" />
           </div>
           <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
-            Education Center
+            Member's Only Education Center
           </h1>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto">
             Master the art of listicle marketing with comprehensive masterclasses, practical guides, and proven templates 
