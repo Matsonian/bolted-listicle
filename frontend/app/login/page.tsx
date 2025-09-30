@@ -67,7 +67,7 @@ export default function LoginPage() {
       if (result?.error) {
         setError("Account created but sign-in failed. Please try signing in manually.")
       } else if (result?.ok) {
-        router.push("/welcome")
+        router.push("/pricing")
       }
     } catch (error: any) {
       setError(error.message || "Failed to create account")
@@ -91,7 +91,7 @@ export default function LoginPage() {
       if (result?.error) {
         setError("Invalid email or password")
       } else if (result?.ok) {
-        router.push("/welcome")
+        router.push("/pricing")
       }
     } catch (error) {
       setError("An unexpected error occurred. Please try again.")
@@ -153,11 +153,11 @@ export default function LoginPage() {
         email: otpData.email,
         password: "otp-signin", // Special flag for OTP signin
         otp: otpData.otpCode,
-        callbackUrl: "/welcome",
+        callbackUrl: "/pricing",
       })
       console.log("signInResult", JSON.stringify(signInResult))
       if (signInResult?.ok) {
-        router.push("/welcome")
+        router.push("/pricing")
       } else {
         setError("Sign-in failed after OTP verification, try logging in with a different method.")
       }
