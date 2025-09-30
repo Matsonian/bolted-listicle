@@ -16,7 +16,9 @@ export default function PricingPage() {
 
   const handleSubscribe = async (priceId: string) => {
     if (!session) {
-      router.push('/auth/signin')
+      // Store the intended plan and redirect to signup
+      localStorage.setItem('intended_plan', priceId)
+      router.push('/signup')
       return
     }
 
@@ -50,19 +52,20 @@ export default function PricingPage() {
   }
 
   const monthlyFeatures = [
-    '2 AI powered searches daily',
-    '20 Curated results per search',
+    'Unlimited listicle searches',
     'AI-powered outreach analysis',
     'Contact information extraction',
     'Personalized email templates',
     'Quality scoring & priority ranking',
-    'Exclusive access to SEO, GEO, LLMO Masterclasses',
+    'Real-time opportunity tracking',
     'Email support'
   ]
 
   const annualFeatures = [
     ...monthlyFeatures,
-    '2 months free (save $58)'
+    '2 months free (save $58)',
+    'Priority email support',
+    'Early access to new features'
   ]
 
   return (
@@ -74,7 +77,7 @@ export default function PricingPage() {
             Choose Your GetListicled Plan
           </h1>
           <p className="text-xl text-gray-600 mb-8">
-            Unlock premium access to incredible listicle opportunities
+            Unlock unlimited access to premium listicle opportunities
           </p>
           
           {/* Plan Toggle */}
