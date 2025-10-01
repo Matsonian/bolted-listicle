@@ -38,29 +38,29 @@ class PerplexitySearchService {
       const allResults: ListicleResult[] = [];
       
       console.log('=== ENHANCED SEARCH STRATEGY ===');
-      console.log('Search variations (${searchVariations.length}):', searchVariations);
+      console.log(`Search variations (${searchVariations.length}):`, searchVariations);
       
       for (let i = 0; i < searchVariations.length; i++) {
         const searchTerm = searchVariations[i];
-        console.log('\n--- Search ${i + 1}/${searchVariations.length}: "${searchTerm}" ---');
+        console.log(`\n--- Search ${i + 1}/${searchVariations.length}: "${searchTerm}" ---`);
         
         try {
           const results = await this.performSingleSearch(searchTerm, sanitizedQuery);
-          console.log('Found ${results.length} results for "${searchTerm}"');
+          console.log(`Found ${results.length} results for "${searchTerm}"`);
           allResults.push(...results);
           
           if (i < searchVariations.length - 1) {
             await new Promise(resolve => setTimeout(resolve, 800));
           }
         } catch (error) {
-          console.error('Error in search variation "${searchTerm}":', error);
+          console.error(`Error in search variation "${searchTerm}":`, error);
         }
       }
       
       const uniqueResults = this.deduplicateResults(allResults);
-      console.log('\n=== ENHANCED RESULTS ===');
-      console.log('Total results before deduplication: ${allResults.length}');
-      console.log('Unique results after deduplication: ${uniqueResults.length}');
+      console.log(`\n=== ENHANCED RESULTS ===`);
+      console.log(`Total results before deduplication: ${allResults.length}`);
+      console.log(`Unique results after deduplication: ${uniqueResults.length}`);
       console.log('=========================');
       
       return uniqueResults.slice(0, 50);
@@ -78,29 +78,29 @@ class PerplexitySearchService {
   generateSearchVariations(query: string): string[] {
     const variations = [
       query,
-      'best ${query}',
-      'top ${query}',
-      '${query} reviews',
-      // 'top 10 ${query}',
-      // 'top 15 ${query}',
-      // 'best 5 ${query}',
-      // '7 best ${query}',
-      '${query} buying guide',
-      '${query} recommendations',
-      '${query} buyer`s guide',
-      'ultimate ${query} guide',
-      'complete ${query} guide',
-      '${query} roundup',
-      '${query} tested',
-      '${query} comparison',
-      '${query} vs',
-      'best budget ${query}',
-      'cheap ${query}',
-      'affordable ${query}',
-      '${query} for beginners',
-      'professional ${query}',
-      'best ${query} 2024',
-      '${query} 2025'
+      `best ${query}`,
+      `top ${query}`,
+      `${query} reviews`,
+      // `top 10 ${query}`,
+      // `top 15 ${query}`,
+      // `best 5 ${query}`,
+      // `7 best ${query}`,
+      `${query} buying guide`,
+      `${query} recommendations`,
+      `${query} buyer's guide`,
+      `ultimate ${query} guide`,
+      `complete ${query} guide`,
+      `${query} roundup`,
+      `${query} tested`,
+      `${query} comparison`,
+      `${query} vs`,
+      `best budget ${query}`,
+      `cheap ${query}`,
+      `affordable ${query}`,
+      `${query} for beginners`,
+      `professional ${query}`,
+      `best ${query} 2024`,
+      `${query} 2025`
     ];
     
     return Array.from(new Set(variations)).slice(0, 12);
@@ -110,7 +110,7 @@ class PerplexitySearchService {
     const response = await fetch(this.baseUrl, {
       method: 'POST',
       headers: {
-        'Authorization': 'Bearer ${this.apiKey}',
+        'Authorization': `Bearer ${this.apiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
@@ -157,7 +157,7 @@ ABSOLUTELY DO NOT:
 - Include general blogs without specific listicles
 - Add commentary about websites being "good resources"
 
-Only verified, actual listicle articles with real titles and working URLs from editorial sources.
+Only verified, actual listicle articles with real titles and working URLs from editorial sources.`
           }
         ],
         return_citations: true,
@@ -169,8 +169,8 @@ Only verified, actual listicle articles with real titles and working URLs from e
     });
 
     if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}));
-    throw new Error('Perplexity API error: ${response.status} ${response.statusText}');
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(`Perplexity API error: ${response.status} ${response.statusText}`);
     }
 
     const data = await response.json();
@@ -184,9 +184,9 @@ Only verified, actual listicle articles with real titles and working URLs from e
     const uniqueUrls = Array.from(new Set(allUrls));
     
     console.log('=== URL EXTRACTION DEBUG ===');
-    console.log('Citations found: ${citations.length}');
-    console.log('Content URLs extracted: ${contentUrls.length}');
-    console.log('Total unique URLs: ${uniqueUrls.length}');
+    console.log(`Citations found: ${citations.length}`);
+    console.log(`Content URLs extracted: ${contentUrls.length}`);
+    console.log(`Total unique URLs: ${uniqueUrls.length}`);
     
     return this.parseResults(uniqueUrls, content, originalQuery);
   }
@@ -203,32 +203,31 @@ Only verified, actual listicle articles with real titles and working URLs from e
           const hostname = urlObj.hostname.toLowerCase();
           const pathname = urlObj.pathname.toLowerCase();
           
-const excludePatterns = [
-  // YouTube - all variants
-  'youtube.com', 'www.youtube.com', 'youtu.be', 'youtube', 'm.youtube.com', 'music.youtube.com', 'studio.youtube.com',
-  // Video platforms
-  'vimeo.com', 'dailymotion.com', 'twitch.tv',
-  // Social media
-  'facebook.com', 'twitter.com', 'instagram.com', 'linkedin.com',
-  'tiktok.com', 'pinterest.com', 'snapchat.com',
-  // Navigation pages
-  '/search', '/tag/', '/category/', '/author/', '/page/',
-  '/contact', '/about', '/privacy', '/terms', '/sitemap',
-  // File types
-  '.pdf', '.doc', '.xls', '.ppt', '.zip', '.mp4', '.mp3', '.avi',
-  // Low-quality domains
-  'reddit.com', 'quora.com', 'answers.com',
-  // Product/shopping page patterns (not entire domains)
-  '/product/', '/products/', '/buy/', '/shop/', '/cart/', '/checkout/',
-  '/dp/', '/gp/product/', '/item/', '/p/', 'add-to-cart', 'buy-now',
-  '?pid=', '?product=', '/catalog/', '/store/'
-];
+          const excludePatterns = [
+            // YouTube - all variants
+            'youtube.com', 'www.youtube.com', 'youtu.be', 'youtube', 'm.youtube.com', 'music.youtube.com', 'studio.youtube.com',
+            // Video platforms
+            'vimeo.com', 'dailymotion.com', 'twitch.tv',
+            // Social media
+            'facebook.com', 'twitter.com', 'instagram.com', 'linkedin.com',
+            'tiktok.com', 'pinterest.com', 'snapchat.com',
+            // Navigation pages
+            '/search', '/tag/', '/category/', '/author/', '/page/',
+            '/contact', '/about', '/privacy', '/terms', '/sitemap',
+            // File types
+            '.pdf', '.doc', '.xls', '.ppt', '.zip', '.mp4', '.mp3', '.avi',
+            // Low-quality domains
+            'reddit.com', 'quora.com', 'answers.com',
+            // Product/shopping page patterns (not entire domains)
+            '/product/', '/products/', '/buy/', '/shop/', '/cart/', '/checkout/',
+            '/dp/', '/gp/product/', '/item/', '/p/', 'add-to-cart', 'buy-now',
+            '?pid=', '?product=', '/catalog/', '/store/'
+          ];
           
-      
           const isExcluded = excludePatterns.some(pattern => 
-  hostname.includes(pattern.toLowerCase()) || 
-  url.toLowerCase().includes(pattern.toLowerCase())
-);
+            hostname.includes(pattern.toLowerCase()) || 
+            url.toLowerCase().includes(pattern.toLowerCase())
+          );
           
           return !isExcluded;
         } catch {
@@ -252,7 +251,7 @@ const excludePatterns = [
                      this.generateTitleFromDomain(domain, query);
         
         results.push({
-          id: 'enhanced-${Date.now()}-${index}',
+          id: `enhanced-${Date.now()}-${index}`,
           title,
           url,
           domain
@@ -262,7 +261,7 @@ const excludePatterns = [
       }
     });
 
-    console.log('Parsed ${results.length} results from ${urls.length} URLs');
+    console.log(`Parsed ${results.length} results from ${urls.length} URLs`);
     return results.slice(0, 40);
   }
 
@@ -379,7 +378,7 @@ const excludePatterns = [
       word.charAt(0).toUpperCase() + word.slice(1)
     ).join(' ');
     
-    return '${capitalizedQuery} Guide from ${capitalizedDomain}';
+    return `${capitalizedQuery} Guide from ${capitalizedDomain}`;
   }
 }
 
