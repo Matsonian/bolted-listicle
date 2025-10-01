@@ -203,7 +203,7 @@ Only verified, actual listicle articles with real titles and working URLs from e
           const hostname = urlObj.hostname.toLowerCase();
           const pathname = urlObj.pathname.toLowerCase();
           
-        const excludePatterns = [
+const excludePatterns = [
   // YouTube - all variants
   'youtube.com', 'www.youtube.com', 'youtu.be', 'youtube', 'm.youtube.com', 'music.youtube.com', 'studio.youtube.com',
   // Video platforms
@@ -216,10 +216,12 @@ Only verified, actual listicle articles with real titles and working URLs from e
   '/contact', '/about', '/privacy', '/terms', '/sitemap',
   // File types
   '.pdf', '.doc', '.xls', '.ppt', '.zip', '.mp4', '.mp3', '.avi',
-  // Low-quality domains to avoid
+  // Low-quality domains
   'reddit.com', 'quora.com', 'answers.com',
-  // Shopping/affiliate sites (if you want to exclude)
-  'amazon.com/gp/', 'ebay.com', 'walmart.com', 'target.com'
+  // Product/shopping page patterns (not entire domains)
+  '/product/', '/products/', '/buy/', '/shop/', '/cart/', '/checkout/',
+  '/dp/', '/gp/product/', '/item/', '/p/', 'add-to-cart', 'buy-now',
+  '?pid=', '?product=', '/catalog/', '/store/'
 ];
           
       
