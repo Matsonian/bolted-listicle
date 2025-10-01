@@ -38,29 +38,29 @@ class PerplexitySearchService {
       const allResults: ListicleResult[] = [];
       
       console.log('=== ENHANCED SEARCH STRATEGY ===');
-      console.log(`Search variations (${searchVariations.length}):`, searchVariations);
+      console.log('Search variations (${searchVariations.length}):', searchVariations);
       
       for (let i = 0; i < searchVariations.length; i++) {
         const searchTerm = searchVariations[i];
-        console.log(`\n--- Search ${i + 1}/${searchVariations.length}: "${searchTerm}" ---`);
+        console.log('\n--- Search ${i + 1}/${searchVariations.length}: "${searchTerm}" ---');
         
         try {
           const results = await this.performSingleSearch(searchTerm, sanitizedQuery);
-          console.log(`Found ${results.length} results for "${searchTerm}"`);
+          console.log('Found ${results.length} results for "${searchTerm}"');
           allResults.push(...results);
           
           if (i < searchVariations.length - 1) {
             await new Promise(resolve => setTimeout(resolve, 800));
           }
         } catch (error) {
-          console.error(`Error in search variation "${searchTerm}":`, error);
+          console.error('Error in search variation "${searchTerm}":', error);
         }
       }
       
       const uniqueResults = this.deduplicateResults(allResults);
-      console.log(`\n=== ENHANCED RESULTS ===`);
-      console.log(`Total results before deduplication: ${allResults.length}`);
-      console.log(`Unique results after deduplication: ${uniqueResults.length}`);
+      console.log('\n=== ENHANCED RESULTS ===');
+      console.log('Total results before deduplication: ${allResults.length}');
+      console.log('Unique results after deduplication: ${uniqueResults.length}');
       console.log('=========================');
       
       return uniqueResults.slice(0, 50);
@@ -78,29 +78,29 @@ class PerplexitySearchService {
   generateSearchVariations(query: string): string[] {
     const variations = [
       query,
-      `best ${query}`,
-      `top ${query}`,
-      `${query} reviews`,
-      // `top 10 ${query}`,
-      // `top 15 ${query}`,
-      // `best 5 ${query}`,
-      // `7 best ${query}`,
-      `${query} buying guide`,
-      `${query} recommendations`,
-      `${query} buyer's guide`,
-      `ultimate ${query} guide`,
-      `complete ${query} guide`,
-      `${query} roundup`,
-      `${query} tested`,
-      `${query} comparison`,
-      `${query} vs`,
-      `best budget ${query}`,
-      `cheap ${query}`,
-      `affordable ${query}`,
-      `${query} for beginners`,
-      `professional ${query}`,
-      `best ${query} 2024`,
-      `${query} 2025`
+      'best ${query}',
+      'top ${query}',
+      '${query} reviews',
+      // 'top 10 ${query}',
+      // 'top 15 ${query}',
+      // 'best 5 ${query}',
+      // '7 best ${query}',
+      '${query} buying guide',
+      '${query} recommendations',
+      '${query} buyer's guide',
+      'ultimate ${query} guide',
+      'complete ${query} guide',
+      '${query} roundup',
+      '${query} tested',
+      '${query} comparison',
+      '${query} vs',
+      'best budget ${query}',
+      'cheap ${query}',
+      'affordable ${query}',
+      '${query} for beginners',
+      'professional ${query}',
+      'best ${query} 2024',
+      '${query} 2025'
     ];
     
     return Array.from(new Set(variations)).slice(0, 12);
@@ -110,7 +110,7 @@ class PerplexitySearchService {
     const response = await fetch(this.baseUrl, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${this.apiKey}`,
+        'Authorization': 'Bearer ${this.apiKey}',
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
@@ -118,7 +118,7 @@ class PerplexitySearchService {
         messages: [
           {
             role: 'user',
-            content: `Find ALL listicles and "best of" articles about: ${searchTerm}
+            content: 'Find ALL listicles and "best of" articles about: ${searchTerm}
 
 CRITICAL INSTRUCTIONS:
 - ONLY return results for articles that actually exist and that you can verify
@@ -183,10 +183,10 @@ Only verified, actual listicle articles with real titles and working URLs from e
     const allUrls = [...citationUrls, ...contentUrls];
     const uniqueUrls = Array.from(new Set(allUrls));
     
-    console.log(`=== URL EXTRACTION DEBUG ===`);
-    console.log(`Citations found: ${citations.length}`);
-    console.log(`Content URLs extracted: ${contentUrls.length}`);
-    console.log(`Total unique URLs: ${uniqueUrls.length}`);
+    console.log('=== URL EXTRACTION DEBUG ===');
+    console.log('Citations found: ${citations.length}');
+    console.log('Content URLs extracted: ${contentUrls.length}');
+    console.log('Total unique URLs: ${uniqueUrls.length}');
     
     return this.parseResults(uniqueUrls, content, originalQuery);
   }
@@ -252,7 +252,7 @@ const excludePatterns = [
                      this.generateTitleFromDomain(domain, query);
         
         results.push({
-          id: `enhanced-${Date.now()}-${index}`,
+          id: 'enhanced-${Date.now()}-${index}',
           title,
           url,
           domain
@@ -262,7 +262,7 @@ const excludePatterns = [
       }
     });
 
-    console.log(`Parsed ${results.length} results from ${urls.length} URLs`);
+    console.log('Parsed ${results.length} results from ${urls.length} URLs');
     return results.slice(0, 40);
   }
 
@@ -379,7 +379,7 @@ const excludePatterns = [
       word.charAt(0).toUpperCase() + word.slice(1)
     ).join(' ');
     
-    return `${capitalizedQuery} Guide from ${capitalizedDomain}`;
+    return '${capitalizedQuery} Guide from ${capitalizedDomain}';
   }
 }
 
