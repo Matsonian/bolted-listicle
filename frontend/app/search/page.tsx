@@ -57,7 +57,7 @@ export default function SearchPage() {
       
       const phases = [
         { phase: 'analyzing', progress: 10, message: 'Analyzing your search query...', delay: 10000 },
-        { phase: 'generating', progress: 20, message: 'Generating 10+ search variations...', delay: 10000 },
+        { phase: 'generating', progress: 20, message: 'Generating 20+ search variations...', delay: 10000 },
         { phase: 'searching', progress: 35, message: 'Searching across the web for listicles...', delay: 60000 },
         { phase: 'filtering', progress: 75, message: 'Filtering high-quality listicles...', delay: 10000 },
         { phase: 'organizing', progress: 90, message: 'Organizing and ranking results...', delay: 10000 }
@@ -225,7 +225,7 @@ export default function SearchPage() {
               </div>
 
               <div className="text-sm text-gray-500">
-                <p className="mb-2">💡 <strong>Did you know?</strong> We search across 10+ different query variations</p>
+                <p className="mb-2">💡 <strong>Did you know?</strong> We search across 20+ different query variations</p>
                 <p>🎯 Finding the best listicles from major publications and niche experts</p>
               </div>
             </div>
