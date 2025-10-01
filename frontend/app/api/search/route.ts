@@ -118,7 +118,7 @@ class PerplexitySearchService {
         messages: [
           {
             role: 'user',
-            content: 'Find ALL listicles and "best of" articles about: ${searchTerm}
+            content: `Find ALL listicles and "best of" articles about: ${searchTerm}
 
 CRITICAL INSTRUCTIONS:
 - ONLY return results for articles that actually exist and that you can verify
