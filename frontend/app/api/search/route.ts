@@ -125,19 +125,23 @@ CRITICAL INSTRUCTIONS:
 - DO NOT make up or fabricate any URLs
 - DO NOT create fake article titles
 - DO NOT provide general website recommendations or "this is a good site for..." statements
-- DO NOT deliver ecommerce results or links to product pages 
+- DO NOT deliver ecommerce results, product pages, or shopping sites (Amazon, Chewy, Walmart, etc.)
+- Exclude retail websites, online stores, and any pages with purchase functionality
 - If you find fewer than 10 results, that's perfectly fine - quality over quantity
 
 WHAT I NEED:
 - Real article titles (preferably H1 tags from actual webpages)
 - Working URLs to actual articles
-- Only listicles, rankings, and "best of" articles - high quality blogs or informational sites are okay - low quality blogs or informational sites are not okay
+- Only listicles, rankings, and "best of" articles from editorial sources
+- High quality blogs, magazines, review sites, or informational publications
+- Editorial content that reviews/compares products (NOT pages that sell them)
 
 SEARCH CRITERIA:
 - Numbered lists ("Top 10", "Best 5", etc.)
 - "Best of" product recommendations
 - Product comparison articles
 - Buying guides with ranked recommendations
+- Expert reviews and editorial roundups
 
 RESPONSE FORMAT:
 For each REAL article you find:
@@ -148,11 +152,12 @@ If you can only find 3-5 real articles, return those. Do not pad the results wit
 
 ABSOLUTELY DO NOT:
 - Invent URLs that don't exist
-- Create generic titles like "Best [Product] Guide"  
+- Create generic titles like "Best [Product] Guide"
+- Include shopping sites, product pages, or ecommerce platforms
 - Include general blogs without specific listicles
 - Add commentary about websites being "good resources"
 
-Only verified, actual listicle articles with real titles and working URLs.`
+Only verified, actual listicle articles with real titles and working URLs from editorial sources.
           }
         ],
         return_citations: true,
@@ -200,7 +205,7 @@ Only verified, actual listicle articles with real titles and working URLs.`
           
         const excludePatterns = [
   // YouTube - all variants
-  'youtube.com', 'youtu.be', 'youtube', 'm.youtube.com', 'music.youtube.com', 'studio.youtube.com',
+  'youtube.com', 'www.youtube.com', 'youtu.be', 'youtube', 'm.youtube.com', 'music.youtube.com', 'studio.youtube.com',
   // Video platforms
   'vimeo.com', 'dailymotion.com', 'twitch.tv',
   // Social media
