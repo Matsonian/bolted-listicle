@@ -2,8 +2,8 @@ import { gql } from "graphql-tag";
 
 
 export const UPDATE_USER = gql`
-mutation UpdateUser($address1: String, $address2: String, $city: String, $email: String, $firstName: String, $businessDescription: String, $businessName: String, $dailySearchesUsed: Int, $isOnboarded: Boolean, $lastName: String, $state: String, $tier: String, $website: String, $yearOfFounding: Int) {
-  updateUser(address1: $address1, address2: $address2, city: $city, email: $email, firstName: $firstName, businessDescription: $businessDescription, businessName: $businessName, dailySearchesUsed: $dailySearchesUsed, isOnboarded: $isOnboarded, lastName: $lastName, state: $state, tier: $tier, website: $website, yearOfFounding: $yearOfFounding) {
+mutation UpdateUser($address1: String, $address2: String, $city: String, $email: String, $firstName: String, $businessDescription: String, $businessName: String, $dailySearchesUsed: Int, $isOnboarded: Boolean, $lastName: String, $state: String, $website: String, $yearOfFounding: Int) {
+  updateUser(address1: $address1, address2: $address2, city: $city, email: $email, firstName: $firstName, businessDescription: $businessDescription, businessName: $businessName, dailySearchesUsed: $dailySearchesUsed, isOnboarded: $isOnboarded, lastName: $lastName, state: $state, website: $website, yearOfFounding: $yearOfFounding) {
     address1
     address2
     businessDescription
@@ -99,3 +99,14 @@ export const SSO_LOGIN_MUTATION = gql`
     }
   }
 `;
+
+export const UPDATE_USER_SUBSCRIPTION = gql`
+mutation UpdateUserSubscription($stripeCustomerId: String!, $tier: Tier!, $subscriptionStatus: String) {
+  updateUserSubscription(stripeCustomerId: $stripeCustomerId, tier: $tier, subscriptionStatus: $subscriptionStatus) {
+    id
+    stripeCustomerId
+    subscriptionStatus
+    tier
+  }
+}
+  `

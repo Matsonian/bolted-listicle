@@ -71,6 +71,7 @@ export type Mutation = {
   ssoLogin?: Maybe<AuthPayload>;
   updateUser?: Maybe<User>;
   updateUserProfile?: Maybe<User>;
+  updateUserSubscription?: Maybe<User>;
 };
 
 
@@ -108,7 +109,6 @@ export type MutationUpdateUserArgs = {
   isOnboarded?: InputMaybe<Scalars['Boolean']['input']>;
   lastName?: InputMaybe<Scalars['String']['input']>;
   state?: InputMaybe<Scalars['String']['input']>;
-  tier?: InputMaybe<Scalars['String']['input']>;
   website?: InputMaybe<Scalars['String']['input']>;
   yearOfFounding?: InputMaybe<Scalars['Int']['input']>;
 };
@@ -117,6 +117,13 @@ export type MutationUpdateUserArgs = {
 export type MutationUpdateUserProfileArgs = {
   firstName?: InputMaybe<Scalars['String']['input']>;
   lastName?: InputMaybe<Scalars['String']['input']>;
+};
+
+
+export type MutationUpdateUserSubscriptionArgs = {
+  stripeCustomerId: Scalars['String']['input'];
+  subscriptionStatus?: InputMaybe<Scalars['String']['input']>;
+  tier: Tier;
 };
 
 export type OneTimePassword = {
@@ -134,6 +141,11 @@ export type Query = {
   user?: Maybe<User>;
   users?: Maybe<Array<User>>;
 };
+
+export enum Tier {
+  Free = 'FREE',
+  Paid = 'PAID'
+}
 
 export type User = {
   __typename?: 'User';
@@ -153,7 +165,9 @@ export type User = {
   provider?: Maybe<Scalars['String']['output']>;
   role?: Maybe<UserRole>;
   state?: Maybe<Scalars['String']['output']>;
-  tier?: Maybe<Scalars['String']['output']>;
+  stripeCustomerId?: Maybe<Scalars['String']['output']>;
+  subscriptionStatus?: Maybe<Scalars['String']['output']>;
+  tier?: Maybe<Tier>;
   updatedAt?: Maybe<Scalars['Date']['output']>;
   website?: Maybe<Scalars['String']['output']>;
   yearOfFounding?: Maybe<Scalars['Int']['output']>;
@@ -193,13 +207,12 @@ export type UpdateUserMutationVariables = Exact<{
   isOnboarded?: InputMaybe<Scalars['Boolean']['input']>;
   lastName?: InputMaybe<Scalars['String']['input']>;
   state?: InputMaybe<Scalars['String']['input']>;
-  tier?: InputMaybe<Scalars['String']['input']>;
   website?: InputMaybe<Scalars['String']['input']>;
   yearOfFounding?: InputMaybe<Scalars['Int']['input']>;
 }>;
 
 
-export type UpdateUserMutation = { __typename?: 'Mutation', updateUser?: { __typename?: 'User', address1?: string | null, address2?: string | null, businessDescription?: string | null, businessName?: string | null, city?: string | null, dailySearchesUsed?: number | null, email?: string | null, id?: string | null, isOnboarded?: boolean | null, lastName?: string | null, role?: UserRole | null, state?: string | null, tier?: string | null, website?: string | null, yearOfFounding?: number | null } | null };
+export type UpdateUserMutation = { __typename?: 'Mutation', updateUser?: { __typename?: 'User', address1?: string | null, address2?: string | null, businessDescription?: string | null, businessName?: string | null, city?: string | null, dailySearchesUsed?: number | null, email?: string | null, id?: string | null, isOnboarded?: boolean | null, lastName?: string | null, role?: UserRole | null, state?: string | null, tier?: Tier | null, website?: string | null, yearOfFounding?: number | null } | null };
 
 export type SignUpOrInWithPasswordMutationVariables = Exact<{
   email: Scalars['String']['input'];
@@ -207,7 +220,7 @@ export type SignUpOrInWithPasswordMutationVariables = Exact<{
 }>;
 
 
-export type SignUpOrInWithPasswordMutation = { __typename?: 'Mutation', signUpOrInWithPassword?: { __typename?: 'AuthPayload', token?: string | null, userId?: string | null, user?: { __typename?: 'User', address1?: string | null, address2?: string | null, businessDescription?: string | null, businessName?: string | null, city?: string | null, dailySearchesUsed?: number | null, email?: string | null, id?: string | null, isOnboarded?: boolean | null, lastName?: string | null, role?: UserRole | null, state?: string | null, tier?: string | null, website?: string | null, yearOfFounding?: number | null } | null } | null };
+export type SignUpOrInWithPasswordMutation = { __typename?: 'Mutation', signUpOrInWithPassword?: { __typename?: 'AuthPayload', token?: string | null, userId?: string | null, user?: { __typename?: 'User', address1?: string | null, address2?: string | null, businessDescription?: string | null, businessName?: string | null, city?: string | null, dailySearchesUsed?: number | null, email?: string | null, id?: string | null, isOnboarded?: boolean | null, lastName?: string | null, role?: UserRole | null, state?: string | null, tier?: Tier | null, website?: string | null, yearOfFounding?: number | null } | null } | null };
 
 export type SendOtpMutationVariables = Exact<{
   email: Scalars['String']['input'];
@@ -221,7 +234,7 @@ export type SignInWithOtpMutationVariables = Exact<{
 }>;
 
 
-export type SignInWithOtpMutation = { __typename?: 'Mutation', signInWithOtp?: { __typename?: 'AuthPayload', token?: string | null, userId?: string | null, user?: { __typename?: 'User', address1?: string | null, address2?: string | null, businessDescription?: string | null, businessName?: string | null, city?: string | null, dailySearchesUsed?: number | null, email?: string | null, id?: string | null, isOnboarded?: boolean | null, lastName?: string | null, role?: UserRole | null, state?: string | null, tier?: string | null, website?: string | null, yearOfFounding?: number | null } | null } | null };
+export type SignInWithOtpMutation = { __typename?: 'Mutation', signInWithOtp?: { __typename?: 'AuthPayload', token?: string | null, userId?: string | null, user?: { __typename?: 'User', address1?: string | null, address2?: string | null, businessDescription?: string | null, businessName?: string | null, city?: string | null, dailySearchesUsed?: number | null, email?: string | null, id?: string | null, isOnboarded?: boolean | null, lastName?: string | null, role?: UserRole | null, state?: string | null, tier?: Tier | null, website?: string | null, yearOfFounding?: number | null } | null } | null };
 
 export type SsoLoginMutationVariables = Exact<{
   provider: Scalars['String']['input'];
@@ -231,14 +244,23 @@ export type SsoLoginMutationVariables = Exact<{
 
 export type SsoLoginMutation = { __typename?: 'Mutation', ssoLogin?: { __typename?: 'AuthPayload', token?: string | null, userId?: string | null } | null };
 
+export type UpdateUserSubscriptionMutationVariables = Exact<{
+  stripeCustomerId: Scalars['String']['input'];
+  tier: Tier;
+  subscriptionStatus?: InputMaybe<Scalars['String']['input']>;
+}>;
+
+
+export type UpdateUserSubscriptionMutation = { __typename?: 'Mutation', updateUserSubscription?: { __typename?: 'User', id?: string | null, stripeCustomerId?: string | null, subscriptionStatus?: string | null, tier?: Tier | null } | null };
+
 export type UserQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type UserQuery = { __typename?: 'Query', user?: { __typename?: 'User', address1?: string | null, address2?: string | null, businessDescription?: string | null, businessName?: string | null, city?: string | null, createdAt?: any | null, dailySearchesUsed?: number | null, email?: string | null, firstName?: string | null, id?: string | null, isOnboarded?: boolean | null, lastName?: string | null, role?: UserRole | null, state?: string | null, tier?: string | null, website?: string | null, yearOfFounding?: number | null } | null };
+export type UserQuery = { __typename?: 'Query', user?: { __typename?: 'User', address1?: string | null, address2?: string | null, businessDescription?: string | null, businessName?: string | null, city?: string | null, createdAt?: any | null, dailySearchesUsed?: number | null, email?: string | null, firstName?: string | null, id?: string | null, isOnboarded?: boolean | null, lastName?: string | null, role?: UserRole | null, state?: string | null, tier?: Tier | null, website?: string | null, yearOfFounding?: number | null } | null };
 
 
 export const UpdateUserDocument = gql`
-    mutation UpdateUser($address1: String, $address2: String, $city: String, $email: String, $firstName: String, $businessDescription: String, $businessName: String, $dailySearchesUsed: Int, $isOnboarded: Boolean, $lastName: String, $state: String, $tier: String, $website: String, $yearOfFounding: Int) {
+    mutation UpdateUser($address1: String, $address2: String, $city: String, $email: String, $firstName: String, $businessDescription: String, $businessName: String, $dailySearchesUsed: Int, $isOnboarded: Boolean, $lastName: String, $state: String, $website: String, $yearOfFounding: Int) {
   updateUser(
     address1: $address1
     address2: $address2
@@ -251,7 +273,6 @@ export const UpdateUserDocument = gql`
     isOnboarded: $isOnboarded
     lastName: $lastName
     state: $state
-    tier: $tier
     website: $website
     yearOfFounding: $yearOfFounding
   ) {
@@ -299,7 +320,6 @@ export type UpdateUserMutationFn = Apollo.MutationFunction<UpdateUserMutation, U
  *      isOnboarded: // value for 'isOnboarded'
  *      lastName: // value for 'lastName'
  *      state: // value for 'state'
- *      tier: // value for 'tier'
  *      website: // value for 'website'
  *      yearOfFounding: // value for 'yearOfFounding'
  *   },
@@ -481,6 +501,48 @@ export function useSsoLoginMutation(baseOptions?: Apollo.MutationHookOptions<Sso
 export type SsoLoginMutationHookResult = ReturnType<typeof useSsoLoginMutation>;
 export type SsoLoginMutationResult = Apollo.MutationResult<SsoLoginMutation>;
 export type SsoLoginMutationOptions = Apollo.BaseMutationOptions<SsoLoginMutation, SsoLoginMutationVariables>;
+export const UpdateUserSubscriptionDocument = gql`
+    mutation UpdateUserSubscription($stripeCustomerId: String!, $tier: Tier!, $subscriptionStatus: String) {
+  updateUserSubscription(
+    stripeCustomerId: $stripeCustomerId
+    tier: $tier
+    subscriptionStatus: $subscriptionStatus
+  ) {
+    id
+    stripeCustomerId
+    subscriptionStatus
+    tier
+  }
+}
+    `;
+export type UpdateUserSubscriptionMutationFn = Apollo.MutationFunction<UpdateUserSubscriptionMutation, UpdateUserSubscriptionMutationVariables>;
+
+/**
+ * __useUpdateUserSubscriptionMutation__
+ *
+ * To run a mutation, you first call `useUpdateUserSubscriptionMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useUpdateUserSubscriptionMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [updateUserSubscriptionMutation, { data, loading, error }] = useUpdateUserSubscriptionMutation({
+ *   variables: {
+ *      stripeCustomerId: // value for 'stripeCustomerId'
+ *      tier: // value for 'tier'
+ *      subscriptionStatus: // value for 'subscriptionStatus'
+ *   },
+ * });
+ */
+export function useUpdateUserSubscriptionMutation(baseOptions?: Apollo.MutationHookOptions<UpdateUserSubscriptionMutation, UpdateUserSubscriptionMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<UpdateUserSubscriptionMutation, UpdateUserSubscriptionMutationVariables>(UpdateUserSubscriptionDocument, options);
+      }
+export type UpdateUserSubscriptionMutationHookResult = ReturnType<typeof useUpdateUserSubscriptionMutation>;
+export type UpdateUserSubscriptionMutationResult = Apollo.MutationResult<UpdateUserSubscriptionMutation>;
+export type UpdateUserSubscriptionMutationOptions = Apollo.BaseMutationOptions<UpdateUserSubscriptionMutation, UpdateUserSubscriptionMutationVariables>;
 export const UserDocument = gql`
     query User {
   user {

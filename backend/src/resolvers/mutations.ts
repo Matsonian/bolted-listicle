@@ -8,7 +8,7 @@ import { Prisma } from '@prisma/client';
 // import { sendOtpEmail, sendWelcomeEmail } from '../email/emailService';
 import * as jwt from 'jsonwebtoken';
 import { prisma, builder } from '../schemabuilder';
-import { AuthPayloadRef } from './types';
+import { AuthPayloadRef, TierEnum } from './types';
 
 export const UserMutations = builder.mutationType({
     fields: (t) => ({
@@ -169,6 +169,21 @@ export const UserMutations = builder.mutationType({
                 return updated;
             },
         }),
+        updateUserSubscription: t.prismaField({
+            type: 'User',
+            args: {
+                tier: t.arg({ type: TierEnum, required: true }),
+                stripeCustomerId: t.arg.string({ required: true }),
+                subscriptionStatus: t.arg.string({ required: false }),
+            },
+            resolve: async (query, _parent, args, ctx) => {
+                return prisma.user.update({
+                    ...query,
+                    where: { id: ctx.user?.id },
+                    data: args,
+                });
+            },
+        }),
         updateUser: t.prismaField({
             type: 'User',
             args: {
@@ -184,7 +199,6 @@ export const UserMutations = builder.mutationType({
                 businessDescription: t.arg.string(),
                 yearOfFounding: t.arg.int(),
                 website: t.arg.string(),
-                tier: t.arg.string(),
                 dailySearchesUsed: t.arg.int()
             },
             // updates the contextual user

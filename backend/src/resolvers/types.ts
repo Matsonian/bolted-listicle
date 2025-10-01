@@ -1,8 +1,12 @@
-import { UserRole, MessageRole } from '@prisma/client';
+import { UserRole, MessageRole, Tier } from '@prisma/client';
 import { builder } from '../schemabuilder';
 
 export const UserRoleEnum = builder.enumType(UserRole, {
     name: 'UserRole',
+});
+
+export const TierEnum = builder.enumType(Tier, {
+    name: 'Tier',
 });
 
 
@@ -40,7 +44,9 @@ export const UserType = builder.prismaObject('User', {
         yearOfFounding: true,
         website:             true,
         tier:               true,
-        dailySearchesUsed:   true
+        dailySearchesUsed:   true,
+        stripeCustomerId: true,
+        subscriptionStatus: true,
     },
     fields: (t) => ({
         id: t.exposeID('id'),
@@ -60,9 +66,11 @@ export const UserType = builder.prismaObject('User', {
         businessDescription: t.exposeString('businessDescription', { nullable: true }),
         yearOfFounding: t.exposeInt('yearOfFounding', { nullable: true }),
         website: t.exposeString('website', { nullable: true }),
-        tier: t.exposeString('tier', { nullable: true }),
+        tier: t.expose('tier', { type: TierEnum }),
         dailySearchesUsed: t.exposeInt('dailySearchesUsed', { nullable: true }),
         Conversations: t.relation('Conversations'),
+        stripeCustomerId: t.exposeString('stripeCustomerId', { nullable: true }),
+        subscriptionStatus: t.exposeString('subscriptionStatus', { nullable: true }),
     }),
 });
 
