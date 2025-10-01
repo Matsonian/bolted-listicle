@@ -168,10 +168,10 @@ Only verified, actual listicle articles with real titles and working URLs from e
       })
     });
 
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(`Perplexity API error: ${response.status} ${response.statusText}`);
-    }
+  if (!response.ok) {
+  const errorData = await response.json().catch(() => ({}));
+  throw new Error(`Perplexity API error: ${response.status} ${response.statusText}`);
+}
 
     const data = await response.json();
     const citations = data.citations || [];
