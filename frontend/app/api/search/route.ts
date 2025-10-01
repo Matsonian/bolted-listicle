@@ -125,6 +125,7 @@ CRITICAL INSTRUCTIONS:
 - DO NOT make up or fabricate any URLs
 - DO NOT create fake article titles
 - DO NOT provide general website recommendations or "this is a good site for..." statements
+- DO NOT deliver ecommerce results or links to product pages 
 - If you find fewer than 10 results, that's perfectly fine - quality over quantity
 
 WHAT I NEED:
