@@ -81,10 +81,10 @@ class PerplexitySearchService {
       `best ${query}`,
       `top ${query}`,
       `${query} reviews`,
-      `top 10 ${query}`,
-      `top 15 ${query}`,
-      `best 5 ${query}`,
-      `7 best ${query}`,
+      // `top 10 ${query}`,
+      // `top 15 ${query}`,
+      // `best 5 ${query}`,
+      // `7 best ${query}`,
       `${query} buying guide`,
       `${query} recommendations`,
       `${query} buyer's guide`,
@@ -130,7 +130,7 @@ CRITICAL INSTRUCTIONS:
 WHAT I NEED:
 - Real article titles (preferably H1 tags from actual webpages)
 - Working URLs to actual articles
-- Only listicles, rankings, and "best of" articles - not general blogs or informational sites
+- Only listicles, rankings, and "best of" articles - high quality blogs or informational sites are okay - low quality blogs or informational sites are not okay
 
 SEARCH CRITERIA:
 - Numbered lists ("Top 10", "Best 5", etc.)
@@ -197,17 +197,30 @@ Only verified, actual listicle articles with real titles and working URLs.`
           const hostname = urlObj.hostname.toLowerCase();
           const pathname = urlObj.pathname.toLowerCase();
           
-          const excludePatterns = [
-            'youtube.com', 'youtu.be', 'vimeo.com',
-            'facebook.com', 'twitter.com', 'instagram.com', 'linkedin.com',
-            '/search', '/tag/', '/category/', '/author/',
-            '/contact', '/about', '/privacy', '/terms',
-            '.pdf', '.doc', '.xls', '.ppt', '.zip'
-          ];
+        const excludePatterns = [
+  // YouTube - all variants
+  'youtube.com', 'youtu.be', 'youtube', 'm.youtube.com', 'music.youtube.com', 'studio.youtube.com',
+  // Video platforms
+  'vimeo.com', 'dailymotion.com', 'twitch.tv',
+  // Social media
+  'facebook.com', 'twitter.com', 'instagram.com', 'linkedin.com',
+  'tiktok.com', 'pinterest.com', 'snapchat.com',
+  // Navigation pages
+  '/search', '/tag/', '/category/', '/author/', '/page/',
+  '/contact', '/about', '/privacy', '/terms', '/sitemap',
+  // File types
+  '.pdf', '.doc', '.xls', '.ppt', '.zip', '.mp4', '.mp3', '.avi',
+  // Low-quality domains to avoid
+  'reddit.com', 'quora.com', 'answers.com',
+  // Shopping/affiliate sites (if you want to exclude)
+  'amazon.com/gp/', 'ebay.com', 'walmart.com', 'target.com'
+];
           
+      
           const isExcluded = excludePatterns.some(pattern => 
-            hostname.includes(pattern) || pathname.includes(pattern)
-          );
+  hostname.includes(pattern.toLowerCase()) || 
+  url.toLowerCase().includes(pattern.toLowerCase())
+);
           
           return !isExcluded;
         } catch {
