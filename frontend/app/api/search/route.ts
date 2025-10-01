@@ -87,7 +87,7 @@ class PerplexitySearchService {
       // '7 best ${query}',
       '${query} buying guide',
       '${query} recommendations',
-      '${query} buyer's guide',
+      '${query} buyer`s guide',
       'ultimate ${query} guide',
       'complete ${query} guide',
       '${query} roundup',
