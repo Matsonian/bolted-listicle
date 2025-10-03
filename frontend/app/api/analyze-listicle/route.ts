@@ -32,28 +32,40 @@ interface AnalysisResponse {
 }
 
 export async function POST(req: NextRequest) {
+  console.log('🚀 API route called')
+  
   try {
+    console.log('📝 Parsing request body...')
     const { url, userProfile }: { url: string; userProfile: UserProfile } = await req.json();
+    console.log('📋 Received URL:', url)
+    console.log('👤 User profile received:', !!userProfile)
 
     if (!url || !userProfile) {
+      console.log('❌ Missing required fields')
       return NextResponse.json(
         { error: 'Missing required fields' },
         { status: 400 }
       );
     }
 
+    console.log('🔑 Checking OpenAI API key...')
     // Get OpenAI API key from environment (server-side only)
     const openaiKey = process.env.OPENAI_API_KEY;
     if (!openaiKey) {
+      console.log('❌ OpenAI API key not configured')
       return NextResponse.json(
         { error: 'OpenAI API key not configured' },
         { status: 500 }
       );
     }
+    console.log('✅ OpenAI key found')
 
+    console.log('🔨 Building analysis prompt...')
     // Build the analysis prompt
     const prompt = buildAnalysisPrompt(url, userProfile);
+    console.log('📝 Prompt length:', prompt.length)
 
+    console.log('🤖 Calling OpenAI API...')
     // Call OpenAI API
     const openaiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -62,7 +74,7 @@ export async function POST(req: NextRequest) {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-5-mini-2025-08-07',
+        model: 'gpt-4o-mini', // Fixed model name
         messages: [
           {
             role: 'system',
@@ -78,46 +90,59 @@ export async function POST(req: NextRequest) {
       }),
     });
 
+    console.log('📡 OpenAI response status:', openaiResponse.status)
+
     if (!openaiResponse.ok) {
       const errorText = await openaiResponse.text();
-      console.error('OpenAI API error:', openaiResponse.status, errorText);
+      console.error('❌ OpenAI API error:', openaiResponse.status, errorText);
       return NextResponse.json(
         { error: 'Failed to analyze listicle' },
         { status: 500 }
       );
     }
 
+    console.log('✅ OpenAI response OK, parsing data...')
     const openaiData = await openaiResponse.json();
     const content = openaiData.choices[0]?.message?.content;
 
     if (!content) {
+      console.log('❌ No content received from OpenAI')
       return NextResponse.json(
         { error: 'No content received from OpenAI' },
         { status: 500 }
       );
     }
 
+    console.log('📄 Content received, length:', content.length)
+    console.log('📄 Raw content preview:', content.substring(0, 200))
+
     // Parse the JSON response
     let parsedResponse;
     try {
+      console.log('🔍 Parsing JSON response...')
       parsedResponse = JSON.parse(content);
+      console.log('✅ JSON parsed successfully')
     } catch (parseError) {
-      console.error('Failed to parse OpenAI response:', content);
+      console.error('❌ Failed to parse OpenAI response:', content);
       return NextResponse.json(
         { error: 'Invalid response from AI' },
         { status: 500 }
       );
     }
 
+    console.log('🔍 Validating response...')
     // Validate and format the response
     const validatedResponse = validateAndFormatResponse(parsedResponse);
+    console.log('✅ Response validated')
 
+    console.log('🎉 Returning success response')
     return NextResponse.json(validatedResponse, { status: 200 });
 
   } catch (error) {
-    console.error('API error:', error);
+    console.error('💥 API error:', error);
+    console.error('💥 Error stack:', error instanceof Error ? error.stack : 'No stack trace');
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: `Internal server error: ${error instanceof Error ? error.message : 'Unknown error'}` },
       { status: 500 }
     );
   }
