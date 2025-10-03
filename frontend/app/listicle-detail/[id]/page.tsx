@@ -14,7 +14,8 @@ import {
   TrendingUp,
   AlertCircle,
   Copy,
-  CheckCircle
+  CheckCircle,
+  Loader2
 } from 'lucide-react'
 import { openaiService, type AnalysisResponse, type UserProfile } from '@/services/openaiService'
 
@@ -37,45 +38,53 @@ export default function ListicleDetailPage() {
   }, [decodedUrl, session?.user])
 
   const analyzeListicle = async () => {
-  if (!decodedUrl || !session?.user) return
+    if (!decodedUrl || !session?.user) return
 
-  setLoading(true)
-  setError('')
+    setLoading(true)
+    setError('')
 
-  try {
-    // Fetch real user profile from your database
-    const profileResponse = await fetch('/api/user-profile', {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    })
+    try {
+      // Fetch real user profile from your database
+      const profileResponse = await fetch('/api/user-profile', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
 
-    if (!profileResponse.ok) {
-      throw new Error('Failed to fetch user profile')
+      let userProfile: UserProfile
+
+      if (profileResponse.ok) {
+        const profileData = await profileResponse.json()
+        userProfile = {
+          first_name: session.user.name?.split(' ')[0] || profileData.first_name || 'User',
+          last_name: session.user.name?.split(' ')[1] || profileData.last_name || '',
+          business_name: profileData.business_name || 'Your Business',
+          business_description: profileData.business_description || 'Your business description',
+          website: profileData.website,
+          years_in_business: profileData.years_in_business
+        }
+      } else {
+        // Fallback to basic profile if no profile exists yet
+        userProfile = {
+          first_name: session.user.name?.split(' ')[0] || 'User',
+          last_name: session.user.name?.split(' ')[1] || '',
+          business_name: 'Your Business',
+          business_description: 'Your business description',
+          website: '',
+          years_in_business: 1
+        }
+      }
+
+      const analysisResult = await openaiService.analyzeListicle(decodedUrl, userProfile)
+      setAnalysis(analysisResult)
+    } catch (err) {
+      console.error('Analysis error:', err)
+      setError(err instanceof Error ? err.message : 'Failed to analyze listicle')
+    } finally {
+      setLoading(false)
     }
-
-    const userProfile = await profileResponse.json()
-
-    // Ensure we have the required name fields
-    const fullUserProfile: UserProfile = {
-      first_name: session.user.name?.split(' ')[0] || userProfile.first_name || 'User',
-      last_name: session.user.name?.split(' ')[1] || userProfile.last_name || '',
-      business_name: userProfile.business_name,
-      business_description: userProfile.business_description,
-      website: userProfile.website,
-      years_in_business: userProfile.years_in_business
-    }
-
-    const analysisResult = await openaiService.analyzeListicle(decodedUrl, fullUserProfile)
-    setAnalysis(analysisResult)
-  } catch (err) {
-    console.error('Analysis error:', err)
-    setError(err instanceof Error ? err.message : 'Failed to analyze listicle')
-  } finally {
-    setLoading(false)
   }
-}
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
@@ -95,17 +104,26 @@ export default function ListicleDetailPage() {
     }
   }
 
+  const copyEmailToClipboard = () => {
+    if (analysis?.model_email) {
+      navigator.clipboard.writeText(analysis.model_email)
+      setEmailCopied(true)
+      setTimeout(() => setEmailCopied(false), 2000)
+    }
+  }
+
   if (!session) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center bg-white p-8 rounded-lg shadow-sm border max-w-md">
+          <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
           <h1 className="text-2xl font-bold text-gray-900 mb-4">Access Denied</h1>
           <p className="text-gray-600 mb-6">You need to be signed in to analyze listicles.</p>
           <button
-            onClick={() => router.push('/login')}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg"
+            onClick={() => router.push('/signup')}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg transition-colors"
           >
-            Sign In
+            Sign Up
           </button>
         </div>
       </div>
@@ -119,7 +137,7 @@ export default function ListicleDetailPage() {
         <div className="flex items-center mb-6">
           <button
             onClick={() => router.back()}
-            className="flex items-center text-gray-600 hover:text-gray-900 mr-4"
+            className="flex items-center text-gray-600 hover:text-gray-900 mr-4 transition-colors"
           >
             <ArrowLeft className="w-5 h-5 mr-2" />
             Back to Results
@@ -129,11 +147,19 @@ export default function ListicleDetailPage() {
         {/* Loading State */}
         {loading && (
           <div className="bg-white rounded-lg shadow-sm border p-8 text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <div className="flex items-center justify-center mb-4">
+              <Loader2 className="w-12 h-12 text-blue-600 animate-spin" />
+            </div>
             <h3 className="text-xl font-semibold text-gray-900 mb-2">Analyzing Listicle</h3>
-            <p className="text-gray-600">
+            <p className="text-gray-600 mb-4">
               Our AI is analyzing this article for outreach opportunities...
             </p>
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mt-4">
+              <p className="text-sm text-blue-800">
+                This analysis typically takes 30-60 seconds and includes quality assessment, 
+                contact extraction, and personalized email generation.
+              </p>
+            </div>
           </div>
         )}
 
@@ -147,7 +173,7 @@ export default function ListicleDetailPage() {
             <p className="text-red-700 mt-2">{error}</p>
             <button
               onClick={analyzeListicle}
-              className="mt-4 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg"
+              className="mt-4 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition-colors"
             >
               Try Again
             </button>
@@ -168,7 +194,7 @@ export default function ListicleDetailPage() {
                     href={decodedUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center text-blue-600 hover:text-blue-800"
+                    className="inline-flex items-center text-blue-600 hover:text-blue-800 transition-colors"
                   >
                     <Globe className="w-4 h-4 mr-2" />
                     View Original Article
@@ -210,36 +236,36 @@ export default function ListicleDetailPage() {
             {/* Quality Assessment */}
             <div className="bg-white rounded-lg shadow-sm border p-6">
               <h2 className="text-xl font-semibold text-gray-900 mb-4">Quality Assessment</h2>
-              <div className="mb-4">
+              <div className="mb-6">
                 <div className="flex items-center mb-2">
                   <Star className="w-5 h-5 text-yellow-500 mr-2" />
                   <span className="font-medium">Overall Rating: {analysis.llm_quality_rating}</span>
                 </div>
-                <div className="text-gray-700 whitespace-pre-line">
+                <div className="text-gray-700 whitespace-pre-line bg-gray-50 p-4 rounded-lg">
                   {analysis.quality_reasons}
                 </div>
               </div>
               
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="text-center">
+                <div className="text-center bg-blue-50 p-4 rounded-lg">
                   <div className="text-2xl font-bold text-blue-600">{analysis.importance_breakdown.auth}</div>
-                  <div className="text-sm text-gray-600">Authority</div>
-                  <div className="text-xs text-gray-500">0-3</div>
+                  <div className="text-sm font-medium text-gray-700">Authority</div>
+                  <div className="text-xs text-gray-500">Domain credibility</div>
                 </div>
-                <div className="text-center">
+                <div className="text-center bg-green-50 p-4 rounded-lg">
                   <div className="text-2xl font-bold text-green-600">{analysis.importance_breakdown.rel}</div>
-                  <div className="text-sm text-gray-600">Relevance</div>
-                  <div className="text-xs text-gray-500">0-3</div>
+                  <div className="text-sm font-medium text-gray-700">Relevance</div>
+                  <div className="text-xs text-gray-500">Business match</div>
                 </div>
-                <div className="text-center">
+                <div className="text-center bg-purple-50 p-4 rounded-lg">
                   <div className="text-2xl font-bold text-purple-600">{analysis.importance_breakdown.fresh}</div>
-                  <div className="text-sm text-gray-600">Freshness</div>
-                  <div className="text-xs text-gray-500">0-2</div>
+                  <div className="text-sm font-medium text-gray-700">Freshness</div>
+                  <div className="text-xs text-gray-500">Content recency</div>
                 </div>
-                <div className="text-center">
+                <div className="text-center bg-orange-50 p-4 rounded-lg">
                   <div className="text-2xl font-bold text-orange-600">{analysis.importance_breakdown.eng}</div>
-                  <div className="text-sm text-gray-600">Engagement</div>
-                  <div className="text-xs text-gray-500">0-2</div>
+                  <div className="text-sm font-medium text-gray-700">Engagement</div>
+                  <div className="text-xs text-gray-500">User signals</div>
                 </div>
               </div>
             </div>
@@ -250,28 +276,34 @@ export default function ListicleDetailPage() {
                 <h2 className="text-xl font-semibold text-gray-900 mb-4">Contact Information</h2>
                 <div className="space-y-3">
                   {analysis.author_email && (
-                    <div className="flex items-center">
-                      <Mail className="w-5 h-5 text-gray-400 mr-3" />
-                      <a
-                        href={`mailto:${analysis.author_email}`}
-                        className="text-blue-600 hover:text-blue-800"
-                      >
-                        {analysis.author_email}
-                      </a>
+                    <div className="flex items-center p-3 bg-blue-50 rounded-lg">
+                      <Mail className="w-5 h-5 text-blue-600 mr-3" />
+                      <div>
+                        <div className="font-medium text-gray-900">Email Contact</div>
+                        <a
+                          href={`mailto:${analysis.author_email}`}
+                          className="text-blue-600 hover:text-blue-800 transition-colors"
+                        >
+                          {analysis.author_email}
+                        </a>
+                      </div>
                     </div>
                   )}
                   {analysis.contact_url && (
-                    <div className="flex items-center">
-                      <Globe className="w-5 h-5 text-gray-400 mr-3" />
-                      <a
-                        href={analysis.contact_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-blue-600 hover:text-blue-800 flex items-center"
-                      >
-                        Contact Page
-                        <ExternalLink className="w-4 h-4 ml-1" />
-                      </a>
+                    <div className="flex items-center p-3 bg-green-50 rounded-lg">
+                      <Globe className="w-5 h-5 text-green-600 mr-3" />
+                      <div>
+                        <div className="font-medium text-gray-900">Contact Page</div>
+                        <a
+                          href={analysis.contact_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-green-600 hover:text-green-800 transition-colors flex items-center"
+                        >
+                          Visit Contact Page
+                          <ExternalLink className="w-4 h-4 ml-1" />
+                        </a>
+                      </div>
                     </div>
                   )}
                 </div>
@@ -281,8 +313,8 @@ export default function ListicleDetailPage() {
             {/* Outreach Strategy */}
             <div className="bg-white rounded-lg shadow-sm border p-6">
               <h2 className="text-xl font-semibold text-gray-900 mb-4">Outreach Strategy</h2>
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
-                <h3 className="font-semibold text-blue-900 mb-2">Suggested Angle:</h3>
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+                <h3 className="font-semibold text-blue-900 mb-2">Suggested Approach:</h3>
                 <p className="text-blue-800">{analysis.suggested_outreach_angle}</p>
               </div>
               
@@ -291,7 +323,7 @@ export default function ListicleDetailPage() {
                   <h3 className="font-semibold text-gray-900">Ready-to-Send Email:</h3>
                   <button
                     onClick={copyEmailToClipboard}
-                    className="flex items-center text-sm text-blue-600 hover:text-blue-800"
+                    className="flex items-center text-sm text-blue-600 hover:text-blue-800 transition-colors"
                   >
                     {emailCopied ? (
                       <>
@@ -306,8 +338,42 @@ export default function ListicleDetailPage() {
                     )}
                   </button>
                 </div>
-                <div className="bg-white border rounded p-4 text-sm whitespace-pre-line font-mono">
+                <div className="bg-white border rounded-lg p-4 text-sm whitespace-pre-line font-mono text-gray-800 max-h-96 overflow-y-auto">
                   {analysis.model_email}
+                </div>
+                <div className="mt-3 text-xs text-gray-500">
+                  This email was personalized using your business profile and the article content.
+                </div>
+              </div>
+            </div>
+
+            {/* Next Steps */}
+            <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg p-6 text-white">
+              <h2 className="text-xl font-bold mb-4">Next Steps</h2>
+              <div className="grid md:grid-cols-2 gap-4">
+                <div>
+                  <h3 className="font-semibold mb-2">1. Review & Customize</h3>
+                  <p className="text-blue-100 text-sm">
+                    Review the generated email and customize it to match your voice and specific offering.
+                  </p>
+                </div>
+                <div>
+                  <h3 className="font-semibold mb-2">2. Send & Follow Up</h3>
+                  <p className="text-blue-100 text-sm">
+                    Send your outreach email and plan a follow-up sequence if you don't hear back.
+                  </p>
+                </div>
+                <div>
+                  <h3 className="font-semibold mb-2">3. Track Results</h3>
+                  <p className="text-blue-100 text-sm">
+                    Monitor responses and engagement to refine your outreach strategy.
+                  </p>
+                </div>
+                <div>
+                  <h3 className="font-semibold mb-2">4. Scale Success</h3>
+                  <p className="text-blue-100 text-sm">
+                    Use successful templates and approaches for similar publications and authors.
+                  </p>
                 </div>
               </div>
             </div>
