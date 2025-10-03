@@ -76,29 +76,30 @@ export default function LoginPage() {
     }
   }
 
-  const handleSignIn = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsLoading(true)
-    setError("")
+const handleSignIn = async (e: React.FormEvent) => {
+  e.preventDefault()
+  setIsLoading(true)
+  setError("")
 
-    try {
-      const result = await signIn("credentials", {
-        email: signInData.email,
-        password: signInData.password,
-        redirect: false,
-      })
+  try {
+    const result = await signIn("credentials", {
+      email: signInData.email,
+      password: signInData.password,
+      redirect: false,
+    })
 
-      if (result?.error) {
-        setError("Invalid email or password")
-      } else if (result?.ok) {
-        router.push("/pricing")
-      }
-    } catch (error) {
-      setError("An unexpected error occurred. Please try again.")
-    } finally {
-      setIsLoading(false)
+    if (result?.error) {
+      setError("Invalid email or password")
+    } else if (result?.ok) {
+      // Route existing users to dashboard, not pricing
+      router.push("/profile")  // Changed from "/pricing"
     }
+  } catch (error) {
+    setError("An unexpected error occurred. Please try again.")
+  } finally {
+    setIsLoading(false)
   }
+}
 
   const handleSendOtp = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -153,11 +154,11 @@ export default function LoginPage() {
         email: otpData.email,
         password: "otp-signin", // Special flag for OTP signin
         otp: otpData.otpCode,
-        callbackUrl: "/pricing",
+        callbackUrl: "/profile",
       })
       console.log("signInResult", JSON.stringify(signInResult))
       if (signInResult?.ok) {
-        router.push("/pricing")
+        router.push("/profile")
       } else {
         setError("Sign-in failed after OTP verification, try logging in with a different method.")
       }
