@@ -89,10 +89,10 @@ export default function BusinessProfilePage() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          userId: session?.user?.id,
-          ...profile
-        }),
+       body: JSON.stringify({
+        userEmail: session?.user?.email,
+        ...profile
+      }),
       })
 
       if (!response.ok) {
