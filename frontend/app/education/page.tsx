@@ -7,11 +7,12 @@ import { useRouter } from 'next/navigation'
 import { BookOpen, GraduationCap, Wrench, ArrowRight, Clock, Users, Brain, Zap, Mail, Lock } from 'lucide-react'
 
 export default function EducationPage() {
-  const { data: session } = useSession()
+  const { data: session, status } = useSession()
   const router = useRouter()
 
-  // Check if user is a paid member - adjust based on your user model
+  // Explicit membership check - must be logged in AND have paid tier
   const isPaidMember = session?.user?.tier === 'paid'
+  const shouldShowGate = !session || session?.user?.tier !== 'paid'
 
   const masterclasses = [
     {
@@ -234,25 +235,26 @@ export default function EducationPage() {
             </div>
           </div>
 
-          {/* Blur Overlay for Non-Members */}
-          {!isPaidMember && (
-            <div className="absolute inset-0 top-0">
-              <div className="absolute inset-0 bg-white bg-opacity-70 backdrop-blur-sm"></div>
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="bg-white rounded-2xl shadow-2xl p-8 text-center max-w-md mx-4 border-2 border-blue-200">
-                  <div className="bg-blue-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
+          {/* Membership Gate Overlay - Only shows for non-paid members */}
+          {shouldShowGate && (
+            <div className="absolute inset-0 top-0 z-50">
+              <div className="absolute inset-0 bg-white bg-opacity-80 backdrop-blur-sm"></div>
+              <div className="absolute inset-0 flex items-center justify-center p-4">
+                <div className="bg-white rounded-2xl shadow-2xl p-8 text-center max-w-lg mx-auto border-2 border-blue-200">
+                  <div className="bg-blue-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-6">
                     <Lock className="w-8 h-8 text-blue-600" />
                   </div>
                   <h3 className="text-2xl font-bold text-gray-900 mb-4">
                     Exclusive Member Content
                   </h3>
-                  <p className="text-gray-600 mb-6">
-                    Unlock access to comprehensive MasterClasses, proven outreach templates, and insider strategies that turn your business into an authority.
+                  <p className="text-gray-600 mb-6 leading-relaxed">
+                    Unlock access to comprehensive MasterClasses, proven outreach templates, and insider strategies 
+                    that transform your business into an industry authority.
                   </p>
-                  <div className="space-y-3 mb-4">
+                  <div className="space-y-4 mb-6">
                     <button
                       onClick={handleSignup}
-                      className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-medium py-3 px-6 rounded-lg transition-all duration-200 flex items-center justify-center"
+                      className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold py-4 px-8 rounded-lg transition-all duration-200 flex items-center justify-center shadow-lg hover:shadow-xl"
                     >
                       Start Your Membership
                       <ArrowRight className="w-5 h-5 ml-2" />
@@ -260,6 +262,9 @@ export default function EducationPage() {
                     <p className="text-sm text-gray-500">
                       Join hundreds of businesses getting featured in top publications
                     </p>
+                  </div>
+                  <div className="text-xs text-gray-400">
+                    30-day money-back guarantee • Cancel anytime
                   </div>
                 </div>
               </div>
