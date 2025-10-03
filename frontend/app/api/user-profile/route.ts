@@ -3,7 +3,7 @@
 import React, { useState } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
-import { Building2, Globe, Calendar, FileText, ArrowRight, Loader2 } from 'lucide-react'
+import { Building2, Globe, Calendar, ArrowRight, Loader2 } from 'lucide-react'
 
 interface BusinessProfile {
   business_name: string
@@ -16,7 +16,7 @@ interface BusinessProfile {
   unique_value_proposition: string
 }
 
-export default function BusinessProfileForm() {
+export default function BusinessProfilePage() {
   const { data: session } = useSession()
   const router = useRouter()
   const [loading, setLoading] = useState(false)
@@ -99,8 +99,7 @@ export default function BusinessProfileForm() {
         throw new Error('Failed to save profile')
       }
 
-      // Store intended plan and redirect to pricing
-      const intendedPlan = localStorage.getItem('intended_plan')
+      // Redirect to pricing page
       router.push('/pricing')
       
     } catch (err) {
@@ -115,7 +114,13 @@ export default function BusinessProfileForm() {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <h1 className="text-2xl font-bold text-gray-900 mb-4">Access Denied</h1>
-          <p className="text-gray-600">Please sign up first to continue.</p>
+          <p className="text-gray-600 mb-6">Please sign up first to continue.</p>
+          <button
+            onClick={() => router.push('/signup')}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg"
+          >
+            Sign Up
+          </button>
         </div>
       </div>
     )
