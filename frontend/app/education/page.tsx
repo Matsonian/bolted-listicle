@@ -3,7 +3,7 @@
 import React from 'react'
 import Link from 'next/link'
 import { useSession } from 'next-auth/react'
-import { useRouter } from 'next/navigation'
+import { useRouter } from 'next/navigation'https://www.getlisticled.com/login
 import { BookOpen, GraduationCap, Wrench, ArrowRight, Clock, Users, Brain, Zap, Mail, Lock } from 'lucide-react'
 
 export default function EducationPage() {
@@ -69,7 +69,7 @@ const shouldShowGate = !session
   }
 
   const handleSignup = () => {
-    router.push('/signup')
+    router.push('/login')
   }
 
   return (
