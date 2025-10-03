@@ -2,9 +2,17 @@
 
 import React from 'react'
 import Link from 'next/link'
-import { BookOpen, GraduationCap, Wrench, ArrowRight, Clock, Users, Brain, Zap, Mail, TrendingUp } from 'lucide-react'
+import { useSession } from 'next-auth/react'
+import { useRouter } from 'next/navigation'
+import { BookOpen, GraduationCap, Wrench, ArrowRight, Clock, Users, Brain, Zap, Mail, Lock } from 'lucide-react'
 
 export default function EducationPage() {
+  const { data: session } = useSession()
+  const router = useRouter()
+
+  // Check if user is a paid member - adjust based on your user model
+  const isPaidMember = session?.user?.tier === 'paid'
+
   const masterclasses = [
     {
       id: 'media-relationships',
@@ -59,10 +67,14 @@ export default function EducationPage() {
     return colors[color] || colors.blue
   }
 
+  const handleSignup = () => {
+    router.push('/signup')
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 py-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Header */}
+        {/* Header - Always Visible */}
         <div className="text-center mb-16">
           <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-100 rounded-full mb-6">
             <GraduationCap className="w-8 h-8 text-blue-600" />
@@ -76,148 +88,183 @@ export default function EducationPage() {
           </p>
         </div>
 
-        {/* MasterClasses Section */}
-        <div className="mb-16">
-          <div className="flex items-center mb-8">
-            <div className="bg-blue-100 rounded-lg p-2 mr-3">
-              <BookOpen className="w-6 h-6 text-blue-600" />
+        {/* Content Area - Conditional Display */}
+        <div className="relative">
+          {/* MasterClasses Section */}
+          <div className="mb-16">
+            <div className="flex items-center mb-8">
+              <div className="bg-blue-100 rounded-lg p-2 mr-3">
+                <BookOpen className="w-6 h-6 text-blue-600" />
+              </div>
+              <div>
+                <h2 className="text-3xl font-bold text-gray-900">MasterClasses</h2>
+                <p className="text-gray-600">Structured learning paths with exercises and actionable takeaways</p>
+              </div>
             </div>
-            <div>
-              <h2 className="text-3xl font-bold text-gray-900">MasterClasses</h2>
-              <p className="text-gray-600">Structured learning paths with exercises and actionable takeaways</p>
-            </div>
-          </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {masterclasses.map((course) => {
-              const colors = getColorClasses(course.color)
-              return (
-                <Link 
-                  key={course.id}
-                  href={course.slug}
-                  className={`bg-white rounded-lg border-2 ${colors.border} ${colors.hover} p-6 transition-all hover:shadow-lg group`}
-                >
-                  <div className={`${colors.bg} ${colors.text} rounded-lg p-3 w-12 h-12 flex items-center justify-center mb-4`}>
-                    {course.icon}
-                  </div>
-                  
-                  <h3 className="text-xl font-bold text-gray-900 mb-3 group-hover:text-blue-600 transition-colors">
-                    {course.title}
-                  </h3>
-                  
-                  <p className="text-gray-600 mb-4 text-sm leading-relaxed">
-                    {course.description}
-                  </p>
-                  
-                  <div className="flex items-center justify-between text-sm text-gray-500 mb-4">
-                    <div className="flex items-center">
-                      <Clock className="w-4 h-4 mr-1" />
-                      <span>{course.duration}</span>
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {masterclasses.map((course) => {
+                const colors = getColorClasses(course.color)
+                return (
+                  <Link 
+                    key={course.id}
+                    href={isPaidMember ? course.slug : '#'}
+                    className={`bg-white rounded-lg border-2 ${colors.border} ${colors.hover} p-6 transition-all hover:shadow-lg group ${isPaidMember ? '' : 'cursor-default'}`}
+                  >
+                    <div className={`${colors.bg} ${colors.text} rounded-lg p-3 w-12 h-12 flex items-center justify-center mb-4`}>
+                      {course.icon}
                     </div>
-                    <span>{course.modules} modules</span>
-                  </div>
+                    
+                    <h3 className="text-xl font-bold text-gray-900 mb-3 group-hover:text-blue-600 transition-colors">
+                      {course.title}
+                    </h3>
+                    
+                    <p className="text-gray-600 mb-4 text-sm leading-relaxed">
+                      {course.description}
+                    </p>
+                    
+                    <div className="flex items-center justify-between text-sm text-gray-500 mb-4">
+                      <div className="flex items-center">
+                        <Clock className="w-4 h-4 mr-1" />
+                        <span>{course.duration}</span>
+                      </div>
+                      <span>{course.modules} modules</span>
+                    </div>
 
-                  <div className="flex items-center text-blue-600 font-medium text-sm group-hover:translate-x-1 transition-transform">
-                    Start Learning
-                    <ArrowRight className="w-4 h-4 ml-1" />
-                  </div>
-                </Link>
-              )
-            })}
-          </div>
-        </div>
-
-        {/* Tools Section */}
-        <div className="mb-16">
-          <div className="flex items-center mb-8">
-            <div className="bg-orange-100 rounded-lg p-2 mr-3">
-              <Wrench className="w-6 h-6 text-orange-600" />
+                    <div className="flex items-center text-blue-600 font-medium text-sm group-hover:translate-x-1 transition-transform">
+                      {isPaidMember ? 'Start Learning' : 'Members Only'}
+                      <ArrowRight className="w-4 h-4 ml-1" />
+                    </div>
+                  </Link>
+                )
+              })}
             </div>
-            <div>
-              <h2 className="text-3xl font-bold text-gray-900">Tools & Templates</h2>
-              <p className="text-gray-600">Ready-to-use resources for immediate implementation</p>
+          </div>
+
+          {/* Tools Section */}
+          <div className="mb-16">
+            <div className="flex items-center mb-8">
+              <div className="bg-orange-100 rounded-lg p-2 mr-3">
+                <Wrench className="w-6 h-6 text-orange-600" />
+              </div>
+              <div>
+                <h2 className="text-3xl font-bold text-gray-900">Tools & Templates</h2>
+                <p className="text-gray-600">Ready-to-use resources for immediate implementation</p>
+              </div>
+            </div>
+
+            <div className="grid md:grid-cols-2 gap-6">
+              {tools.map((tool) => {
+                const colors = getColorClasses(tool.color)
+                return (
+                  <Link 
+                    key={tool.id}
+                    href={isPaidMember ? tool.slug : '#'}
+                    className={`bg-white rounded-lg border-2 ${colors.border} ${colors.hover} p-6 transition-all hover:shadow-lg group ${isPaidMember ? '' : 'cursor-default'}`}
+                  >
+                    <div className={`${colors.bg} ${colors.text} rounded-lg p-3 w-12 h-12 flex items-center justify-center mb-4`}>
+                      {tool.icon}
+                    </div>
+                    
+                    <h3 className="text-xl font-bold text-gray-900 mb-3 group-hover:text-blue-600 transition-colors">
+                      {tool.title}
+                    </h3>
+                    
+                    <p className="text-gray-600 mb-4 text-sm leading-relaxed">
+                      {tool.description}
+                    </p>
+
+                    <div className="flex items-center text-blue-600 font-medium text-sm group-hover:translate-x-1 transition-transform">
+                      {isPaidMember ? 'View Templates' : 'Members Only'}
+                      <ArrowRight className="w-4 h-4 ml-1" />
+                    </div>
+                  </Link>
+                )
+              })}
             </div>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-6">
-            {tools.map((tool) => {
-              const colors = getColorClasses(tool.color)
-              return (
-                <Link 
-                  key={tool.id}
-                  href={tool.slug}
-                  className={`bg-white rounded-lg border-2 ${colors.border} ${colors.hover} p-6 transition-all hover:shadow-lg group`}
-                >
-                  <div className={`${colors.bg} ${colors.text} rounded-lg p-3 w-12 h-12 flex items-center justify-center mb-4`}>
-                    {tool.icon}
+          {/* Learning Path */}
+          <div className="bg-gradient-to-br from-blue-600 to-purple-600 rounded-2xl p-8 md:p-12 text-white">
+            <h2 className="text-3xl font-bold mb-4">Recommended Learning Path</h2>
+            <p className="text-blue-100 mb-8 text-lg">
+              Get the most from our education center by following this structured learning path
+            </p>
+            
+            <div className="space-y-4">
+              <div className="flex items-start">
+                <div className="bg-white text-blue-600 rounded-full w-8 h-8 flex items-center justify-center font-bold flex-shrink-0 mr-4">
+                  1
+                </div>
+                <div>
+                  <h4 className="font-semibold mb-1">Start with AI & SEO Fundamentals</h4>
+                  <p className="text-blue-100 text-sm">Understand how AI is changing search and discovery</p>
+                </div>
+              </div>
+              
+              <div className="flex items-start">
+                <div className="bg-white text-blue-600 rounded-full w-8 h-8 flex items-center justify-center font-bold flex-shrink-0 mr-4">
+                  2
+                </div>
+                <div>
+                  <h4 className="font-semibold mb-1">Learn Media Relationship Building</h4>
+                  <p className="text-blue-100 text-sm">Build your media list and master outreach strategies</p>
+                </div>
+              </div>
+              
+              <div className="flex items-start">
+                <div className="bg-white text-blue-600 rounded-full w-8 h-8 flex items-center justify-center font-bold flex-shrink-0 mr-4">
+                  3
+                </div>
+                <div>
+                  <h4 className="font-semibold mb-1">Use Outreach Templates</h4>
+                  <p className="text-blue-100 text-sm">Apply proven templates to contact writers and editors</p>
+                </div>
+              </div>
+              
+              <div className="flex items-start">
+                <div className="bg-white text-blue-600 rounded-full w-8 h-8 flex items-center justify-center font-bold flex-shrink-0 mr-4">
+                  4
+                </div>
+                <div>
+                  <h4 className="font-semibold mb-1">Amplify with Press Distribution</h4>
+                  <p className="text-blue-100 text-sm">Turn listicle placements into lasting AI authority</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Blur Overlay for Non-Members */}
+          {!isPaidMember && (
+            <div className="absolute inset-0 top-0">
+              <div className="absolute inset-0 bg-white bg-opacity-70 backdrop-blur-sm"></div>
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="bg-white rounded-2xl shadow-2xl p-8 text-center max-w-md mx-4 border-2 border-blue-200">
+                  <div className="bg-blue-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
+                    <Lock className="w-8 h-8 text-blue-600" />
                   </div>
-                  
-                  <h3 className="text-xl font-bold text-gray-900 mb-3 group-hover:text-blue-600 transition-colors">
-                    {tool.title}
+                  <h3 className="text-2xl font-bold text-gray-900 mb-4">
+                    Exclusive Member Content
                   </h3>
-                  
-                  <p className="text-gray-600 mb-4 text-sm leading-relaxed">
-                    {tool.description}
+                  <p className="text-gray-600 mb-6">
+                    Unlock access to comprehensive MasterClasses, proven outreach templates, and insider strategies that turn your business into an authority.
                   </p>
-
-                  <div className="flex items-center text-blue-600 font-medium text-sm group-hover:translate-x-1 transition-transform">
-                    View Templates
-                    <ArrowRight className="w-4 h-4 ml-1" />
+                  <div className="space-y-3 mb-4">
+                    <button
+                      onClick={handleSignup}
+                      className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-medium py-3 px-6 rounded-lg transition-all duration-200 flex items-center justify-center"
+                    >
+                      Start Your Membership
+                      <ArrowRight className="w-5 h-5 ml-2" />
+                    </button>
+                    <p className="text-sm text-gray-500">
+                      Join hundreds of businesses getting featured in top publications
+                    </p>
                   </div>
-                </Link>
-              )
-            })}
-          </div>
-        </div>
-
-        {/* Learning Path */}
-        <div className="bg-gradient-to-br from-blue-600 to-purple-600 rounded-2xl p-8 md:p-12 text-white">
-          <h2 className="text-3xl font-bold mb-4">Recommended Learning Path</h2>
-          <p className="text-blue-100 mb-8 text-lg">
-            Get the most from our education center by following this structured learning path
-          </p>
-          
-          <div className="space-y-4">
-            <div className="flex items-start">
-              <div className="bg-white text-blue-600 rounded-full w-8 h-8 flex items-center justify-center font-bold flex-shrink-0 mr-4">
-                1
-              </div>
-              <div>
-                <h4 className="font-semibold mb-1">Start with AI & SEO Fundamentals</h4>
-                <p className="text-blue-100 text-sm">Understand how AI is changing search and discovery</p>
+                </div>
               </div>
             </div>
-            
-            <div className="flex items-start">
-              <div className="bg-white text-blue-600 rounded-full w-8 h-8 flex items-center justify-center font-bold flex-shrink-0 mr-4">
-                2
-              </div>
-              <div>
-                <h4 className="font-semibold mb-1">Learn Media Relationship Building</h4>
-                <p className="text-blue-100 text-sm">Build your media list and master outreach strategies</p>
-              </div>
-            </div>
-            
-            <div className="flex items-start">
-              <div className="bg-white text-blue-600 rounded-full w-8 h-8 flex items-center justify-center font-bold flex-shrink-0 mr-4">
-                3
-              </div>
-              <div>
-                <h4 className="font-semibold mb-1">Use Outreach Templates</h4>
-                <p className="text-blue-100 text-sm">Apply proven templates to contact writers and editors</p>
-              </div>
-            </div>
-            
-            <div className="flex items-start">
-              <div className="bg-white text-blue-600 rounded-full w-8 h-8 flex items-center justify-center font-bold flex-shrink-0 mr-4">
-                4
-              </div>
-              <div>
-                <h4 className="font-semibold mb-1">Amplify with Press Distribution</h4>
-                <p className="text-blue-100 text-sm">Turn listicle placements into lasting AI authority</p>
-              </div>
-            </div>
-          </div>
+          )}
         </div>
       </div>
     </div>
