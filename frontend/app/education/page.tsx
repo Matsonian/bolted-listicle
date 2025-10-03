@@ -11,8 +11,8 @@ export default function EducationPage() {
   const router = useRouter()
 
   // Explicit membership check - must be logged in AND have paid tier
-  const isPaidMember = session?.user?.tier === 'paid'
-  const shouldShowGate = !session || session?.user?.tier !== 'paid'
+  const isPaidMember = !!session?.user
+const shouldShowGate = !session
 
   const masterclasses = [
     {
