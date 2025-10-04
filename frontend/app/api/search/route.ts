@@ -205,10 +205,11 @@ Only verified, actual listicle articles with real titles and working URLs from e
           
           const excludePatterns = [
             // YouTube - all variants
-            'youtube.com', 'www.youtube.com', 'youtu.be', 'youtube', 'm.youtube.com', 'music.youtube.com', 'studio.youtube.com',
+            'youtube.com', 'www.youtube.com', 'youtu.be', 'youtube', 'm.youtube.com', 'music.youtube.com', 'studio.youtube.com','youtube', 'youtu.be', '/watch?v=', '/embed/', '/shorts/',
+            'video', 'videos', 'watch', 'player',
             // Video platforms
             'vimeo.com', 'dailymotion.com', 'twitch.tv',
-            // Social media
+            /  / Social media
             'facebook.com', 'twitter.com', 'instagram.com', 'linkedin.com',
             'tiktok.com', 'pinterest.com', 'snapchat.com',
             // Navigation pages
