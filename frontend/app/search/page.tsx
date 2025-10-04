@@ -119,9 +119,9 @@ export default function SearchPage() {
   }
 
   const handleGetListicled = (article: ListicleResult) => {
-    const encodedUrl = encodeURIComponent(article.url)
-    router.push(`/listicle-detail/${encodedUrl}`)
-  }
+  const encodedUrl = encodeURIComponent(article.url)
+  router.push(`/analyze/${encodedUrl}`)
+}
 
   return (
     <div className="min-h-screen py-8 px-4">
