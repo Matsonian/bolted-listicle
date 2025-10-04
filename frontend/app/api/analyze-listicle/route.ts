@@ -1,5 +1,6 @@
 // app/api/analyze-listicle/route.ts
 import { NextRequest, NextResponse } from 'next/server'
+import * as cheerio from 'cheerio'
 
 interface UserProfile {
   first_name: string;
@@ -31,6 +32,85 @@ interface AnalysisResponse {
   model_email: string;
 }
 
+async function scrapeWebpage(url: string): Promise<string> {
+  try {
+    console.log('🌐 Fetching webpage:', url)
+    
+    const response = await fetch(url, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+        'Accept-Language': 'en-US,en;q=0.5',
+        'Accept-Encoding': 'gzip, deflate, br',
+        'Connection': 'keep-alive',
+        'Upgrade-Insecure-Requests': '1',
+      },
+      timeout: 10000, // 10 second timeout
+    })
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+    }
+
+    const html = await response.text()
+    console.log('✅ Webpage fetched, size:', html.length)
+
+    // Parse HTML with Cheerio
+    const $ = cheerio.load(html)
+
+    // Remove unwanted elements
+    $('script, style, nav, header, footer, aside, .sidebar, .advertisement, .ads').remove()
+
+    // Extract main content - try multiple selectors
+    let content = ''
+    const contentSelectors = [
+      'article',
+      '[role="main"]',
+      '.post-content',
+      '.entry-content', 
+      '.content',
+      'main',
+      '.article-body',
+      '.post-body'
+    ]
+
+    for (const selector of contentSelectors) {
+      const element = $(selector).first()
+      if (element.length && element.text().trim().length > 200) {
+        content = element.text().trim()
+        console.log(`📄 Content found using selector: ${selector}`)
+        break
+      }
+    }
+
+    // If no content found with selectors, try to extract from body
+    if (!content) {
+      content = $('body').text().trim()
+      console.log('📄 Content extracted from body tag')
+    }
+
+    // Clean up content
+    content = content
+      .replace(/\s+/g, ' ') // Replace multiple whitespace with single space
+      .replace(/\n+/g, '\n') // Replace multiple newlines with single newline
+      .trim()
+
+    // Limit content size for OpenAI (keep within token limits)
+    const maxLength = 15000 // Roughly 3000-4000 tokens
+    if (content.length > maxLength) {
+      content = content.substring(0, maxLength) + '...[content truncated]'
+      console.log('✂️ Content truncated to fit token limits')
+    }
+
+    console.log('📊 Final content length:', content.length)
+    return content
+
+  } catch (error) {
+    console.error('❌ Scraping error:', error)
+    throw new Error(`Failed to scrape webpage: ${error instanceof Error ? error.message : 'Unknown error'}`)
+  }
+}
+
 export async function POST(req: NextRequest) {
   console.log('🚀 API route called')
   
@@ -49,7 +129,6 @@ export async function POST(req: NextRequest) {
     }
 
     console.log('🔑 Checking OpenAI API key...')
-    // Get OpenAI API key from environment (server-side only)
     const openaiKey = process.env.OPENAI_API_KEY;
     if (!openaiKey) {
       console.log('❌ OpenAI API key not configured')
@@ -60,13 +139,15 @@ export async function POST(req: NextRequest) {
     }
     console.log('✅ OpenAI key found')
 
+    // Scrape the webpage content
+    console.log('🕷️ Starting web scraping...')
+    const webpageContent = await scrapeWebpage(url)
+
     console.log('🔨 Building analysis prompt...')
-    // Build the analysis prompt
-    const prompt = buildAnalysisPrompt(url, userProfile);
+    const prompt = buildAnalysisPrompt(url, webpageContent, userProfile);
     console.log('📝 Prompt length:', prompt.length)
 
     console.log('🤖 Calling OpenAI API...')
-    // Call OpenAI API
     const openaiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -74,11 +155,11 @@ export async function POST(req: NextRequest) {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4.1-mini', // Updated model name
+        model: 'gpt-4.1-mini', // Updated to use GPT-4.1 mini
         messages: [
           {
             role: 'system',
-            content: 'You are an expert content analyst specializing in evaluating listicles for business outreach opportunities. Always return valid JSON responses.'
+            content: 'You are an expert content analyst specializing in evaluating listicles and articles for business outreach opportunities. You analyze actual webpage content to find contact information and assess quality. Always return valid JSON responses.'
           },
           {
             role: 'user',
@@ -114,7 +195,6 @@ export async function POST(req: NextRequest) {
     }
 
     console.log('📄 Content received, length:', content.length)
-    console.log('📄 Raw content preview:', content.substring(0, 200))
 
     // Parse the JSON response
     let parsedResponse;
@@ -131,7 +211,6 @@ export async function POST(req: NextRequest) {
     }
 
     console.log('🔍 Validating response...')
-    // Validate and format the response
     const validatedResponse = validateAndFormatResponse(parsedResponse);
     console.log('✅ Response validated')
 
@@ -148,17 +227,20 @@ export async function POST(req: NextRequest) {
   }
 }
 
-function buildAnalysisPrompt(url: string, userProfile: UserProfile): string {
+function buildAnalysisPrompt(url: string, content: string, userProfile: UserProfile): string {
   return `
-Analyze this article URL and extract detailed information:
+Analyze this article content and extract detailed information:
 
 URL: ${url}
 
+WEBPAGE CONTENT:
+${content}
+
 EXTRACT AND ANALYZE:
-1. TITLE: Extract the exact article title
+1. TITLE: Extract the exact article title from the content
 2. PUBLICATION_DATE: Find publication date (YYYY-MM-DD format) or last updated date
-3. AUTHOR: Find author name from byline, bio, or about section
-4. CONTACT: Find author email, contact page URL, or social media link for the author
+3. AUTHOR: Find author name from byline, bio, or about section in the content
+4. CONTACT: Look for author email addresses, contact page links, or social media profiles mentioned in the content
 5. DESCRIPTION: Write a 200-character summary of the article content
 6. QUALITY (HIGH|MED|LOW) — from an LLM POV: likely to be indexed/cited?
    Signals (+1 each): 
@@ -170,12 +252,12 @@ EXTRACT AND ANALYZE:
    Rule: HIGH=4–5, MED=2–3, LOW=0–1
 7. IMPORTANCE (1–10) — outreach priority for LLM impact
    Score = AUTH(0–3) + REL(0–3) + FRESH(0–2) + ENG(0–2)
-   - AUTH: domain/author credibility
+   - AUTH: domain/author credibility based on content quality
    - REL: topical match to USER BUSINESS: ${userProfile.business_name} - ${userProfile.business_description}
-   - FRESH: recent/updated content
-   - ENG: on-page signals (ToC, internal links, shares/comments if shown)
-8. OUTREACH_ANGLE: One sentence pitch tailored to this article
-9. MODEL_EMAIL: Write personalized outreach email using business info below
+   - FRESH: recent/updated content based on dates found
+   - ENG: content depth, internal links, professional presentation
+8. OUTREACH_ANGLE: One sentence pitch tailored to this specific article content
+9. MODEL_EMAIL: Write personalized outreach email using business info below and referencing specific details from the article
 
 USER BUSINESS INFO:
 - Name: ${userProfile.first_name} ${userProfile.last_name}
@@ -186,14 +268,14 @@ USER BUSINESS INFO:
 
 Return ONLY valid JSON in this exact format:
 {
-  "title": "exact article title",
-  "author_name": "author name or null",
-  "author_email": "email@domain.com or null", 
-  "contact_url": "contact page URL or social media URL or null",
-  "publication_date": "YYYY-MM-DD or null",
-  "description": "200 char max description",
+  "title": "exact article title from content",
+  "author_name": "author name found in content or null",
+  "author_email": "email@domain.com found in content or null", 
+  "contact_url": "contact page URL or social media URL found in content or null",
+  "publication_date": "YYYY-MM-DD found in content or null",
+  "description": "200 char max description based on actual content",
   "llm_quality_rating": "HIGH|MED|LOW",
-  "quality_reasons": "• bullet point reasons why this rating",
+  "quality_reasons": "• bullet point reasons based on actual content analysis",
   "importance_score": 1-10,
   "importance_breakdown": {
     "auth": 0-3,
@@ -202,11 +284,11 @@ Return ONLY valid JSON in this exact format:
     "eng": 0-2
   },
   "outreach_priority": "P1|P2|P3",
-  "suggested_outreach_angle": "one sentence pitch",
-  "model_email": "complete professional email ready to send"
+  "suggested_outreach_angle": "one sentence pitch based on actual article content",
+  "model_email": "complete professional email referencing specific details from the article"
 }
 
-Note: For contact information, prioritize in this order: 1) direct email, 2) contact page, 3) social media. If none found, use null.
+Note: Base all analysis on the actual webpage content provided, not assumptions about the URL.
 `;
 }
 
