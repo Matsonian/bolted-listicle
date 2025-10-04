@@ -1,6 +1,11 @@
 // app/api/analyze-listicle/route.ts
-import { NextRequest, NextResponse } from 'next/server'
-import * as cheerio from 'cheerio'
+import { NextRequest, NextResponse } from 'next/server';
+import OpenAI from 'openai';
+import * as cheerio from 'cheerio';
+
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+});
 
 interface UserProfile {
   first_name: string;
@@ -32,280 +37,219 @@ interface AnalysisResponse {
   model_email: string;
 }
 
-async function scrapeWebpage(url: string): Promise<string> {
-  try {
-    console.log('🌐 Fetching webpage:', url)
-    
-    const response = await fetch(url, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-        'Accept-Language': 'en-US,en;q=0.5',
-        'Accept-Encoding': 'gzip, deflate, br',
-        'Connection': 'keep-alive',
-        'Upgrade-Insecure-Requests': '1',
-      },
-      timeout: 10000, // 10 second timeout
-    })
-
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}: ${response.statusText}`)
-    }
-
-    const html = await response.text()
-    console.log('✅ Webpage fetched, size:', html.length)
-
-    // Parse HTML with Cheerio
-    const $ = cheerio.load(html)
-
-    // Remove unwanted elements
-    $('script, style, nav, header, footer, aside, .sidebar, .advertisement, .ads').remove()
-
-    // Extract main content - try multiple selectors
-    let content = ''
-    const contentSelectors = [
-      'article',
-      '[role="main"]',
-      '.post-content',
-      '.entry-content', 
-      '.content',
-      'main',
-      '.article-body',
-      '.post-body'
-    ]
-
-    for (const selector of contentSelectors) {
-      const element = $(selector).first()
-      if (element.length && element.text().trim().length > 200) {
-        content = element.text().trim()
-        console.log(`📄 Content found using selector: ${selector}`)
-        break
-      }
-    }
-
-    // If no content found with selectors, try to extract from body
-    if (!content) {
-      content = $('body').text().trim()
-      console.log('📄 Content extracted from body tag')
-    }
-
-    // Clean up content
-    content = content
-      .replace(/\s+/g, ' ') // Replace multiple whitespace with single space
-      .replace(/\n+/g, '\n') // Replace multiple newlines with single newline
-      .trim()
-
-    // Limit content size for OpenAI (keep within token limits)
-    const maxLength = 15000 // Roughly 3000-4000 tokens
-    if (content.length > maxLength) {
-      content = content.substring(0, maxLength) + '...[content truncated]'
-      console.log('✂️ Content truncated to fit token limits')
-    }
-
-    console.log('📊 Final content length:', content.length)
-    return content
-
-  } catch (error) {
-    console.error('❌ Scraping error:', error)
-    throw new Error(`Failed to scrape webpage: ${error instanceof Error ? error.message : 'Unknown error'}`)
-  }
-}
-
 export async function POST(req: NextRequest) {
-  console.log('🚀 API route called')
-  
   try {
-    console.log('📝 Parsing request body...')
-    const { url, userProfile }: { url: string; userProfile: UserProfile } = await req.json();
-    console.log('📋 Received URL:', url)
-    console.log('👤 User profile received:', !!userProfile)
+    const { url, userProfile } = await req.json();
 
     if (!url || !userProfile) {
-      console.log('❌ Missing required fields')
-      return NextResponse.json(
-        { error: 'Missing required fields' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'URL and user profile are required' }, { status: 400 });
     }
 
-    console.log('🔑 Checking OpenAI API key...')
-    const openaiKey = process.env.OPENAI_API_KEY;
-    if (!openaiKey) {
-      console.log('❌ OpenAI API key not configured')
-      return NextResponse.json(
-        { error: 'OpenAI API key not configured' },
-        { status: 500 }
-      );
+    // Create AbortController for timeout
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+
+    let html: string;
+    
+    try {
+      const response = await fetch(url, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+          'Accept-Language': 'en-US,en;q=0.5',
+          'Accept-Encoding': 'gzip, deflate',
+          'Connection': 'keep-alive',
+          'Upgrade-Insecure-Requests': '1',
+        },
+        signal: controller.signal, // This enables the timeout
+      });
+
+      // Clear the timeout since fetch completed
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      html = await response.text();
+
+    } catch (error) {
+      clearTimeout(timeoutId); // Clean up timeout on error
+      
+      if (error.name === 'AbortError') {
+        throw new Error('Request timed out after 10 seconds');
+      }
+      throw error; // Re-throw other errors
     }
-    console.log('✅ OpenAI key found')
 
-    // Scrape the webpage content
-    console.log('🕷️ Starting web scraping...')
-    const webpageContent = await scrapeWebpage(url)
+    // Parse HTML and extract content
+    const $ = cheerio.load(html);
+    
+    // Remove unwanted elements
+    $('script, style, nav, header, footer, aside, .ad, .advertisement, .social-share').remove();
+    
+    // Extract metadata
+    const title = $('h1').first().text().trim() || 
+                  $('title').text().trim() || 
+                  $('meta[property="og:title"]').attr('content') || 
+                  'No title found';
+    
+    const description = $('meta[name="description"]').attr('content') || 
+                       $('meta[property="og:description"]').attr('content') || 
+                       $('p').first().text().substring(0, 200) + '...' || 
+                       'No description found';
 
-    console.log('🔨 Building analysis prompt...')
-    const prompt = buildAnalysisPrompt(url, webpageContent, userProfile);
-    console.log('📝 Prompt length:', prompt.length)
+    // Extract main content
+    const contentSelectors = ['article', '.post-content', '.entry-content', '.content', 'main', '.main'];
+    let mainContent = '';
+    
+    for (const selector of contentSelectors) {
+      const content = $(selector).text().trim();
+      if (content.length > mainContent.length) {
+        mainContent = content;
+      }
+    }
+    
+    if (!mainContent) {
+      mainContent = $('body').text().trim();
+    }
 
-    console.log('🤖 Calling OpenAI API...')
-    const openaiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${openaiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'gpt-4.1-mini', // Updated to use GPT-4.1 mini
-        messages: [
-          {
-            role: 'system',
-            content: 'You are an expert content analyst specializing in evaluating listicles and articles for business outreach opportunities. You analyze actual webpage content to find contact information and assess quality. Always return valid JSON responses.'
-          },
-          {
-            role: 'user',
-            content: prompt
-          }
-        ],
-        temperature: 0.7,
-        max_tokens: 4000,
-      }),
+    // Limit content length for API
+    const truncatedContent = mainContent.substring(0, 8000);
+
+    // Extract author info
+    const authorName = $('.author').text().trim() || 
+                      $('[rel="author"]').text().trim() || 
+                      $('meta[name="author"]').attr('content') || 
+                      $('.byline').text().trim() ||
+                      null;
+
+    // Extract contact info  
+    const contactUrl = $('a[href*="contact"]').attr('href') || 
+                      $('a[href*="about"]').attr('href') || 
+                      null;
+
+    // Extract publication date
+    const pubDate = $('time').attr('datetime') || 
+                   $('meta[property="article:published_time"]').attr('content') || 
+                   $('.date').text().trim() ||
+                   null;
+
+    // Create comprehensive prompt for OpenAI
+    const prompt = `
+Analyze this listicle and provide a comprehensive outreach assessment for ${userProfile.business_name}.
+
+BUSINESS CONTEXT:
+- Business: ${userProfile.business_name}
+- Industry: ${userProfile.business_description}
+- Website: ${userProfile.website || 'Not provided'}
+- Experience: ${userProfile.years_in_business || 'Not specified'} years
+
+LISTICLE DETAILS:
+- Title: ${title}
+- Author: ${authorName || 'Unknown'}
+- URL: ${url}
+- Content Preview: ${truncatedContent.substring(0, 2000)}
+
+Please analyze this listicle and provide a JSON response with the following structure:
+
+{
+  "title": "Article title (cleaned up if needed)",
+  "author_name": "Author name or null",
+  "author_email": "Extracted email or null", 
+  "contact_url": "Contact page URL or null",
+  "publication_date": "Publication date or null",
+  "description": "150-200 character summary of the article",
+  "llm_quality_rating": "HIGH/MED/LOW based on content quality, writing, and authority",
+  "quality_reasons": "Brief explanation of quality assessment",
+  "importance_score": 1-10 (how valuable this outreach opportunity is),
+  "importance_breakdown": {
+    "auth": 0-3 (site authority and reach),
+    "rel": 0-3 (relevance to business),
+    "fresh": 0-2 (content recency),
+    "eng": 0-2 (engagement potential)
+  },
+  "outreach_priority": "P1/P2/P3 (P1=high, P2=medium, P3=low)",
+  "suggested_outreach_angle": "Specific angle for reaching out to this publication",
+  "model_email": "Draft outreach email template"
+}
+
+Focus on relevance to ${userProfile.business_description} and provide actionable outreach insights.
+`;
+
+    // Call OpenAI API
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [
+        {
+          role: "system", 
+          content: "You are an expert marketing analyst. Provide detailed listicle analysis in valid JSON format only. No additional text outside the JSON."
+        },
+        {
+          role: "user",
+          content: prompt
+        }
+      ],
+      temperature: 0.3,
+      max_tokens: 2000,
     });
 
-    console.log('📡 OpenAI response status:', openaiResponse.status)
-
-    if (!openaiResponse.ok) {
-      const errorText = await openaiResponse.text();
-      console.error('❌ OpenAI API error:', openaiResponse.status, errorText);
-      return NextResponse.json(
-        { error: 'Failed to analyze listicle' },
-        { status: 500 }
-      );
+    const analysisText = completion.choices[0]?.message?.content;
+    
+    if (!analysisText) {
+      throw new Error('No analysis generated');
     }
 
-    console.log('✅ OpenAI response OK, parsing data...')
-    const openaiData = await openaiResponse.json();
-    const content = openaiData.choices[0]?.message?.content;
-
-    if (!content) {
-      console.log('❌ No content received from OpenAI')
-      return NextResponse.json(
-        { error: 'No content received from OpenAI' },
-        { status: 500 }
-      );
-    }
-
-    console.log('📄 Content received, length:', content.length)
-
-    // Parse the JSON response
-    let parsedResponse;
+    // Parse JSON response
+    let analysis;
     try {
-      console.log('🔍 Parsing JSON response...')
-      parsedResponse = JSON.parse(content);
-      console.log('✅ JSON parsed successfully')
+      analysis = JSON.parse(analysisText);
     } catch (parseError) {
-      console.error('❌ Failed to parse OpenAI response:', content);
-      return NextResponse.json(
-        { error: 'Invalid response from AI' },
-        { status: 500 }
-      );
+      console.error('Failed to parse OpenAI response:', analysisText);
+      throw new Error('Invalid response format from AI');
     }
 
-    console.log('🔍 Validating response...')
-    const validatedResponse = validateAndFormatResponse(parsedResponse);
-    console.log('✅ Response validated')
+    // Validate and clean the response
+    const validatedResponse = validateAnalysisResponse(analysis, {
+      title,
+      authorName,
+      contactUrl,
+      pubDate,
+      description
+    });
 
-    console.log('🎉 Returning success response')
-    return NextResponse.json(validatedResponse, { status: 200 });
+    return NextResponse.json(validatedResponse);
 
   } catch (error) {
-    console.error('💥 API error:', error);
-    console.error('💥 Error stack:', error instanceof Error ? error.stack : 'No stack trace');
+    console.error('Analysis error:', error);
     return NextResponse.json(
-      { error: `Internal server error: ${error instanceof Error ? error.message : 'Unknown error'}` },
+      { error: error instanceof Error ? error.message : 'Analysis failed' },
       { status: 500 }
     );
   }
 }
 
-function buildAnalysisPrompt(url: string, content: string, userProfile: UserProfile): string {
-  return `
-Analyze this article content and extract detailed information:
-
-URL: ${url}
-
-WEBPAGE CONTENT:
-${content}
-
-EXTRACT AND ANALYZE:
-1. TITLE: Extract the exact article title from the content
-2. PUBLICATION_DATE: Find publication date (YYYY-MM-DD format) or last updated date
-3. AUTHOR: Find author name from byline, bio, or about section in the content
-4. CONTACT: Look for author email addresses, contact page links, or social media profiles mentioned in the content
-5. DESCRIPTION: Write a 200-character summary of the article content
-6. QUALITY (HIGH|MED|LOW) — from an LLM POV: likely to be indexed/cited?
-   Signals (+1 each): 
-   - S: numbered "Best/Top" item list (H2/H3, scannable)
-   - C: ≥8 items or deep specs/pros/cons
-   - O/E: original notes, testing, or cited sources
-   - F: updated ≤180d or clearly current models/pricing
-   - A/UX: credible site/author + clean, non-spammy UX
-   Rule: HIGH=4–5, MED=2–3, LOW=0–1
-7. IMPORTANCE (1–10) — outreach priority for LLM impact
-   Score = AUTH(0–3) + REL(0–3) + FRESH(0–2) + ENG(0–2)
-   - AUTH: domain/author credibility based on content quality
-   - REL: topical match to USER BUSINESS: ${userProfile.business_name} - ${userProfile.business_description}
-   - FRESH: recent/updated content based on dates found
-   - ENG: content depth, internal links, professional presentation
-8. OUTREACH_ANGLE: One sentence pitch tailored to this specific article content
-9. MODEL_EMAIL: Write personalized outreach email using business info below and referencing specific details from the article
-
-USER BUSINESS INFO:
-- Name: ${userProfile.first_name} ${userProfile.last_name}
-- Business: ${userProfile.business_name}
-- Description: ${userProfile.business_description}
-- Website: ${userProfile.website || 'Not provided'}
-- Years in Business: ${userProfile.years_in_business || 'Not specified'}
-
-Return ONLY valid JSON in this exact format:
-{
-  "title": "exact article title from content",
-  "author_name": "author name found in content or null",
-  "author_email": "email@domain.com found in content or null", 
-  "contact_url": "contact page URL or social media URL found in content or null",
-  "publication_date": "YYYY-MM-DD found in content or null",
-  "description": "200 char max description based on actual content",
-  "llm_quality_rating": "HIGH|MED|LOW",
-  "quality_reasons": "• bullet point reasons based on actual content analysis",
-  "importance_score": 1-10,
-  "importance_breakdown": {
-    "auth": 0-3,
-    "rel": 0-3, 
-    "fresh": 0-2,
-    "eng": 0-2
-  },
-  "outreach_priority": "P1|P2|P3",
-  "suggested_outreach_angle": "one sentence pitch based on actual article content",
-  "model_email": "complete professional email referencing specific details from the article"
-}
-
-Note: Base all analysis on the actual webpage content provided, not assumptions about the URL.
-`;
-}
-
-function validateAndFormatResponse(response: any): AnalysisResponse {
-  // Calculate priority based on importance score
-  let priority: 'P1' | 'P2' | 'P3' = 'P3';
-  const score = parseInt(response.importance_score) || 1;
+function validateAnalysisResponse(response: any, fallbacks: any): AnalysisResponse {
+  // Calculate importance score from breakdown
+  const breakdown = response.importance_breakdown || {};
+  const calculatedScore = (breakdown.auth || 0) + (breakdown.rel || 0) + 
+                         (breakdown.fresh || 0) + (breakdown.eng || 0);
+  
+  const score = response.importance_score || calculatedScore || 5;
+  
+  // Determine priority based on score
+  let priority: 'P1' | 'P2' | 'P3';
   if (score >= 8) priority = 'P1';
-  else if (score >= 6) priority = 'P2';
+  else if (score >= 5) priority = 'P2';
+  else priority = 'P3';
 
   const validated: AnalysisResponse = {
-    title: response.title || 'Title not found',
-    author_name: response.author_name || null,
+    title: response.title || fallbacks.title || 'Unknown Title',
+    author_name: response.author_name || fallbacks.authorName || null,
     author_email: response.author_email || null,
-    contact_url: response.contact_url || null,
-    publication_date: response.publication_date || null,
-    description: response.description || 'Description not available',
+    contact_url: response.contact_url || fallbacks.contactUrl || null,
+    publication_date: response.publication_date || fallbacks.pubDate || null,
+    description: response.description || fallbacks.description || 'No description available',
     llm_quality_rating: ['HIGH', 'MED', 'LOW'].includes(response.llm_quality_rating) 
       ? response.llm_quality_rating : 'LOW',
     quality_reasons: response.quality_reasons || 'No quality assessment available',
