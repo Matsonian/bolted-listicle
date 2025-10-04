@@ -52,7 +52,6 @@ declare global {
 export default function ListicleDetailPage() {
   const params = useParams();
   const router = useRouter();
-  const searchParams = useSearchParams();
   const [analysis, setAnalysis] = useState<ExtendedAnalysisResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -61,7 +60,6 @@ export default function ListicleDetailPage() {
   // Extract URL from params
   const encodedUrl = Array.isArray(params.url) ? params.url.join('/') : params.url;
   const decodedUrl = encodedUrl ? decodeURIComponent(encodedUrl) : '';
-  const isAnalyzing = searchParams?.get('analyzing') === 'true';
 
   useEffect(() => {
     if (!decodedUrl) return;
