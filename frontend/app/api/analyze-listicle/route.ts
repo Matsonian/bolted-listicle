@@ -76,7 +76,7 @@ export async function POST(req: NextRequest) {
     } catch (error) {
       clearTimeout(timeoutId); // Clean up timeout on error
       
-      if (error.name === 'AbortError') {
+      if (error instanceof Error && error.name === 'AbortError') {
         throw new Error('Request timed out after 10 seconds');
       }
       throw error; // Re-throw other errors
