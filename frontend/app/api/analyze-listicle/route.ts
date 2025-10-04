@@ -99,23 +99,61 @@ export async function POST(req: NextRequest) {
                        $('p').first().text().substring(0, 200) + '...' || 
                        'No description found';
 
-    // Extract main content
-    const contentSelectors = ['article', '.post-content', '.entry-content', '.content', 'main', '.main'];
+    // Extract main content with better selectors
+    const contentSelectors = [
+      'article', 
+      '.post-content', 
+      '.entry-content', 
+      '.article-content',
+      '.post-body',
+      '.content', 
+      'main', 
+      '.main',
+      '[role="main"]',
+      '.article-body',
+      '.story-body'
+    ];
+    
     let mainContent = '';
+    let bestSelector = '';
     
     for (const selector of contentSelectors) {
       const content = $(selector).text().trim();
       if (content.length > mainContent.length) {
         mainContent = content;
+        bestSelector = selector;
       }
     }
     
-    if (!mainContent) {
-      mainContent = $('body').text().trim();
+    // If no good content found, try paragraph-based extraction
+    if (mainContent.length < 500) {
+      const paragraphs = $('p').map((i, el) => $(el).text().trim()).get();
+      mainContent = paragraphs.filter(p => p.length > 50).join('\n');
+      bestSelector = 'paragraphs';
     }
+    
+    // Final fallback to body
+    if (!mainContent || mainContent.length < 200) {
+      mainContent = $('body').text().trim();
+      bestSelector = 'body';
+    }
+
+    console.log('Best content selector used:', bestSelector);
 
     // Limit content length for API
     const truncatedContent = mainContent.substring(0, 8000);
+
+    // Debug logging to see what we scraped
+    console.log('=== SCRAPING DEBUG ===');
+    console.log('URL:', url);
+    console.log('Title extracted:', title);
+    console.log('Description extracted:', description);
+    console.log('Author extracted:', authorName);
+    console.log('Content length:', mainContent.length);
+    console.log('Content preview (first 500 chars):', truncatedContent.substring(0, 500));
+    console.log('Contact URL found:', contactUrl);
+    console.log('Publication date found:', pubDate);
+    console.log('=== END SCRAPING DEBUG ===');
 
     // Extract author info
     const authorName = $('.author').text().trim() || 
