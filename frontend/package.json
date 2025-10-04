@@ -10,9 +10,6 @@
     "codegen": "graphql-codegen --config codegen.yml",
     "codegen:watch": "graphql-codegen --config codegen.yml --watch"
   },
-  "overrides": {
-    "eslint": "^8.57.0"
-  },
   "dependencies": {
     "@apollo/client": "^3.14.0",
     "@stripe/stripe-js": "^7.9.0",
