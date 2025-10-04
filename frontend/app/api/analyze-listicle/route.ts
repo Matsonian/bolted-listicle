@@ -119,7 +119,7 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    console.log('Best content selector used:', bestSelector);
+    console.log('Opening content extraction method: paragraphs + intro selectors');
 
     // Limit opening content for API (focus on first 1500 chars instead of 8000)
     const truncatedContent = openingContent.substring(0, 1500);
