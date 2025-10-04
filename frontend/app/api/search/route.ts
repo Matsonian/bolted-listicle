@@ -209,7 +209,7 @@ Only verified, actual listicle articles with real titles and working URLs from e
             'video', 'videos', 'watch', 'player',
             // Video platforms
             'vimeo.com', 'dailymotion.com', 'twitch.tv',
-            /  / Social media
+            // Social media
             'facebook.com', 'twitter.com', 'instagram.com', 'linkedin.com',
             'tiktok.com', 'pinterest.com', 'snapchat.com',
             // Navigation pages
