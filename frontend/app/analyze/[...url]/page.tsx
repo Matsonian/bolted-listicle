@@ -1,1 +1,5 @@
-// something goes here
+'use client';
+
+export default function AnalyzePage() {
+  return <div>Static analyze page works!</div>;
+}
