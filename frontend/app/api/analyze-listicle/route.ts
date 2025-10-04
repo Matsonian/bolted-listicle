@@ -152,7 +152,7 @@ export async function POST(req: NextRequest) {
     if (!authorName) {
       authorName = $('meta[name="author"]').attr('content') || 
                   $('meta[property="article:author"]').attr('content') ||
-                  $('meta[name="byl"]').attr('content');
+                  $('meta[name="byl"]').attr('content') || null;
     }
 
     // ENHANCED EMAIL EXTRACTION
