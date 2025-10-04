@@ -1,385 +1,436 @@
-'use client'
+// app/listicle-detail/[...url]/page.tsx
+'use client';
 
-import React, { useState, useEffect } from 'react'
-import { useParams, useRouter } from 'next/navigation'
-import { useSession } from 'next-auth/react'
+import React, { useState, useEffect } from 'react';
+import { useParams, useRouter } from 'next/navigation';
+import { openaiService, type AnalysisResponse } from '../../../services/openaiService';
 import { 
   ArrowLeft, 
-  ExternalLink, 
-  Mail, 
-  Globe, 
-  Calendar, 
   User, 
+  Mail, 
+  Calendar, 
   Star, 
-  TrendingUp,
-  AlertCircle,
+  ExternalLink, 
   Copy,
+  Phone,
+  Globe,
+  MessageSquare,
   CheckCircle,
-  Loader2
-} from 'lucide-react'
-import { openaiService, type AnalysisResponse, type UserProfile } from '@/services/openaiService'
+  XCircle,
+  Clock
+} from 'lucide-react';
+
+interface ExtendedAnalysisResponse extends AnalysisResponse {
+  author_bio?: string;
+  author_url?: string;
+}
 
 export default function ListicleDetailPage() {
-  const params = useParams()
-  const router = useRouter()
-  const { data: session } = useSession()
-  const [analysis, setAnalysis] = useState<AnalysisResponse | null>(null)
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string>('')
-  const [emailCopied, setEmailCopied] = useState(false)
+  const params = useParams();
+  const router = useRouter();
+  const [analysis, setAnalysis] = useState<ExtendedAnalysisResponse | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [copied, setCopied] = useState<string | null>(null);
 
-  const encodedUrl = params?.id as string
-  const decodedUrl = encodedUrl ? decodeURIComponent(encodedUrl) : ''
+  // Extract URL from params
+  const encodedUrl = Array.isArray(params.url) ? params.url.join('/') : params.url;
+  const decodedUrl = encodedUrl ? decodeURIComponent(encodedUrl) : '';
 
   useEffect(() => {
-    if (decodedUrl && session?.user && !analysis && !loading) {
-      analyzeListicle()
+    if (decodedUrl) {
+      analyzeListicle();
     }
-  }, [decodedUrl, session?.user])
+  }, [decodedUrl]);
 
   const analyzeListicle = async () => {
-    if (!decodedUrl || !session?.user) return
-
-    setLoading(true)
-    setError('')
-
     try {
-      // Fetch real user profile from your database
-      const profileResponse = await fetch('/api/user-profile', {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      })
+      setLoading(true);
+      setError(null);
+      
+      // Mock user profile - in real app, get from auth/context
+      const userProfile = {
+        first_name: 'John',
+        last_name: 'Doe',
+        business_name: 'Your Business',
+        business_description: 'Your business description',
+        website: 'https://yourbusiness.com',
+        years_in_business: 5
+      };
 
-      let userProfile: UserProfile
-
-      if (profileResponse.ok) {
-        const profileData = await profileResponse.json()
-        userProfile = {
-          first_name: session.user.name?.split(' ')[0] || profileData.first_name || 'User',
-          last_name: session.user.name?.split(' ')[1] || profileData.last_name || '',
-          business_name: profileData.business_name || 'Your Business',
-          business_description: profileData.business_description || 'Your business description',
-          website: profileData.website,
-          years_in_business: profileData.years_in_business
-        }
-      } else {
-        // Fallback to basic profile if no profile exists yet
-        userProfile = {
-          first_name: session.user.name?.split(' ')[0] || 'User',
-          last_name: session.user.name?.split(' ')[1] || '',
-          business_name: 'Your Business',
-          business_description: 'Your business description',
-          website: '',
-          years_in_business: 1
-        }
-      }
-
-      const analysisResult = await openaiService.analyzeListicle(decodedUrl, userProfile)
-      setAnalysis(analysisResult)
+      const result = await openaiService.analyzeListicle(decodedUrl, userProfile);
+      setAnalysis(result);
     } catch (err) {
-      console.error('Analysis error:', err)
-      setError(err instanceof Error ? err.message : 'Failed to analyze listicle')
+      setError(err instanceof Error ? err.message : 'Analysis failed');
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
+
+  const copyToClipboard = async (text: string, type: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(type);
+      setTimeout(() => setCopied(null), 2000);
+    } catch (err) {
+      console.error('Failed to copy:', err);
+    }
+  };
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
-      case 'P1': return 'bg-red-100 text-red-800 border-red-200'
-      case 'P2': return 'bg-yellow-100 text-yellow-800 border-yellow-200'
-      case 'P3': return 'bg-green-100 text-green-800 border-green-200'
-      default: return 'bg-gray-100 text-gray-800 border-gray-200'
+      case 'P1': return 'bg-green-100 text-green-800 border-green-200';
+      case 'P2': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+      case 'P3': return 'bg-gray-100 text-gray-800 border-gray-200';
+      default: return 'bg-gray-100 text-gray-800 border-gray-200';
     }
-  }
+  };
 
-  const getQualityColor = (rating: string) => {
-    switch (rating) {
-      case 'HIGH': return 'bg-green-100 text-green-800 border-green-200'
-      case 'MED': return 'bg-yellow-100 text-yellow-800 border-yellow-200'
-      case 'LOW': return 'bg-red-100 text-red-800 border-red-200'
-      default: return 'bg-gray-100 text-gray-800 border-gray-200'
+  const getQualityColor = (quality: string) => {
+    switch (quality) {
+      case 'HIGH': return 'bg-green-100 text-green-800 border-green-200';
+      case 'MED': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+      case 'LOW': return 'bg-red-100 text-red-800 border-red-200';
+      default: return 'bg-gray-100 text-gray-800 border-gray-200';
     }
-  }
+  };
 
-  const copyEmailToClipboard = () => {
-    if (analysis?.model_email) {
-      navigator.clipboard.writeText(analysis.model_email)
-      setEmailCopied(true)
-      setTimeout(() => setEmailCopied(false), 2000)
-    }
-  }
-
-  if (!session) {
+  if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center bg-white p-8 rounded-lg shadow-sm border max-w-md">
-          <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">Access Denied</h1>
-          <p className="text-gray-600 mb-6">You need to be signed in to analyze listicles.</p>
-          <button
-            onClick={() => router.push('/signup')}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg transition-colors"
-          >
-            Sign Up
-          </button>
+      <div className="min-h-screen py-8 px-4">
+        <div className="container mx-auto max-w-4xl">
+          <div className="text-center py-12">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">Analyzing listicle and extracting contact information...</p>
+          </div>
         </div>
       </div>
-    )
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen py-8 px-4">
+        <div className="container mx-auto max-w-4xl">
+          <div className="text-center py-12">
+            <XCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+            <h2 className="text-xl font-semibold text-gray-900 mb-2">Analysis Failed</h2>
+            <p className="text-gray-600 mb-6">{error}</p>
+            <div className="space-x-4">
+              <button
+                onClick={analyzeListicle}
+                className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                Try Again
+              </button>
+              <button
+                onClick={() => router.back()}
+                className="text-gray-600 hover:text-gray-700"
+              >
+                Go Back
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!analysis) {
+    return <div>No analysis data available</div>;
   }
 
   return (
     <div className="min-h-screen bg-gray-50 py-8 px-4">
-      <div className="container mx-auto max-w-4xl">
+      <div className="container mx-auto max-w-6xl">
         {/* Header */}
-        <div className="flex items-center mb-6">
+        <div className="mb-8">
           <button
             onClick={() => router.back()}
-            className="flex items-center text-gray-600 hover:text-gray-900 mr-4 transition-colors"
+            className="inline-flex items-center space-x-2 text-blue-600 hover:text-blue-700 mb-4 transition-colors"
           >
-            <ArrowLeft className="w-5 h-5 mr-2" />
-            Back to Results
+            <ArrowLeft className="w-4 h-4" />
+            <span>Back to Search</span>
           </button>
+          
+          <div className="flex items-start justify-between">
+            <div className="flex-1">
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">
+                Listicle Analysis
+              </h1>
+              <a 
+                href={decodedUrl} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-blue-600 hover:text-blue-700 text-sm break-all inline-flex items-center gap-1"
+              >
+                {decodedUrl}
+                <ExternalLink className="w-3 h-3" />
+              </a>
+            </div>
+            <div className="flex items-center space-x-3 ml-4">
+              <span className={`px-3 py-1 rounded-full text-sm font-medium border ${getPriorityColor(analysis.outreach_priority)}`}>
+                {analysis.outreach_priority} Priority
+              </span>
+              <span className={`px-3 py-1 rounded-full text-sm font-medium border ${getQualityColor(analysis.llm_quality_rating)}`}>
+                {analysis.llm_quality_rating} Quality
+              </span>
+            </div>
+          </div>
         </div>
 
-        {/* Loading State */}
-        {loading && (
-          <div className="bg-white rounded-lg shadow-sm border p-8 text-center">
-            <div className="flex items-center justify-center mb-4">
-              <Loader2 className="w-12 h-12 text-blue-600 animate-spin" />
-            </div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">Analyzing Listicle</h3>
-            <p className="text-gray-600 mb-4">
-              Our AI is analyzing this article for outreach opportunities...
-            </p>
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mt-4">
-              <p className="text-sm text-blue-800">
-                This analysis typically takes 30-60 seconds and includes quality assessment, 
-                contact extraction, and personalized email generation.
-              </p>
-            </div>
-          </div>
-        )}
-
-        {/* Error State */}
-        {error && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-6 mb-6">
-            <div className="flex items-center">
-              <AlertCircle className="w-5 h-5 text-red-500 mr-2" />
-              <h3 className="text-lg font-semibold text-red-900">Analysis Failed</h3>
-            </div>
-            <p className="text-red-700 mt-2">{error}</p>
-            <button
-              onClick={analyzeListicle}
-              className="mt-4 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition-colors"
-            >
-              Try Again
-            </button>
-          </div>
-        )}
-
-        {/* Analysis Results */}
-        {analysis && (
-          <div className="space-y-6">
+        <div className="grid lg:grid-cols-3 gap-8">
+          {/* Left Column - Article Info */}
+          <div className="lg:col-span-2 space-y-6">
             {/* Article Overview */}
-            <div className="bg-white rounded-lg shadow-sm border p-6">
-              <div className="flex items-start justify-between mb-4">
-                <div className="flex-1">
-                  <h1 className="text-2xl font-bold text-gray-900 mb-2">
-                    {analysis.title}
-                  </h1>
-                  <a
-                    href={decodedUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center text-blue-600 hover:text-blue-800 transition-colors"
-                  >
-                    <Globe className="w-4 h-4 mr-2" />
-                    View Original Article
-                    <ExternalLink className="w-4 h-4 ml-1" />
-                  </a>
-                </div>
-                <div className="flex space-x-2">
-                  <span className={`px-3 py-1 rounded-full text-sm font-medium border ${getPriorityColor(analysis.outreach_priority)}`}>
-                    {analysis.outreach_priority}
-                  </span>
-                  <span className={`px-3 py-1 rounded-full text-sm font-medium border ${getQualityColor(analysis.llm_quality_rating)}`}>
-                    {analysis.llm_quality_rating} Quality
-                  </span>
-                </div>
-              </div>
+            <div className="bg-white rounded-xl shadow-sm border p-6">
+              <h2 className="text-2xl font-semibold text-gray-900 mb-4">
+                {analysis.title}
+              </h2>
               
-              <p className="text-gray-700 mb-4">{analysis.description}</p>
-              
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                {analysis.author_name && (
-                  <div className="flex items-center">
-                    <User className="w-4 h-4 text-gray-400 mr-2" />
-                    <span>{analysis.author_name}</span>
-                  </div>
-                )}
+              <div className="grid md:grid-cols-2 gap-4 mb-6 text-sm">
                 {analysis.publication_date && (
-                  <div className="flex items-center">
-                    <Calendar className="w-4 h-4 text-gray-400 mr-2" />
-                    <span>{new Date(analysis.publication_date).toLocaleDateString()}</span>
+                  <div className="flex items-center space-x-2 text-gray-600">
+                    <Calendar className="w-4 h-4" />
+                    <span>Published: {analysis.publication_date}</span>
                   </div>
                 )}
-                <div className="flex items-center">
-                  <TrendingUp className="w-4 h-4 text-gray-400 mr-2" />
-                  <span>Score: {analysis.importance_score}/10</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Quality Assessment */}
-            <div className="bg-white rounded-lg shadow-sm border p-6">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">Quality Assessment</h2>
-              <div className="mb-6">
-                <div className="flex items-center mb-2">
-                  <Star className="w-5 h-5 text-yellow-500 mr-2" />
-                  <span className="font-medium">Overall Rating: {analysis.llm_quality_rating}</span>
-                </div>
-                <div className="text-gray-700 whitespace-pre-line bg-gray-50 p-4 rounded-lg">
-                  {analysis.quality_reasons}
+                
+                <div className="flex items-center space-x-2 text-gray-600">
+                  <Clock className="w-4 h-4" />
+                  <span>Analyzed: {new Date().toLocaleDateString()}</span>
                 </div>
               </div>
               
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="text-center bg-blue-50 p-4 rounded-lg">
-                  <div className="text-2xl font-bold text-blue-600">{analysis.importance_breakdown.auth}</div>
-                  <div className="text-sm font-medium text-gray-700">Authority</div>
-                  <div className="text-xs text-gray-500">Domain credibility</div>
-                </div>
-                <div className="text-center bg-green-50 p-4 rounded-lg">
-                  <div className="text-2xl font-bold text-green-600">{analysis.importance_breakdown.rel}</div>
-                  <div className="text-sm font-medium text-gray-700">Relevance</div>
-                  <div className="text-xs text-gray-500">Business match</div>
-                </div>
-                <div className="text-center bg-purple-50 p-4 rounded-lg">
-                  <div className="text-2xl font-bold text-purple-600">{analysis.importance_breakdown.fresh}</div>
-                  <div className="text-sm font-medium text-gray-700">Freshness</div>
-                  <div className="text-xs text-gray-500">Content recency</div>
-                </div>
-                <div className="text-center bg-orange-50 p-4 rounded-lg">
-                  <div className="text-2xl font-bold text-orange-600">{analysis.importance_breakdown.eng}</div>
-                  <div className="text-sm font-medium text-gray-700">Engagement</div>
-                  <div className="text-xs text-gray-500">User signals</div>
+              <div className="mb-6">
+                <h3 className="font-medium text-gray-900 mb-2">Article Summary:</h3>
+                <p className="text-gray-700 leading-relaxed">{analysis.description}</p>
+              </div>
+
+              {/* Quality Assessment */}
+              <div className="border-t pt-6">
+                <h3 className="font-medium text-gray-900 mb-3">Quality Assessment</h3>
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div>
+                    <div className="flex items-center space-x-2 mb-2">
+                      <span className={`px-2 py-1 rounded text-xs font-medium border ${getQualityColor(analysis.llm_quality_rating)}`}>
+                        {analysis.llm_quality_rating}
+                      </span>
+                      <span className="flex items-center space-x-1">
+                        <Star className="w-4 h-4 text-yellow-500" />
+                        <span className="font-medium">{analysis.importance_score}/10</span>
+                      </span>
+                    </div>
+                    <p className="text-sm text-gray-600">{analysis.quality_reasons}</p>
+                  </div>
+                  <div className="text-sm">
+                    <div className="space-y-1">
+                      <div className="flex justify-between">
+                        <span>Authority:</span>
+                        <span className="font-medium">{analysis.importance_breakdown.auth}/3</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Relevance:</span>
+                        <span className="font-medium">{analysis.importance_breakdown.rel}/3</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Freshness:</span>
+                        <span className="font-medium">{analysis.importance_breakdown.fresh}/2</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Engagement:</span>
+                        <span className="font-medium">{analysis.importance_breakdown.eng}/2</span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
-
-            {/* Contact Information */}
-            {(analysis.author_email || analysis.contact_url) && (
-              <div className="bg-white rounded-lg shadow-sm border p-6">
-                <h2 className="text-xl font-semibold text-gray-900 mb-4">Contact Information</h2>
-                <div className="space-y-3">
-                  {analysis.author_email && (
-                    <div className="flex items-center p-3 bg-blue-50 rounded-lg">
-                      <Mail className="w-5 h-5 text-blue-600 mr-3" />
-                      <div>
-                        <div className="font-medium text-gray-900">Email Contact</div>
-                        <a
-                          href={`mailto:${analysis.author_email}`}
-                          className="text-blue-600 hover:text-blue-800 transition-colors"
-                        >
-                          {analysis.author_email}
-                        </a>
-                      </div>
-                    </div>
-                  )}
-                  {analysis.contact_url && (
-                    <div className="flex items-center p-3 bg-green-50 rounded-lg">
-                      <Globe className="w-5 h-5 text-green-600 mr-3" />
-                      <div>
-                        <div className="font-medium text-gray-900">Contact Page</div>
-                        <a
-                          href={analysis.contact_url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-green-600 hover:text-green-800 transition-colors flex items-center"
-                        >
-                          Visit Contact Page
-                          <ExternalLink className="w-4 h-4 ml-1" />
-                        </a>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
 
             {/* Outreach Strategy */}
-            <div className="bg-white rounded-lg shadow-sm border p-6">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">Outreach Strategy</h2>
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-                <h3 className="font-semibold text-blue-900 mb-2">Suggested Approach:</h3>
-                <p className="text-blue-800">{analysis.suggested_outreach_angle}</p>
-              </div>
-              
-              <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-                <div className="flex items-center justify-between mb-3">
-                  <h3 className="font-semibold text-gray-900">Ready-to-Send Email:</h3>
-                  <button
-                    onClick={copyEmailToClipboard}
-                    className="flex items-center text-sm text-blue-600 hover:text-blue-800 transition-colors"
-                  >
-                    {emailCopied ? (
-                      <>
-                        <CheckCircle className="w-4 h-4 mr-1" />
-                        Copied!
-                      </>
-                    ) : (
-                      <>
-                        <Copy className="w-4 h-4 mr-1" />
-                        Copy Email
-                      </>
-                    )}
-                  </button>
-                </div>
-                <div className="bg-white border rounded-lg p-4 text-sm whitespace-pre-line font-mono text-gray-800 max-h-96 overflow-y-auto">
-                  {analysis.model_email}
-                </div>
-                <div className="mt-3 text-xs text-gray-500">
-                  This email was personalized using your business profile and the article content.
-                </div>
-              </div>
-            </div>
-
-            {/* Next Steps */}
-            <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg p-6 text-white">
-              <h2 className="text-xl font-bold mb-4">Next Steps</h2>
-              <div className="grid md:grid-cols-2 gap-4">
+            <div className="bg-white rounded-xl shadow-sm border p-6">
+              <h3 className="text-xl font-semibold text-gray-900 mb-4">Outreach Strategy</h3>
+              <div className="space-y-4">
                 <div>
-                  <h3 className="font-semibold mb-2">1. Review & Customize</h3>
-                  <p className="text-blue-100 text-sm">
-                    Review the generated email and customize it to match your voice and specific offering.
-                  </p>
+                  <h4 className="font-medium text-gray-900 mb-2">Suggested Approach:</h4>
+                  <p className="text-gray-700 leading-relaxed">{analysis.suggested_outreach_angle}</p>
                 </div>
+                
                 <div>
-                  <h3 className="font-semibold mb-2">2. Send & Follow Up</h3>
-                  <p className="text-blue-100 text-sm">
-                    Send your outreach email and plan a follow-up sequence if you don't hear back.
-                  </p>
-                </div>
-                <div>
-                  <h3 className="font-semibold mb-2">3. Track Results</h3>
-                  <p className="text-blue-100 text-sm">
-                    Monitor responses and engagement to refine your outreach strategy.
-                  </p>
-                </div>
-                <div>
-                  <h3 className="font-semibold mb-2">4. Scale Success</h3>
-                  <p className="text-blue-100 text-sm">
-                    Use successful templates and approaches for similar publications and authors.
-                  </p>
+                  <h4 className="font-medium text-gray-900 mb-2">Draft Email Template:</h4>
+                  <div className="relative bg-gray-50 rounded-lg p-4">
+                    <pre className="text-sm text-gray-700 whitespace-pre-wrap font-sans">{analysis.model_email}</pre>
+                    <button
+                      onClick={() => copyToClipboard(analysis.model_email, 'email')}
+                      className="absolute top-2 right-2 p-2 text-gray-400 hover:text-gray-600 transition-colors"
+                      title="Copy email template"
+                    >
+                      {copied === 'email' ? (
+                        <CheckCircle className="w-4 h-4 text-green-600" />
+                      ) : (
+                        <Copy className="w-4 h-4" />
+                      )}
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-        )}
+
+          {/* Right Column - Contact Information */}
+          <div className="space-y-6">
+            {/* Author Contact Card */}
+            <div className="bg-white rounded-xl shadow-sm border p-6">
+              <h3 className="text-xl font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                <User className="w-5 h-5 text-blue-600" />
+                Contact Information
+              </h3>
+              
+              <div className="space-y-4">
+                {/* Author Name */}
+                {analysis.author_name && (
+                  <div className="border-b pb-3">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h4 className="font-medium text-gray-900">Author</h4>
+                        <p className="text-gray-700">{analysis.author_name}</p>
+                      </div>
+                      <User className="w-5 h-5 text-gray-400" />
+                    </div>
+                  </div>
+                )}
+
+                {/* Author Email */}
+                {analysis.author_email && (
+                  <div className="border-b pb-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1">
+                        <h4 className="font-medium text-gray-900 flex items-center gap-2">
+                          <CheckCircle className="w-4 h-4 text-green-600" />
+                          Email Found
+                        </h4>
+                        <p className="text-gray-700 break-all">{analysis.author_email}</p>
+                      </div>
+                      <button
+                        onClick={() => copyToClipboard(analysis.author_email!, 'author_email')}
+                        className="p-2 text-gray-400 hover:text-gray-600 transition-colors"
+                        title="Copy email"
+                      >
+                        {copied === 'author_email' ? (
+                          <CheckCircle className="w-4 h-4 text-green-600" />
+                        ) : (
+                          <Copy className="w-4 h-4" />
+                        )}
+                      </button>
+                    </div>
+                    <div className="mt-2">
+                      <a
+                        href={`mailto:${analysis.author_email}`}
+                        className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 text-sm transition-colors"
+                      >
+                        <Mail className="w-4 h-4" />
+                        Send Email
+                      </a>
+                    </div>
+                  </div>
+                )}
+
+                {/* Contact URLs */}
+                {analysis.contact_url && (
+                  <div className="border-b pb-3">
+                    <div>
+                      <h4 className="font-medium text-gray-900 flex items-center gap-2">
+                        <CheckCircle className="w-4 h-4 text-green-600" />
+                        Contact Page
+                      </h4>
+                      <a
+                        href={analysis.contact_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-600 hover:text-blue-700 text-sm break-all inline-flex items-center gap-1 mt-1"
+                      >
+                        View Contact Page
+                        <ExternalLink className="w-3 h-3" />
+                      </a>
+                    </div>
+                  </div>
+                )}
+
+                {/* Author Bio (if available) */}
+                {(analysis as ExtendedAnalysisResponse).author_bio && (
+                  <div className="border-b pb-3">
+                    <h4 className="font-medium text-gray-900 mb-2">Author Bio</h4>
+                    <p className="text-sm text-gray-600 leading-relaxed">
+                      {(analysis as ExtendedAnalysisResponse).author_bio}
+                    </p>
+                  </div>
+                )}
+
+                {/* Author URL (if different from contact) */}
+                {(analysis as ExtendedAnalysisResponse).author_url && (
+                  <div>
+                    <h4 className="font-medium text-gray-900">Author Profile</h4>
+                    <a
+                      href={(analysis as ExtendedAnalysisResponse).author_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-600 hover:text-blue-700 text-sm break-all inline-flex items-center gap-1 mt-1"
+                    >
+                      View Profile
+                      <ExternalLink className="w-3 h-3" />
+                    </a>
+                  </div>
+                )}
+
+                {/* No Contact Info Found */}
+                {!analysis.author_email && !analysis.contact_url && !analysis.author_name && (
+                  <div className="text-center py-4">
+                    <XCircle className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+                    <p className="text-gray-500 text-sm">No contact information found</p>
+                    <p className="text-gray-400 text-xs mt-1">Manual research may be required</p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Quick Actions */}
+            <div className="bg-white rounded-xl shadow-sm border p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
+              <div className="space-y-3">
+                <button
+                  onClick={() => window.open(decodedUrl, '_blank')}
+                  className="w-full flex items-center justify-center gap-2 bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  <Globe className="w-4 h-4" />
+                  View Article
+                </button>
+                
+                {analysis.author_email && (
+                  <button
+                    onClick={() => window.location.href = `mailto:${analysis.author_email}?subject=Collaboration Opportunity&body=${encodeURIComponent(analysis.model_email)}`}
+                    className="w-full flex items-center justify-center gap-2 bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700 transition-colors"
+                  >
+                    <Mail className="w-4 h-4" />
+                    Send Outreach Email
+                  </button>
+                )}
+                
+                <button
+                  onClick={() => copyToClipboard(analysis.model_email, 'template')}
+                  className="w-full flex items-center justify-center gap-2 border border-gray-300 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  {copied === 'template' ? (
+                    <CheckCircle className="w-4 h-4 text-green-600" />
+                  ) : (
+                    <Copy className="w-4 h-4" />
+                  )}
+                  Copy Email Template
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
-  )
+  );
 }
