@@ -169,16 +169,8 @@ export default function ListicleDetailPage() {
           <div className="text-center py-12">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
             <p className="text-gray-600">
-              {isAnalyzing 
-                ? 'Analyzing listicle and extracting contact information...' 
-                : 'Loading analysis...'
-              }
+              Analyzing listicle and extracting contact information...
             </p>
-            {isAnalyzing && (
-              <p className="text-sm text-gray-500 mt-2">
-                This should complete within 30 seconds
-              </p>
-            )}
           </div>
         </div>
       </div>
