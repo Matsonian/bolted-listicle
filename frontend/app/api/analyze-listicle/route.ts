@@ -203,10 +203,44 @@ Focus on relevance to ${userProfile.business_description} and provide actionable
     // Parse JSON response
     let analysis;
     try {
-      analysis = JSON.parse(analysisText);
+      // Clean the response - sometimes OpenAI adds markdown code blocks
+      let cleanedResponse = analysisText.trim();
+      
+      // Remove markdown code blocks if present
+      if (cleanedResponse.startsWith('```json')) {
+        cleanedResponse = cleanedResponse.replace(/^```json\s*/, '').replace(/\s*```$/, '');
+      } else if (cleanedResponse.startsWith('```')) {
+        cleanedResponse = cleanedResponse.replace(/^```\s*/, '').replace(/\s*```$/, '');
+      }
+      
+      // Try to extract JSON if there's extra text
+      const jsonMatch = cleanedResponse.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        cleanedResponse = jsonMatch[0];
+      }
+      
+      analysis = JSON.parse(cleanedResponse);
     } catch (parseError) {
-      console.error('Failed to parse OpenAI response:', analysisText);
-      throw new Error('Invalid response format from AI');
+      console.error('Failed to parse OpenAI response:');
+      console.error('Raw response:', analysisText);
+      console.error('Parse error:', parseError);
+      
+      // Return a fallback response instead of failing completely
+      analysis = {
+        title: title || 'Unknown Title',
+        author_name: authorName,
+        author_email: null,
+        contact_url: contactUrl,
+        publication_date: pubDate,
+        description: description || 'Analysis could not be completed',
+        llm_quality_rating: 'LOW',
+        quality_reasons: 'AI response parsing failed',
+        importance_score: 3,
+        importance_breakdown: { auth: 1, rel: 1, fresh: 0, eng: 1 },
+        outreach_priority: 'P3',
+        suggested_outreach_angle: 'Manual review recommended',
+        model_email: 'Please create custom outreach email'
+      };
     }
 
     // Validate and clean the response
