@@ -132,9 +132,9 @@ export async function POST(req: NextRequest) {
       'span[class*="author"]', 'div[class*="author"]', 'p[class*="author"]'
     ];
     
-    let authorName = null;
-    let authorBio = null;
-    let authorEmail = null;
+    let authorName: string | null = null;
+    let authorBio: string | null = null;
+    let authorEmail: string | null = null;
     
     for (const selector of authorSelectors) {
       const element = $(selector).first();
@@ -191,8 +191,8 @@ export async function POST(req: NextRequest) {
       'a[href*="author"]', 'a[href*="bio"]', '.author-link', '.contact-link'
     ];
     
-    let contactUrl = null;
-    let authorUrl = null;
+    let contactUrl: string | null = null;
+    let authorUrl: string | null = null;
     
     for (const selector of contactSelectors) {
       const element = $(selector).first();
@@ -214,7 +214,7 @@ export async function POST(req: NextRequest) {
       '.article-date', '[class*="date"]', '.timestamp'
     ];
     
-    let pubDate = null;
+    let pubDate: string | null = null;
     
     // Try datetime attribute first
     const timeElement = $('time[datetime]').first();
