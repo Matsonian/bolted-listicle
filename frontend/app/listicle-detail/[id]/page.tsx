@@ -2,8 +2,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useParams, useRouter } from 'next/navigation';
-import { openaiService, type AnalysisResponse } from '../../../services/openaiService';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { 
   ArrowLeft, 
   User, 
@@ -20,14 +19,40 @@ import {
   Clock
 } from 'lucide-react';
 
+interface AnalysisResponse {
+  title: string;
+  author_name: string | null;
+  author_email: string | null;
+  contact_url: string | null;
+  publication_date: string | null;
+  description: string;
+  llm_quality_rating: 'HIGH' | 'MED' | 'LOW';
+  quality_reasons: string;
+  importance_score: number;
+  importance_breakdown: {
+    auth: number;
+    rel: number;
+    fresh: number;
+    eng: number;
+  };
+  outreach_priority: 'P1' | 'P2' | 'P3';
+  suggested_outreach_angle: string;
+  model_email: string;
+}
+
 interface ExtendedAnalysisResponse extends AnalysisResponse {
   author_bio?: string;
   author_url?: string;
 }
 
+declare global {
+  var analysisCache: Map<string, any>
+}
+
 export default function ListicleDetailPage() {
   const params = useParams();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [analysis, setAnalysis] = useState<ExtendedAnalysisResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -36,15 +61,42 @@ export default function ListicleDetailPage() {
   // Extract URL from params
   const encodedUrl = Array.isArray(params.url) ? params.url.join('/') : params.url;
   const decodedUrl = encodedUrl ? decodeURIComponent(encodedUrl) : '';
+  const isAnalyzing = searchParams?.get('analyzing') === 'true';
 
   useEffect(() => {
-    if (decodedUrl) {
-      analyzeListicle();
+    if (!decodedUrl) return;
+
+    console.log('=== DETAIL PAGE: Component mounted ===', decodedUrl);
+    
+    // Check if we have analysis results from the analyze route
+    const analysisKey = `analysis_${decodedUrl}`;
+    const storedAnalysis = sessionStorage.getItem(analysisKey);
+    
+    if (storedAnalysis) {
+      try {
+        const parsed = JSON.parse(storedAnalysis);
+        console.log('=== DETAIL PAGE: Found stored analysis ===', parsed);
+        
+        if (parsed.data) {
+          setAnalysis(parsed.data);
+          setLoading(false);
+          // Clear the stored data after using it
+          sessionStorage.removeItem(analysisKey);
+          return;
+        }
+      } catch (error) {
+        console.error('=== DETAIL PAGE: Error parsing stored analysis ===', error);
+      }
     }
+
+    // Fallback: if no stored analysis, analyze now
+    console.log('=== DETAIL PAGE: No stored analysis, starting fallback analysis ===');
+    analyzeListicle();
   }, [decodedUrl]);
 
   const analyzeListicle = async () => {
     try {
+      console.log('=== DETAIL PAGE: Starting fallback analysis ===');
       setLoading(true);
       setError(null);
       
@@ -58,9 +110,26 @@ export default function ListicleDetailPage() {
         years_in_business: 5
       };
 
-      const result = await openaiService.analyzeListicle(decodedUrl, userProfile);
+      const response = await fetch('/api/analyze-listicle', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          url: decodedUrl,
+          userProfile
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || `API error: ${response.status} ${response.statusText}`);
+      }
+
+      const result = await response.json();
       setAnalysis(result);
     } catch (err) {
+      console.error('=== DETAIL PAGE: Fallback analysis error ===', err);
       setError(err instanceof Error ? err.message : 'Analysis failed');
     } finally {
       setLoading(false);
@@ -101,7 +170,17 @@ export default function ListicleDetailPage() {
         <div className="container mx-auto max-w-4xl">
           <div className="text-center py-12">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-            <p className="text-gray-600">Analyzing listicle and extracting contact information...</p>
+            <p className="text-gray-600">
+              {isAnalyzing 
+                ? 'Analyzing listicle and extracting contact information...' 
+                : 'Loading analysis...'
+              }
+            </p>
+            {isAnalyzing && (
+              <p className="text-sm text-gray-500 mt-2">
+                This should complete within 30 seconds
+              </p>
+            )}
           </div>
         </div>
       </div>
@@ -353,32 +432,6 @@ export default function ListicleDetailPage() {
                         <ExternalLink className="w-3 h-3" />
                       </a>
                     </div>
-                  </div>
-                )}
-
-                {/* Author Bio (if available) */}
-                {(analysis as ExtendedAnalysisResponse).author_bio && (
-                  <div className="border-b pb-3">
-                    <h4 className="font-medium text-gray-900 mb-2">Author Bio</h4>
-                    <p className="text-sm text-gray-600 leading-relaxed">
-                      {(analysis as ExtendedAnalysisResponse).author_bio}
-                    </p>
-                  </div>
-                )}
-
-                {/* Author URL (if different from contact) */}
-                {(analysis as ExtendedAnalysisResponse).author_url && (
-                  <div>
-                    <h4 className="font-medium text-gray-900">Author Profile</h4>
-                    <a
-                      href={(analysis as ExtendedAnalysisResponse).author_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-blue-600 hover:text-blue-700 text-sm break-all inline-flex items-center gap-1 mt-1"
-                    >
-                      View Profile
-                      <ExternalLink className="w-3 h-3" />
-                    </a>
                   </div>
                 )}
 
