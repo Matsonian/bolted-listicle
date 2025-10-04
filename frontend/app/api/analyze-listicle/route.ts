@@ -197,7 +197,7 @@ export async function POST(req: NextRequest) {
     for (const selector of contactSelectors) {
       const element = $(selector).first();
       if (element.length) {
-        const href = element.attr('href');
+        const href = element.attr('href') || null;
         if (href) {
           if (href.includes('contact') || href.includes('about')) {
             contactUrl = href.startsWith('http') ? href : new URL(href, url).toString();
@@ -219,14 +219,14 @@ export async function POST(req: NextRequest) {
     // Try datetime attribute first
     const timeElement = $('time[datetime]').first();
     if (timeElement.length) {
-      pubDate = timeElement.attr('datetime');
+      pubDate = timeElement.attr('datetime') || null;
     }
     
     // Try meta tags
     if (!pubDate) {
       pubDate = $('meta[property="article:published_time"]').attr('content') ||
                $('meta[name="date"]').attr('content') ||
-               $('meta[name="publish_date"]').attr('content');
+               $('meta[name="publish_date"]').attr('content') || null;
     }
     
     // Try text-based date selectors
