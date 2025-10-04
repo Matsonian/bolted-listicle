@@ -143,18 +143,6 @@ export async function POST(req: NextRequest) {
     // Limit content length for API
     const truncatedContent = mainContent.substring(0, 8000);
 
-    // Debug logging to see what we scraped
-    console.log('=== SCRAPING DEBUG ===');
-    console.log('URL:', url);
-    console.log('Title extracted:', title);
-    console.log('Description extracted:', description);
-    console.log('Author extracted:', authorName);
-    console.log('Content length:', mainContent.length);
-    console.log('Content preview (first 500 chars):', truncatedContent.substring(0, 500));
-    console.log('Contact URL found:', contactUrl);
-    console.log('Publication date found:', pubDate);
-    console.log('=== END SCRAPING DEBUG ===');
-
     // Extract author info
     const authorName = $('.author').text().trim() || 
                       $('[rel="author"]').text().trim() || 
@@ -172,6 +160,18 @@ export async function POST(req: NextRequest) {
                    $('meta[property="article:published_time"]').attr('content') || 
                    $('.date').text().trim() ||
                    null;
+
+    // Debug logging to see what we scraped
+    console.log('=== SCRAPING DEBUG ===');
+    console.log('URL:', url);
+    console.log('Title extracted:', title);
+    console.log('Description extracted:', description);
+    console.log('Author extracted:', authorName);
+    console.log('Content length:', mainContent.length);
+    console.log('Content preview (first 500 chars):', truncatedContent.substring(0, 500));
+    console.log('Contact URL found:', contactUrl);
+    console.log('Publication date found:', pubDate);
+    console.log('=== END SCRAPING DEBUG ===');
 
     // Create comprehensive prompt for OpenAI
     const prompt = `
