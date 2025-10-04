@@ -224,15 +224,15 @@ JSON response only:
       messages: [
         {
           role: "system", 
-          content: "You are a fast marketing analyst. Provide brief listicle analysis in valid JSON format only. Be concise."
+          content: "You are an expert outreach strategist and business development specialist. Provide highly personalized, strategic listicle analysis in valid JSON format only. Focus on creating genuinely valuable outreach opportunities."
         },
         {
           role: "user",
           content: prompt
         }
       ],
-      temperature: 0.1, // Lower for faster, more deterministic responses
-      max_tokens: 1000, // Reduced from 2000 for speed
+      temperature: 0.2, // Slightly higher for more creative personalization
+      max_tokens: 1500, // Increased for detailed personalized analysis
     });
 
     console.log('=== OPENAI RESPONSE RECEIVED ===', new Date().toISOString());
