@@ -39,15 +39,23 @@ interface AnalysisResponse {
 
 export async function POST(req: NextRequest) {
   try {
+    console.log('=== API START ===', new Date().toISOString());
+    
     const { url, userProfile } = await req.json();
+    console.log('=== REQUEST PARSED ===', new Date().toISOString());
 
     if (!url || !userProfile) {
       return NextResponse.json({ error: 'URL and user profile are required' }, { status: 400 });
     }
 
+    console.log('=== STARTING FETCH ===', new Date().toISOString(), url);
+    
     // Create AbortController for timeout
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+    const timeoutId = setTimeout(() => {
+      console.log('=== FETCH TIMEOUT ===', new Date().toISOString());
+      controller.abort();
+    }, 10000); // 10 second timeout
 
     let html: string;
     
@@ -66,15 +74,18 @@ export async function POST(req: NextRequest) {
 
       // Clear the timeout since fetch completed
       clearTimeout(timeoutId);
+      console.log('=== FETCH COMPLETED ===', new Date().toISOString());
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
       html = await response.text();
+      console.log('=== HTML RECEIVED ===', new Date().toISOString(), 'Length:', html.length);
 
     } catch (error) {
       clearTimeout(timeoutId); // Clean up timeout on error
+      console.log('=== FETCH ERROR ===', new Date().toISOString(), error);
       
       if (error instanceof Error && error.name === 'AbortError') {
         throw new Error('Request timed out after 10 seconds');
@@ -82,11 +93,15 @@ export async function POST(req: NextRequest) {
       throw error; // Re-throw other errors
     }
 
+    console.log('=== STARTING CHEERIO PARSE ===', new Date().toISOString());
+
     // Parse HTML and extract content
     const $ = cheerio.load(html);
+    console.log('=== CHEERIO LOADED ===', new Date().toISOString());
     
     // Remove unwanted elements
     $('script, style, nav, header, footer, aside, .ad, .advertisement, .social-share').remove();
+    console.log('=== CLEANUP COMPLETE ===', new Date().toISOString());
     
     // Extract metadata
     const title = $('h1').first().text().trim() || 
@@ -99,228 +114,119 @@ export async function POST(req: NextRequest) {
                        $('p').first().text().substring(0, 200) + '...' || 
                        'No description found';
 
-    // Extract opening content (first few paragraphs that describe the article)
+    // FAST extraction - minimal selectors only
     let openingContent = '';
     
-    // Try to get the first 2-3 meaningful paragraphs
-    const paragraphs = $('p').map((i, el) => $(el).text().trim()).get()
-      .filter(p => p.length > 50 && !p.toLowerCase().includes('cookie') && !p.toLowerCase().includes('subscribe'));
+    // Quick paragraph extraction - just first 2 paragraphs
+    const firstParagraphs = $('p').slice(0, 2).map((i, el) => $(el).text().trim()).get()
+      .filter(p => p.length > 30).join('\n\n');
     
-    openingContent = paragraphs.slice(0, 3).join('\n\n');
-    
-    // If we didn't get much, try intro/lead selectors
-    if (openingContent.length < 300) {
-      const introSelectors = ['.intro', '.lead', '.article-intro', '.post-intro', '.excerpt', '.summary'];
-      for (const selector of introSelectors) {
-        const intro = $(selector).text().trim();
-        if (intro.length > openingContent.length) {
-          openingContent = intro;
-        }
-      }
-    }
+    openingContent = firstParagraphs.substring(0, 800); // Smaller limit for speed
 
-    console.log('Opening content extraction method: paragraphs + intro selectors');
+    console.log('Opening content extraction method: fast paragraphs only');
 
-    // Limit opening content for API (focus on first 1500 chars instead of 8000)
-    const truncatedContent = openingContent.substring(0, 1500);
-
-    // ENHANCED AUTHOR & CONTACT EXTRACTION
-    // Try multiple strategies to find author information
-    const authorSelectors = [
-      '.author-name', '.author', '.byline', '.post-author', '.article-author',
-      '[rel="author"]', '.writer', '.contributor', '.by-author',
-      'span[class*="author"]', 'div[class*="author"]', 'p[class*="author"]'
-    ];
+    // FAST AUTHOR & CONTACT EXTRACTION - fewer selectors
+    const quickAuthorSelectors = ['.author', '[rel="author"]', '.byline'];
     
     let authorName: string | null = null;
-    let authorBio: string | null = null;
     let authorEmail: string | null = null;
     
-    for (const selector of authorSelectors) {
+    // Quick author search
+    for (const selector of quickAuthorSelectors) {
       const element = $(selector).first();
       if (element.length && element.text().trim()) {
         authorName = element.text().trim();
-        // Try to find author bio near the author name
-        authorBio = element.next('p').text().trim() || 
-                   element.parent().find('p').first().text().trim() ||
-                   element.siblings('.bio, .author-bio').text().trim();
         break;
       }
     }
     
-    // Fallback author extraction from meta tags
+    // Fallback to meta tag only
     if (!authorName) {
-      authorName = $('meta[name="author"]').attr('content') || 
-                  $('meta[property="article:author"]').attr('content') ||
-                  $('meta[name="byl"]').attr('content') || null;
+      authorName = $('meta[name="author"]').attr('content') || null;
     }
 
-    // ENHANCED EMAIL EXTRACTION
-    // Look for email addresses in multiple places
+    // FAST EMAIL EXTRACTION - simple regex only
     const emailRegex = /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/g;
-    
-    // Search in author bio/section
-    if (authorBio) {
-      const bioEmails = authorBio.match(emailRegex);
-      if (bioEmails) authorEmail = bioEmails[0];
-    }
-    
-    // Search in contact sections
-    if (!authorEmail) {
-      const contactSections = $('.contact, .author-contact, .bio, .about-author').text();
-      const contactEmails = contactSections.match(emailRegex);
-      if (contactEmails) authorEmail = contactEmails[0];
-    }
-    
-    // Search in mailto links
-    if (!authorEmail) {
-      $('a[href^="mailto:"]').each((i, el) => {
-        if (!authorEmail) {
-          const href = $(el).attr('href');
-          if (href) {
-            authorEmail = href.replace('mailto:', '').split('?')[0];
-          }
-        }
-      });
+    const pageText = $('body').text();
+    const emailMatches = pageText.match(emailRegex);
+    if (emailMatches && emailMatches.length > 0) {
+      authorEmail = emailMatches[0];
     }
 
-    // ENHANCED CONTACT URL EXTRACTION
-    // Look for multiple types of contact information
-    const contactSelectors = [
-      'a[href*="contact"]', 'a[href*="about"]', 'a[href*="team"]',
-      'a[href*="author"]', 'a[href*="bio"]', '.author-link', '.contact-link'
-    ];
-    
+    // FAST CONTACT URL - just look for contact links
     let contactUrl: string | null = null;
-    let authorUrl: string | null = null;
-    
-    for (const selector of contactSelectors) {
-      const element = $(selector).first();
-      if (element.length) {
-        const href = element.attr('href') || null;
-        if (href) {
-          if (href.includes('contact') || href.includes('about')) {
-            contactUrl = href.startsWith('http') ? href : new URL(href, url).toString();
-          } else if (href.includes('author') || href.includes('bio')) {
-            authorUrl = href.startsWith('http') ? href : new URL(href, url).toString();
-          }
-        }
-      }
+    const contactLink = $('a[href*="contact"]').first().attr('href');
+    if (contactLink) {
+      contactUrl = contactLink.startsWith('http') ? contactLink : new URL(contactLink, url).toString();
     }
 
-    // PUBLICATION DATE EXTRACTION
-    const dateSelectors = [
-      'time[datetime]', '.date', '.publish-date', '.post-date', 
-      '.article-date', '[class*="date"]', '.timestamp'
-    ];
-    
+    // FAST DATE EXTRACTION
     let pubDate: string | null = null;
-    
-    // Try datetime attribute first
-    const timeElement = $('time[datetime]').first();
-    if (timeElement.length) {
-      pubDate = timeElement.attr('datetime') || null;
-    }
-    
-    // Try meta tags
-    if (!pubDate) {
-      pubDate = $('meta[property="article:published_time"]').attr('content') ||
-               $('meta[name="date"]').attr('content') ||
-               $('meta[name="publish_date"]').attr('content') || null;
-    }
-    
-    // Try text-based date selectors
-    if (!pubDate) {
-      for (const selector of dateSelectors) {
-        const dateText = $(selector).first().text().trim();
-        if (dateText && dateText.length < 50) { // Reasonable date length
-          pubDate = dateText;
-          break;
-        }
-      }
-    }
+    pubDate = $('time[datetime]').first().attr('datetime') || 
+             $('meta[property="article:published_time"]').attr('content') || null;
+
+    // Streamlined content for faster processing
+    const truncatedContent = openingContent.substring(0, 800);
 
     // Debug logging focused on contact information
-    console.log('=== CONTACT EXTRACTION RESULTS ===');
-    console.log(`Author: ${authorName || 'None found'}`);
-    console.log(`Author Email: ${authorEmail || 'None found'}`);
-    console.log(`Author Bio: ${authorBio ? authorBio.substring(0, 100) + '...' : 'None found'}`);
-    console.log(`Author URL: ${authorUrl || 'None found'}`);
-    console.log(`Contact URL: ${contactUrl || 'None found'}`);
-    console.log(`Publication Date: ${pubDate || 'None found'}`);
-    console.log(`Opening Content: ${truncatedContent.length} chars`);
-    console.log('=== END CONTACT EXTRACTION ===');
+    console.log('=== FAST EXTRACTION RESULTS ===');
+    console.log(`Author: ${authorName || 'None'}`);
+    console.log(`Email: ${authorEmail || 'None'}`);
+    console.log(`Contact: ${contactUrl || 'None'}`);
+    console.log(`Date: ${pubDate || 'None'}`);
+    console.log(`Content: ${truncatedContent.length} chars`);
+    console.log('=== END FAST EXTRACTION ===');
 
-    // Create comprehensive prompt for OpenAI focused on contact information
+    // STREAMLINED PROMPT for faster OpenAI processing
     const prompt = `
-Analyze this listicle for outreach opportunities. Focus heavily on CONTACT INFORMATION and OUTREACH POTENTIAL.
+Analyze this listicle quickly for ${userProfile.business_name}.
 
-BUSINESS CONTEXT:
-- Business: ${userProfile.business_name}
-- Industry: ${userProfile.business_description}
-- Website: ${userProfile.website || 'Not provided'}
-- Experience: ${userProfile.years_in_business || 'Not specified'} years
+ARTICLE: ${title}
+AUTHOR: ${authorName || 'Unknown'}
+CONTENT: ${truncatedContent}
 
-LISTICLE DETAILS:
-- Title: ${title}
-- URL: ${url}
-- Publication Date: ${pubDate || 'Unknown'}
+Rate 1-10 for outreach value considering:
+- Contact info available: ${authorEmail ? 'YES (email found)' : 'NO'}
+- Business relevance to: ${userProfile.business_description}
 
-AUTHOR & CONTACT INFORMATION FOUND:
-- Author Name: ${authorName || 'Unknown'}
-- Author Email: ${authorEmail || 'Not found'}
-- Author Bio: ${authorBio || 'Not available'}
-- Author URL: ${authorUrl || 'Not found'}
-- Contact URL: ${contactUrl || 'Not found'}
-
-ARTICLE OPENING CONTENT:
-${truncatedContent}
-
-INSTRUCTIONS:
-Focus your analysis on the OUTREACH POTENTIAL and CONTACT ACCESSIBILITY. If we found contact information (email, author details, contact pages), rate this higher for outreach priority. The opening content shows what the article is about - assess how relevant this content is to our business for potential collaboration or mention opportunities.
-
-Provide a JSON response with this structure:
-
+JSON response only:
 {
-  "title": "Article title (cleaned up if needed)",
-  "author_name": "${authorName || 'Unknown'}",
-  "author_email": "${authorEmail || null}",
-  "contact_url": "${contactUrl || authorUrl || null}",
-  "publication_date": "${pubDate || null}",
-  "description": "150-200 character summary focusing on what the article covers and why it's relevant",
-  "llm_quality_rating": "HIGH/MED/LOW based on content quality and authority",
-  "quality_reasons": "Brief explanation focusing on contact accessibility and content relevance",
-  "importance_score": 1-10 (heavily weight contact information availability + business relevance),
-  "importance_breakdown": {
-    "auth": 0-3 (site authority and reach),
-    "rel": 0-3 (relevance to ${userProfile.business_description}),
-    "fresh": 0-2 (content recency),
-    "eng": 0-2 (engagement potential + contact accessibility)
-  },
-  "outreach_priority": "P1/P2/P3 (P1 if good contact info + relevant, P2 if one or the other, P3 if neither)",
-  "suggested_outreach_angle": "Specific strategy for reaching out - mention what value we could provide based on article content",
-  "model_email": "Draft outreach email template using author name and article specifics"
+  "title": "${title}",
+  "author_name": "${authorName}",
+  "author_email": "${authorEmail}",
+  "contact_url": "${contactUrl}",
+  "publication_date": "${pubDate}",
+  "description": "Brief summary (150 chars max)",
+  "llm_quality_rating": "HIGH/MED/LOW",
+  "quality_reasons": "Brief explanation",
+  "importance_score": 1-10,
+  "importance_breakdown": {"auth": 0-3, "rel": 0-3, "fresh": 0-2, "eng": 0-2},
+  "outreach_priority": "P1/P2/P3",
+  "suggested_outreach_angle": "One sentence approach",
+  "model_email": "Short professional email template"
 }
-
-PRIORITIZE articles where we found contact information (email, author bio, contact pages) as these have higher outreach success potential.
 `;
 
-    // Call OpenAI API
+    console.log('=== STARTING OPENAI CALL ===', new Date().toISOString());
+    
+    // Call OpenAI API with faster settings
     const completion = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
+      model: "gpt-4o-mini", // Already using the fastest model
       messages: [
         {
           role: "system", 
-          content: "You are an expert marketing analyst. Provide detailed listicle analysis in valid JSON format only. No additional text outside the JSON."
+          content: "You are a fast marketing analyst. Provide brief listicle analysis in valid JSON format only. Be concise."
         },
         {
           role: "user",
           content: prompt
         }
       ],
-      temperature: 0.3,
-      max_tokens: 2000,
+      temperature: 0.1, // Lower for faster, more deterministic responses
+      max_tokens: 1000, // Reduced from 2000 for speed
     });
+
+    console.log('=== OPENAI RESPONSE RECEIVED ===', new Date().toISOString());
 
     const analysisText = completion.choices[0]?.message?.content;
     
