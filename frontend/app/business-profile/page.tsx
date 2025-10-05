@@ -4,6 +4,7 @@ import React, { useState } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { Building2, Globe, Calendar, ArrowRight, Loader2 } from 'lucide-react'
+import { useUpdateUserMutation } from '../../generated/graphql'
 
 interface BusinessProfile {
   business_name: string
@@ -21,6 +22,7 @@ export default function BusinessProfilePage() {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [updateUserMutation] = useUpdateUserMutation()
   
   const [profile, setProfile] = useState<BusinessProfile>({
     business_name: '',
@@ -83,25 +85,27 @@ export default function BusinessProfilePage() {
         throw new Error('Please fill in all required fields')
       }
 
-      // Save profile to your database
-      const response = await fetch('/api/user-profile', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
+      // Update user profile using GraphQL mutation
+      const result = await updateUserMutation({
+        variables: {
+          businessName: profile.business_name,
+          businessDescription: profile.business_description,
+          website: profile.website,
+          yearOfFounding: profile.years_in_business,
+          industry: profile.industry,
+          targetAudience: profile.target_audience,
+          productType: profile.product_type,
+          uniqueValueProposition: profile.unique_value_proposition,
         },
-        body: JSON.stringify({
-       userEmail: session?.user?.email,
-          ...profile
-        }),
       })
 
-      if (!response.ok) {
+      if (result.errors) {
         throw new Error('Failed to save profile')
       }
 
       // Redirect to pricing page
       router.push('/pricing')
-      
+
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Something went wrong')
     } finally {
