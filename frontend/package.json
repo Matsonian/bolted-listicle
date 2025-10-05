@@ -23,7 +23,8 @@
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "stripe": "^18.5.0",
-    "cheerio": "^1.0.0-rc.12"
+    "cheerio": "^1.0.0-rc.12",
+    "seobot": "^latest"
   },
   "devDependencies": {
     "@eslint/js": "^8.57.0",
