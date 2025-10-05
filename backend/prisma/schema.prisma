@@ -30,29 +30,33 @@ enum Tier {
 }
 
 model User {
-  id                  String              @id @default(uuid())
-  createdAt           DateTime            @default(now())
-  updatedAt           DateTime            @updatedAt
-  email               String?             @unique
-  isOnboarded         Boolean             @default(false)
-  firstName           String?
-  lastName            String?
-  address1            String?
-  address2            String?
-  city                String?
-  state               String?
-  password            String?
-  provider            String?
-  businessName        String?
-  businessDescription String?
-  yearOfFounding      Int?
-  website             String?
-  tier                Tier                @default(FREE)
-  stripeCustomerId    String?
-  subscriptionStatus  String?
-  dailySearchesUsed   Int?
-  role                UserRole            @default(USER)
-  Conversations       AgentConversation[]
+  id                     String              @id @default(uuid())
+  createdAt              DateTime            @default(now())
+  updatedAt              DateTime            @updatedAt
+  email                  String?             @unique
+  isOnboarded            Boolean             @default(false)
+  firstName              String?
+  lastName               String?
+  address1               String?
+  address2               String?
+  city                   String?
+  state                  String?
+  password               String?
+  provider               String?
+  businessName           String?
+  businessDescription    String?
+  industry               String?
+  productType            String?
+  targetAudience         String?
+  yearOfFounding         Int?
+  uniqueValueProposition String?
+  website                String?
+  tier                   Tier                @default(FREE)
+  stripeCustomerId       String?
+  subscriptionStatus     String?
+  dailySearchesUsed      Int?
+  role                   UserRole            @default(USER)
+  Conversations          AgentConversation[]
 }
 
 model OneTimePassword {

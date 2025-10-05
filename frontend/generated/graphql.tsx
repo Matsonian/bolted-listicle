@@ -106,9 +106,13 @@ export type MutationUpdateUserArgs = {
   dailySearchesUsed?: InputMaybe<Scalars['Int']['input']>;
   email?: InputMaybe<Scalars['String']['input']>;
   firstName?: InputMaybe<Scalars['String']['input']>;
+  industry?: InputMaybe<Scalars['String']['input']>;
   isOnboarded?: InputMaybe<Scalars['Boolean']['input']>;
   lastName?: InputMaybe<Scalars['String']['input']>;
+  productType?: InputMaybe<Scalars['String']['input']>;
   state?: InputMaybe<Scalars['String']['input']>;
+  targetAudience?: InputMaybe<Scalars['String']['input']>;
+  uniqueValueProposition?: InputMaybe<Scalars['String']['input']>;
   website?: InputMaybe<Scalars['String']['input']>;
   yearOfFounding?: InputMaybe<Scalars['Int']['input']>;
 };
@@ -160,14 +164,18 @@ export type User = {
   email?: Maybe<Scalars['String']['output']>;
   firstName?: Maybe<Scalars['String']['output']>;
   id?: Maybe<Scalars['ID']['output']>;
+  industry?: Maybe<Scalars['String']['output']>;
   isOnboarded?: Maybe<Scalars['Boolean']['output']>;
   lastName?: Maybe<Scalars['String']['output']>;
+  productType?: Maybe<Scalars['String']['output']>;
   provider?: Maybe<Scalars['String']['output']>;
   role?: Maybe<UserRole>;
   state?: Maybe<Scalars['String']['output']>;
   stripeCustomerId?: Maybe<Scalars['String']['output']>;
   subscriptionStatus?: Maybe<Scalars['String']['output']>;
+  targetAudience?: Maybe<Scalars['String']['output']>;
   tier?: Maybe<Tier>;
+  uniqueValueProposition?: Maybe<Scalars['String']['output']>;
   updatedAt?: Maybe<Scalars['Date']['output']>;
   website?: Maybe<Scalars['String']['output']>;
   yearOfFounding?: Maybe<Scalars['Int']['output']>;
@@ -204,15 +212,19 @@ export type UpdateUserMutationVariables = Exact<{
   businessDescription?: InputMaybe<Scalars['String']['input']>;
   businessName?: InputMaybe<Scalars['String']['input']>;
   dailySearchesUsed?: InputMaybe<Scalars['Int']['input']>;
+  industry?: InputMaybe<Scalars['String']['input']>;
   isOnboarded?: InputMaybe<Scalars['Boolean']['input']>;
   lastName?: InputMaybe<Scalars['String']['input']>;
+  productType?: InputMaybe<Scalars['String']['input']>;
   state?: InputMaybe<Scalars['String']['input']>;
+  targetAudience?: InputMaybe<Scalars['String']['input']>;
+  uniqueValueProposition?: InputMaybe<Scalars['String']['input']>;
   website?: InputMaybe<Scalars['String']['input']>;
   yearOfFounding?: InputMaybe<Scalars['Int']['input']>;
 }>;
 
 
-export type UpdateUserMutation = { __typename?: 'Mutation', updateUser?: { __typename?: 'User', address1?: string | null, address2?: string | null, businessDescription?: string | null, businessName?: string | null, city?: string | null, dailySearchesUsed?: number | null, email?: string | null, id?: string | null, isOnboarded?: boolean | null, lastName?: string | null, role?: UserRole | null, state?: string | null, tier?: Tier | null, website?: string | null, yearOfFounding?: number | null } | null };
+export type UpdateUserMutation = { __typename?: 'Mutation', updateUser?: { __typename?: 'User', address1?: string | null, address2?: string | null, businessDescription?: string | null, businessName?: string | null, city?: string | null, dailySearchesUsed?: number | null, email?: string | null, id?: string | null, industry?: string | null, isOnboarded?: boolean | null, lastName?: string | null, productType?: string | null, role?: UserRole | null, state?: string | null, targetAudience?: string | null, tier?: Tier | null, uniqueValueProposition?: string | null, website?: string | null, yearOfFounding?: number | null } | null };
 
 export type SignUpOrInWithPasswordMutationVariables = Exact<{
   email: Scalars['String']['input'];
@@ -220,7 +232,7 @@ export type SignUpOrInWithPasswordMutationVariables = Exact<{
 }>;
 
 
-export type SignUpOrInWithPasswordMutation = { __typename?: 'Mutation', signUpOrInWithPassword?: { __typename?: 'AuthPayload', token?: string | null, userId?: string | null, user?: { __typename?: 'User', address1?: string | null, address2?: string | null, businessDescription?: string | null, businessName?: string | null, city?: string | null, dailySearchesUsed?: number | null, email?: string | null, id?: string | null, isOnboarded?: boolean | null, lastName?: string | null, role?: UserRole | null, state?: string | null, tier?: Tier | null, website?: string | null, yearOfFounding?: number | null } | null } | null };
+export type SignUpOrInWithPasswordMutation = { __typename?: 'Mutation', signUpOrInWithPassword?: { __typename?: 'AuthPayload', token?: string | null, userId?: string | null, user?: { __typename?: 'User', address1?: string | null, address2?: string | null, businessDescription?: string | null, businessName?: string | null, city?: string | null, dailySearchesUsed?: number | null, email?: string | null, id?: string | null, industry?: string | null, isOnboarded?: boolean | null, lastName?: string | null, productType?: string | null, role?: UserRole | null, state?: string | null, targetAudience?: string | null, tier?: Tier | null, uniqueValueProposition?: string | null, website?: string | null, yearOfFounding?: number | null } | null } | null };
 
 export type SendOtpMutationVariables = Exact<{
   email: Scalars['String']['input'];
@@ -234,7 +246,7 @@ export type SignInWithOtpMutationVariables = Exact<{
 }>;
 
 
-export type SignInWithOtpMutation = { __typename?: 'Mutation', signInWithOtp?: { __typename?: 'AuthPayload', token?: string | null, userId?: string | null, user?: { __typename?: 'User', address1?: string | null, address2?: string | null, businessDescription?: string | null, businessName?: string | null, city?: string | null, dailySearchesUsed?: number | null, email?: string | null, id?: string | null, isOnboarded?: boolean | null, lastName?: string | null, role?: UserRole | null, state?: string | null, tier?: Tier | null, website?: string | null, yearOfFounding?: number | null } | null } | null };
+export type SignInWithOtpMutation = { __typename?: 'Mutation', signInWithOtp?: { __typename?: 'AuthPayload', token?: string | null, userId?: string | null, user?: { __typename?: 'User', address1?: string | null, address2?: string | null, businessDescription?: string | null, businessName?: string | null, city?: string | null, dailySearchesUsed?: number | null, email?: string | null, id?: string | null, industry?: string | null, isOnboarded?: boolean | null, lastName?: string | null, productType?: string | null, role?: UserRole | null, state?: string | null, targetAudience?: string | null, tier?: Tier | null, uniqueValueProposition?: string | null, website?: string | null, yearOfFounding?: number | null } | null } | null };
 
 export type SsoLoginMutationVariables = Exact<{
   provider: Scalars['String']['input'];
@@ -256,11 +268,11 @@ export type UpdateUserSubscriptionMutation = { __typename?: 'Mutation', updateUs
 export type UserQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type UserQuery = { __typename?: 'Query', user?: { __typename?: 'User', address1?: string | null, address2?: string | null, businessDescription?: string | null, businessName?: string | null, city?: string | null, createdAt?: any | null, dailySearchesUsed?: number | null, email?: string | null, firstName?: string | null, id?: string | null, isOnboarded?: boolean | null, lastName?: string | null, role?: UserRole | null, state?: string | null, tier?: Tier | null, website?: string | null, yearOfFounding?: number | null } | null };
+export type UserQuery = { __typename?: 'Query', user?: { __typename?: 'User', address1?: string | null, address2?: string | null, businessDescription?: string | null, businessName?: string | null, city?: string | null, createdAt?: any | null, dailySearchesUsed?: number | null, email?: string | null, firstName?: string | null, id?: string | null, industry?: string | null, isOnboarded?: boolean | null, lastName?: string | null, productType?: string | null, role?: UserRole | null, state?: string | null, targetAudience?: string | null, tier?: Tier | null, uniqueValueProposition?: string | null, website?: string | null, yearOfFounding?: number | null } | null };
 
 
 export const UpdateUserDocument = gql`
-    mutation UpdateUser($address1: String, $address2: String, $city: String, $email: String, $firstName: String, $businessDescription: String, $businessName: String, $dailySearchesUsed: Int, $isOnboarded: Boolean, $lastName: String, $state: String, $website: String, $yearOfFounding: Int) {
+    mutation UpdateUser($address1: String, $address2: String, $city: String, $email: String, $firstName: String, $businessDescription: String, $businessName: String, $dailySearchesUsed: Int, $industry: String, $isOnboarded: Boolean, $lastName: String, $productType: String, $state: String, $targetAudience: String, $uniqueValueProposition: String, $website: String, $yearOfFounding: Int) {
   updateUser(
     address1: $address1
     address2: $address2
@@ -270,9 +282,13 @@ export const UpdateUserDocument = gql`
     businessDescription: $businessDescription
     businessName: $businessName
     dailySearchesUsed: $dailySearchesUsed
+    industry: $industry
     isOnboarded: $isOnboarded
     lastName: $lastName
+    productType: $productType
     state: $state
+    targetAudience: $targetAudience
+    uniqueValueProposition: $uniqueValueProposition
     website: $website
     yearOfFounding: $yearOfFounding
   ) {
@@ -284,11 +300,15 @@ export const UpdateUserDocument = gql`
     dailySearchesUsed
     email
     id
+    industry
     isOnboarded
     lastName
+    productType
     role
     state
+    targetAudience
     tier
+    uniqueValueProposition
     website
     yearOfFounding
   }
@@ -317,9 +337,13 @@ export type UpdateUserMutationFn = Apollo.MutationFunction<UpdateUserMutation, U
  *      businessDescription: // value for 'businessDescription'
  *      businessName: // value for 'businessName'
  *      dailySearchesUsed: // value for 'dailySearchesUsed'
+ *      industry: // value for 'industry'
  *      isOnboarded: // value for 'isOnboarded'
  *      lastName: // value for 'lastName'
+ *      productType: // value for 'productType'
  *      state: // value for 'state'
+ *      targetAudience: // value for 'targetAudience'
+ *      uniqueValueProposition: // value for 'uniqueValueProposition'
  *      website: // value for 'website'
  *      yearOfFounding: // value for 'yearOfFounding'
  *   },
@@ -345,11 +369,15 @@ export const SignUpOrInWithPasswordDocument = gql`
       dailySearchesUsed
       email
       id
+      industry
       isOnboarded
       lastName
+      productType
       role
       state
+      targetAudience
       tier
+      uniqueValueProposition
       website
       yearOfFounding
     }
@@ -428,11 +456,15 @@ export const SignInWithOtpDocument = gql`
       dailySearchesUsed
       email
       id
+      industry
       isOnboarded
       lastName
+      productType
       role
       state
+      targetAudience
       tier
+      uniqueValueProposition
       website
       yearOfFounding
     }
@@ -556,11 +588,15 @@ export const UserDocument = gql`
     email
     firstName
     id
+    industry
     isOnboarded
     lastName
+    productType
     role
     state
+    targetAudience
     tier
+    uniqueValueProposition
     website
     yearOfFounding
   }

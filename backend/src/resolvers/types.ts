@@ -41,7 +41,11 @@ export const UserType = builder.prismaObject('User', {
         Conversations: true,
         businessName: true,
         businessDescription: true,
+        industry: true,
+        productType: true,
+        targetAudience: true,
         yearOfFounding: true,
+        uniqueValueProposition: true,
         website:             true,
         tier:               true,
         dailySearchesUsed:   true,
@@ -64,7 +68,11 @@ export const UserType = builder.prismaObject('User', {
         role: t.expose('role', { type: UserRoleEnum }),
         businessName: t.exposeString('businessName', { nullable: true }),
         businessDescription: t.exposeString('businessDescription', { nullable: true }),
+        industry: t.exposeString('industry', { nullable: true }),
+        productType: t.exposeString('productType', { nullable: true }),
+        targetAudience: t.exposeString('targetAudience', { nullable: true }),
         yearOfFounding: t.exposeInt('yearOfFounding', { nullable: true }),
+        uniqueValueProposition: t.exposeString('uniqueValueProposition', { nullable: true }),
         website: t.exposeString('website', { nullable: true }),
         tier: t.expose('tier', { type: TierEnum }),
         dailySearchesUsed: t.exposeInt('dailySearchesUsed', { nullable: true }),
@@ -148,3 +156,4 @@ export const OneTimePasswordSchema = builder.prismaObject('OneTimePassword', {
         used: t.exposeBoolean('used'),
     }),
 });
+

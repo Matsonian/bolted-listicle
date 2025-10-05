@@ -2,8 +2,8 @@ import { gql } from "graphql-tag";
 
 
 export const UPDATE_USER = gql`
-mutation UpdateUser($address1: String, $address2: String, $city: String, $email: String, $firstName: String, $businessDescription: String, $businessName: String, $dailySearchesUsed: Int, $isOnboarded: Boolean, $lastName: String, $state: String, $website: String, $yearOfFounding: Int) {
-  updateUser(address1: $address1, address2: $address2, city: $city, email: $email, firstName: $firstName, businessDescription: $businessDescription, businessName: $businessName, dailySearchesUsed: $dailySearchesUsed, isOnboarded: $isOnboarded, lastName: $lastName, state: $state, website: $website, yearOfFounding: $yearOfFounding) {
+mutation UpdateUser($address1: String, $address2: String, $city: String, $email: String, $firstName: String, $businessDescription: String, $businessName: String, $dailySearchesUsed: Int, $industry: String, $isOnboarded: Boolean, $lastName: String, $productType: String, $state: String, $targetAudience: String, $uniqueValueProposition: String, $website: String, $yearOfFounding: Int) {
+  updateUser(address1: $address1, address2: $address2, city: $city, email: $email, firstName: $firstName, businessDescription: $businessDescription, businessName: $businessName, dailySearchesUsed: $dailySearchesUsed, industry: $industry, isOnboarded: $isOnboarded, lastName: $lastName, productType: $productType, state: $state, targetAudience: $targetAudience, uniqueValueProposition: $uniqueValueProposition, website: $website, yearOfFounding: $yearOfFounding) {
     address1
     address2
     businessDescription
@@ -12,11 +12,15 @@ mutation UpdateUser($address1: String, $address2: String, $city: String, $email:
     dailySearchesUsed
     email
     id
+    industry
     isOnboarded
     lastName
+    productType
     role
     state
+    targetAudience
     tier
+    uniqueValueProposition
     website
     yearOfFounding
   }
@@ -36,11 +40,15 @@ mutation SignUpOrInWithPassword($email: String!, $password: String!) {
     dailySearchesUsed
     email
     id
+    industry
     isOnboarded
     lastName
+    productType
     role
     state
+    targetAudience
     tier
+    uniqueValueProposition
     website
     yearOfFounding
     }
@@ -68,11 +76,15 @@ mutation SignInWithOtp($otpCode: String!) {
     dailySearchesUsed
     email
     id
+    industry
     isOnboarded
     lastName
+    productType
     role
     state
+    targetAudience
     tier
+    uniqueValueProposition
     website
     yearOfFounding
     }

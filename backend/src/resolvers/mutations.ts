@@ -197,7 +197,11 @@ export const UserMutations = builder.mutationType({
                 isOnboarded: t.arg.boolean(),
                 businessName: t.arg.string(),
                 businessDescription: t.arg.string(),
+                industry: t.arg.string(),
+                productType: t.arg.string(),
+                targetAudience: t.arg.string(),
                 yearOfFounding: t.arg.int(),
+                uniqueValueProposition: t.arg.string(),
                 website: t.arg.string(),
                 dailySearchesUsed: t.arg.int()
             },

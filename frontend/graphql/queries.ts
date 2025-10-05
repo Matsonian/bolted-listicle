@@ -13,11 +13,15 @@ query User {
     email
     firstName
     id
+    industry
     isOnboarded
     lastName
+    productType
     role
     state
+    targetAudience
     tier
+    uniqueValueProposition
     website
     yearOfFounding
   }
