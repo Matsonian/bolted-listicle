@@ -129,6 +129,13 @@ CRITICAL INSTRUCTIONS:
 - Exclude retail websites, online stores, and any pages with purchase functionality
 - If you find fewer than 10 results, that's perfectly fine - quality over quantity
 
+ABSOLUTELY EXCLUDE ALL VIDEO CONTENT:
+- NO YouTube videos or YouTube URLs (youtube.com, youtu.be, m.youtube.com)
+- NO video platforms (Vimeo, TikTok, Dailymotion, Twitch)
+- NO URLs containing: /watch, /video, /embed, /shorts, video, videos
+- NO social media posts or profiles
+- ONLY written articles from editorial sources
+
 WHAT I NEED:
 - Real article titles (preferably H1 tags from actual webpages)
 - Working URLs to actual articles
@@ -146,7 +153,7 @@ SEARCH CRITERIA:
 RESPONSE FORMAT:
 For each REAL article you find:
 Title: [Actual article headline/H1 from webpage]
-URL: [Complete working URL]
+URL: [Complete working URL to WRITTEN ARTICLE only]
 
 If you can only find 3-5 real articles, return those. Do not pad the results with fake entries or general website suggestions.
 
@@ -156,8 +163,9 @@ ABSOLUTELY DO NOT:
 - Include shopping sites, product pages, or ecommerce platforms
 - Include general blogs without specific listicles
 - Add commentary about websites being "good resources"
+- Include ANY video content or video platform URLs
 
-Only verified, actual listicle articles with real titles and working URLs from editorial sources.`
+Only verified, actual listicle articles with real titles and working URLs from editorial sources - NO VIDEO CONTENT.`
           }
         ],
         return_citations: true,
@@ -174,17 +182,37 @@ Only verified, actual listicle articles with real titles and working URLs from e
     }
 
     const data = await response.json();
-    const citations = data.citations || [];
-    const content = data.choices[0]?.message?.content || '';
     
-    const citationUrls = citations;
+    // FIRST FILTER: Immediately filter citations for video content
+    const rawCitations = data.citations || [];
+    const filteredCitations = rawCitations.filter(url => {
+      const lowerUrl = url.toLowerCase();
+      const videoPatterns = [
+        'youtube.com', 'youtu.be', 'm.youtube.com', 'music.youtube.com',
+        'vimeo.com', 'dailymotion.com', 'twitch.tv', 'tiktok.com',
+        '/watch?v=', '/watch/', '/video/', '/videos/', '/embed/', '/shorts/',
+        'video', 'videos'
+      ];
+      
+      const hasVideo = videoPatterns.some(pattern => lowerUrl.includes(pattern));
+      
+      if (hasVideo) {
+        console.log('🚫 FILTERED OUT VIDEO URL:', url);
+      }
+      
+      return !hasVideo;
+    });
+    
+    console.log(`Citations: ${rawCitations.length} → ${filteredCitations.length} (filtered ${rawCitations.length - filteredCitations.length} video URLs)`);
+    
+    const content = data.choices[0]?.message?.content || '';
     const contentUrls = this.extractUrlsFromContent(content);
     
-    const allUrls = [...citationUrls, ...contentUrls];
+    const allUrls = [...filteredCitations, ...contentUrls];
     const uniqueUrls = Array.from(new Set(allUrls));
     
     console.log('=== URL EXTRACTION DEBUG ===');
-    console.log(`Citations found: ${citations.length}`);
+    console.log(`Filtered citations: ${filteredCitations.length}`);
     console.log(`Content URLs extracted: ${contentUrls.length}`);
     console.log(`Total unique URLs: ${uniqueUrls.length}`);
     
@@ -229,6 +257,10 @@ Only verified, actual listicle articles with real titles and working URLs from e
             hostname.includes(pattern.toLowerCase()) || 
             url.toLowerCase().includes(pattern.toLowerCase())
           );
+          
+          if (isExcluded) {
+            console.log('🚫 FILTERED OUT (content extraction):', url);
+          }
           
           return !isExcluded;
         } catch {
