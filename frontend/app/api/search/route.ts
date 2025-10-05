@@ -185,7 +185,7 @@ Only verified, actual listicle articles with real titles and working URLs from e
     
     // FIRST FILTER: Immediately filter citations for video content
     const rawCitations = data.citations || [];
-    const filteredCitations = rawCitations.filter(url => {
+    const filteredCitations = rawCitations.filter((url: string) => {
       const lowerUrl = url.toLowerCase();
       const videoPatterns = [
         'youtube.com', 'youtu.be', 'm.youtube.com', 'music.youtube.com',
