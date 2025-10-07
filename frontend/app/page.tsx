@@ -126,7 +126,7 @@ export default function HomePage() {
               The AI Revolution is Built on Listicles
             </h2>
             <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
-              Large language models don't invent answers from scratch â€" they synthesize information from existing structured content.
+              Large language models don't invent answers from scratch... they synthesize information from existing structured content.
             </p>
           </div>
 
@@ -175,7 +175,7 @@ export default function HomePage() {
               What Are Listicles?
             </h2>
             <p className="text-xl text-gray-600 mb-8">
-              Listicles are the structured, numbered articles that dominate online discovery â€" and they're exactly what AI systems love to reference.
+              Listicles are the structured, numbered articles that dominate online discovery... and they're exactly what AI systems love to reference.
             </p>
           </div>
 
