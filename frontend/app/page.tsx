@@ -3,6 +3,7 @@
 import React, { useState } from 'react'
 import { Search, Loader2, TrendingUp, Zap, Users, ArrowRight, Star, CheckCircle, BarChart3, Target, Mail, Eye } from 'lucide-react'
 import { useSearchHandler } from '@/hooks/useSearchHandler'
+import Link from 'next/link'
 
 export default function HomePage() {
   const [searchQuery, setSearchQuery] = useState('')
@@ -52,7 +53,7 @@ export default function HomePage() {
               Get Listicled
             </h1>
             <p className="text-xl md:text-2xl text-blue-100 mb-2">
-              AI is training on Listicles.
+              AI is training on <Link href="https://www.getlisticled.com/blog/what-are-listicles" className="underline hover:text-white transition-colors">Listicles</Link>.
             </p>
             <p className="text-lg md:text-xl text-blue-200 mb-8">
               Find the best listicles in your niche and learn how to make your product popular with ChatGPT, Gemini, Claude and Perplexity.
@@ -64,6 +65,12 @@ export default function HomePage() {
             <div className="flex flex-col sm:flex-row gap-4 max-w-2xl mx-auto">
               <div className="relative flex-grow">
                 <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                {/* Small line above search box */}
+                <div className="text-xs text-blue-200 mb-2 text-left">
+                  <Link href="https://www.getlisticled.com/blog/what-are-listicles" className="underline hover:text-white transition-colors">
+                    What are 'Listicles'?
+                  </Link>
+                </div>
                 <input
                   id="hero-search"
                   type="text"
@@ -119,7 +126,7 @@ export default function HomePage() {
               The AI Revolution is Built on Listicles
             </h2>
             <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
-              Large language models don't invent answers from scratch — they synthesize information from existing structured content.
+              Large language models don't invent answers from scratch â€" they synthesize information from existing structured content.
             </p>
           </div>
 
@@ -168,7 +175,7 @@ export default function HomePage() {
               What Are Listicles?
             </h2>
             <p className="text-xl text-gray-600 mb-8">
-              Listicles are the structured, numbered articles that dominate online discovery — and they're exactly what AI systems love to reference.
+              Listicles are the structured, numbered articles that dominate online discovery â€" and they're exactly what AI systems love to reference.
             </p>
           </div>
 
@@ -373,7 +380,7 @@ export default function HomePage() {
                 <Search className="w-6 h-6" />
               </div>
               <h3 className="text-xl font-semibold text-gray-900 mb-2">Smart Search</h3>
-              <p className="text-gray-600">Find the listicles AI already cites most — fast, focused, and relevant.</p>
+              <p className="text-gray-600">Find the listicles AI already cites most â€" fast, focused, and relevant.</p>
             </div>
             
             <div className="card p-6 text-center group hover:shadow-lg transition-all duration-200 bg-white">
@@ -428,8 +435,8 @@ export default function HomePage() {
                 "GetListicled helped us identify 47 relevant listicles in our automotive niche. We got featured in 12 of them within 3 months, and our ChatGPT mentions increased 400%."
               </p>
               <div className="border-t pt-4">
-                <p className="font-semibold text-gray-900">Sarah Chen</p>
-                <p className="text-sm text-gray-600">Marketing Director, MetalCloak</p>
+                <p className="font-semibold text-gray-900">Matson Breakey</p>
+                <p className="text-sm text-gray-600">MetalCloak</p>
               </div>
             </div>
 
@@ -445,8 +452,8 @@ export default function HomePage() {
                 "The contact discovery feature is game-changing. Instead of guessing at email addresses, we now have direct access to the writers who matter. Our outreach success rate went from 8% to 34%."
               </p>
               <div className="border-t pt-4">
-                <p className="font-semibold text-gray-900">Michael Rodriguez</p>
-                <p className="text-sm text-gray-600">Founder, KitchenTech Pro</p>
+                <p className="font-semibold text-gray-900">Cinda Dettner</p>
+                <p className="text-sm text-gray-600">Dettner & Associates</p>
               </div>
             </div>
 
@@ -462,8 +469,8 @@ export default function HomePage() {
                 "We used to rely on traditional SEO and hope for the best. Now we strategically target the exact listicles that AI systems reference. Revenue from organic discovery is up 250%."
               </p>
               <div className="border-t pt-4">
-                <p className="font-semibold text-gray-900">Jennifer Walsh</p>
-                <p className="text-sm text-gray-600">CEO, FitGear Solutions</p>
+                <p className="font-semibold text-gray-900">Jack Austin</p>
+                <p className="text-sm text-gray-600">PatriotBilt</p>
               </div>
             </div>
           </div>
