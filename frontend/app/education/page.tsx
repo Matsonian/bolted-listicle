@@ -4,7 +4,7 @@ import React from 'react'
 import Link from 'next/link'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
-import { BookOpen, GraduationCap, Wrench, ArrowRight, Clock, Users, Brain, Zap, Mail, Lock } from 'lucide-react'
+import { BookOpen, GraduationCap, Wrench, ArrowRight, Clock, Users, Brain, Zap, Mail, Lock, Download, Gift } from 'lucide-react'
 
 export default function EducationPage() {
   const { data: session, status } = useSession()
@@ -12,7 +12,18 @@ export default function EducationPage() {
 
   // Explicit membership check - must be logged in AND have paid tier
   const isPaidMember = !!session?.user
-const shouldShowGate = !session
+  const shouldShowGate = !session
+
+  const handleBookDownload = () => {
+    if (isPaidMember) {
+      // Trigger actual download
+      // You would replace this with your actual download logic
+      alert('Download started! The GetListicled book will begin downloading shortly.')
+      // window.location.href = '/downloads/getlisticled-book.pdf'
+    } else {
+      router.push('/login')
+    }
+  }
 
   const masterclasses = [
     {
@@ -91,6 +102,92 @@ const shouldShowGate = !session
 
         {/* Content Area - Conditional Display */}
         <div className="relative">
+          {/* FREE BOOK OFFER SECTION - NEW */}
+          <div className="mb-16">
+            <div className="bg-gradient-to-r from-orange-500 to-red-500 rounded-2xl p-8 md:p-12 text-white shadow-xl">
+              <div className="flex items-center mb-6">
+                <div className="bg-white bg-opacity-20 rounded-lg p-2 mr-3">
+                  <Gift className="w-6 h-6 text-white" />
+                </div>
+                <div className="bg-white bg-opacity-20 px-4 py-1 rounded-full text-sm font-semibold">
+                  EXCLUSIVE MEMBER BENEFIT
+                </div>
+              </div>
+              
+              <h2 className="text-3xl md:text-4xl font-bold mb-4">
+                FREE BOOK SPECIAL OFFER
+              </h2>
+              
+              <div className="grid md:grid-cols-2 gap-8 items-center">
+                <div>
+                  <h3 className="text-2xl font-bold mb-4">
+                    GetListicled: The Secret to Getting Ahead with AI Indexing
+                  </h3>
+                  <p className="text-orange-100 mb-6 text-lg leading-relaxed">
+                    Written by the research team at Matsonian Labs, this comprehensive 55-page guide reveals 
+                    the strategies you need to stay discoverable in the AI-driven landscape.
+                  </p>
+                  
+                  <ul className="space-y-3 mb-8">
+                    <li className="flex items-start">
+                      <div className="bg-white bg-opacity-20 rounded p-1 mr-3 mt-0.5">
+                        <ArrowRight className="w-4 h-4" />
+                      </div>
+                      <span>Why listicles and directories remain essential in the AI era</span>
+                    </li>
+                    <li className="flex items-start">
+                      <div className="bg-white bg-opacity-20 rounded p-1 mr-3 mt-0.5">
+                        <ArrowRight className="w-4 h-4" />
+                      </div>
+                      <span>How to get your brand included in "Best Of" content across the web</span>
+                    </li>
+                    <li className="flex items-start">
+                      <div className="bg-white bg-opacity-20 rounded p-1 mr-3 mt-0.5">
+                        <ArrowRight className="w-4 h-4" />
+                      </div>
+                      <span>Technical optimization strategies for AI discovery</span>
+                    </li>
+                    <li className="flex items-start">
+                      <div className="bg-white bg-opacity-20 rounded p-1 mr-3 mt-0.5">
+                        <ArrowRight className="w-4 h-4" />
+                      </div>
+                      <span>Complete workbook to track opportunities and measure visibility</span>
+                    </li>
+                  </ul>
+                </div>
+                
+                <div className="text-center">
+                  <div className="bg-white bg-opacity-10 backdrop-blur-sm rounded-2xl p-6 mb-6">
+                    <div className="bg-gray-800 rounded-xl p-8 mb-6 shadow-2xl">
+                      <div className="text-orange-400 text-3xl font-bold mb-2">GetListicled</div>
+                      <div className="text-white text-sm mb-2">The Secret to Getting Ahead</div>
+                      <div className="text-white text-sm mb-6">with AI Indexing</div>
+                      <div className="text-orange-400 text-lg">Matsonian Labs</div>
+                    </div>
+                    <div className="text-sm text-orange-100 mb-4">55-page comprehensive guide</div>
+                  </div>
+                  
+                  <button
+                    onClick={handleBookDownload}
+                    className="bg-white hover:bg-gray-100 text-orange-600 font-bold py-4 px-8 rounded-lg transition-all duration-200 flex items-center justify-center shadow-lg hover:shadow-xl w-full md:w-auto mx-auto"
+                  >
+                    <Download className="w-5 h-5 mr-2" />
+                    {isPaidMember ? 'Download Free Book (PDF)' : 'Members Only - Upgrade to Download'}
+                  </button>
+                  
+                  {!isPaidMember && (
+                    <div className="mt-4 bg-white bg-opacity-10 rounded-lg p-4">
+                      <p className="text-sm text-orange-100">
+                        <strong>Members Only:</strong> This exclusive guide is available as a free download 
+                        for all paid GetListicled members.
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+
           {/* MasterClasses Section */}
           <div className="mb-16">
             <div className="flex items-center mb-8">
