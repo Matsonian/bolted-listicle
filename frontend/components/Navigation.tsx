@@ -86,6 +86,16 @@ export default function Navigation() {
             >
               Blog
             </Link>
+            <Link 
+              href="/contact" 
+              className={`font-medium transition-colors ${
+                pathname === '/contact' 
+                  ? 'text-blue-600' 
+                  : 'text-gray-700 hover:text-blue-600'
+              }`}
+            >
+              Contact
+            </Link>
             
             {/* Show Education when user is logged in */}
             {session?.user && (
@@ -173,6 +183,13 @@ export default function Navigation() {
                 className="text-gray-700 hover:text-blue-600"
               >
                 Blog
+              </Link>
+              <Link 
+                href="/contact" 
+                onClick={() => setIsOpen(false)}
+                className="text-gray-700 hover:text-blue-600"
+              >
+                Contact
               </Link>
               
               {session?.user && (
