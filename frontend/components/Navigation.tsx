@@ -96,20 +96,16 @@ export default function Navigation() {
             >
               Contact
             </Link>
-            
-            {/* Show Education when user is logged in */}
-            {session?.user && (
-              <Link
-                href="/education"
-                className={`font-medium transition-colors ${
-                  pathname === '/education'
-                    ? 'text-blue-600'
-                    : 'text-gray-700 hover:text-blue-600'
-                }`}
-              >
-                Education
-              </Link>
-            )}
+            <Link
+              href="/education"
+              className={`font-medium transition-colors ${
+                pathname === '/education'
+                  ? 'text-blue-600'
+                  : 'text-gray-700 hover:text-blue-600'
+              }`}
+            >
+              Education
+            </Link>
 
             {/* Auth Section */}
             {session?.user ? (
@@ -191,16 +187,13 @@ export default function Navigation() {
               >
                 Contact
               </Link>
-              
-              {session?.user && (
-                <Link
-                  href="/education"
-                  onClick={() => setIsOpen(false)}
-                  className="text-gray-700 hover:text-blue-600"
-                >
-                  Education
-                </Link>
-              )}
+              <Link
+                href="/education"
+                onClick={() => setIsOpen(false)}
+                className="text-gray-700 hover:text-blue-600"
+              >
+                Education
+              </Link>
 
               {session?.user ? (
                 <>
