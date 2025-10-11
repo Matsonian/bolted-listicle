@@ -126,7 +126,7 @@ export default function HomePage() {
               The AI Revolution is Built on Listicles
             </h2>
             <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
-              Large language models don't invent answers from scratch... they synthesize information from existing structured content.
+              Large language models don't invent answers from scratch â€" they synthesize information from existing structured content.
             </p>
           </div>
 
@@ -167,6 +167,82 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* Reviews Section */}
+      <section className="py-20 px-4">
+        <div className="container mx-auto max-w-6xl">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+              Success Stories
+            </h2>
+            <p className="text-xl text-gray-600">
+              See how businesses are using GetListicled to dominate AI search results
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-8">
+            <div className="bg-white p-6 rounded-xl shadow-lg">
+              <div className="flex items-center mb-4">
+                <div className="flex space-x-1">
+                  {[...Array(5)].map((_, i) => (
+                    <Star key={i} className="w-5 h-5 fill-yellow-400 text-yellow-400" />
+                  ))}
+                </div>
+              </div>
+              <p className="text-gray-700 mb-4">
+                "GetListicled helped us identify 47 relevant listicles in our automotive niche. We got featured in 12 of them within 3 months, and our ChatGPT mentions increased 400%."
+              </p>
+              <div className="border-t pt-4">
+                <p className="font-semibold text-gray-900">Matson Breakey</p>
+                <p className="text-sm text-gray-600">MetalCloak</p>
+              </div>
+            </div>
+
+            <div className="bg-white p-6 rounded-xl shadow-lg">
+              <div className="flex items-center mb-4">
+                <div className="flex space-x-1">
+                  {[...Array(5)].map((_, i) => (
+                    <Star key={i} className="w-5 h-5 fill-yellow-400 text-yellow-400" />
+                  ))}
+                </div>
+              </div>
+              <p className="text-gray-700 mb-4">
+                "The contact discovery feature is game-changing. Instead of guessing at email addresses, we now have direct access to the writers who matter. Our outreach success rate went from 8% to 34%."
+              </p>
+              <div className="border-t pt-4">
+                <p className="font-semibold text-gray-900">Cinda Dettner</p>
+                <p className="text-sm text-gray-600">Dettner & Associates</p>
+              </div>
+            </div>
+
+            <div className="bg-white p-6 rounded-xl shadow-lg">
+              <div className="flex items-center mb-4">
+                <div className="flex space-x-1">
+                  {[...Array(5)].map((_, i) => (
+                    <Star key={i} className="w-5 h-5 fill-yellow-400 text-yellow-400" />
+                  ))}
+                </div>
+              </div>
+              <p className="text-gray-700 mb-4">
+                "We used to rely on traditional SEO and hope for the best. Now we strategically target the exact listicles that AI systems reference. Revenue from organic discovery is up 250%."
+              </p>
+              <div className="border-t pt-4">
+                <p className="font-semibold text-gray-900">Jack Austin</p>
+                <p className="text-sm text-gray-600">PatriotBilt</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="text-center mt-12">
+            <button
+              onClick={scrollToSearch}
+              className="bg-green-600 hover:bg-green-700 text-white px-8 py-4 rounded-xl font-semibold transition-colors duration-200 text-lg shadow-lg"
+            >
+              Join Them - Start Now
+            </button>
+          </div>
+        </div>
+      </section>
+
       {/* What Are Listicles Section */}
       <section className="py-20 px-4">
         <div className="container mx-auto max-w-4xl">
@@ -175,7 +251,7 @@ export default function HomePage() {
               What Are Listicles?
             </h2>
             <p className="text-xl text-gray-600 mb-8">
-              Listicles are the structured, numbered articles that dominate online discovery... and they're exactly what AI systems love to reference.
+              Listicles are the structured, numbered articles that dominate online discovery â€" and they're exactly what AI systems love to reference.
             </p>
           </div>
 
