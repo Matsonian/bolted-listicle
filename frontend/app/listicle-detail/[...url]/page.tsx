@@ -60,10 +60,18 @@ export default function ListicleDetailPage() {
     try {
       let decoded = decodeURIComponent(encoded);
       
-      // Remove any getlisticled.com prefix (this matches the API cleaning)
+      // Remove any getlisticled.com prefix
       decoded = decoded.replace(/^https?:\/\/(?:www\.)?getlisticled\.com\//, '');
       
-      // Ensure proper protocol
+      // Fix the specific malformed pattern: https://https:/ -> https://
+      decoded = decoded.replace(/^https:\/\/https:\//, 'https://');
+      
+      // Fix other double protocol patterns
+      decoded = decoded.replace(/^https:\/\/https:\/\//, 'https://');
+      decoded = decoded.replace(/^http:\/\/https:\/\//, 'https://');
+      decoded = decoded.replace(/^https:\/\/http:\/\//, 'https://');
+      
+      // Ensure proper protocol if none exists
       if (!decoded.startsWith('http://') && !decoded.startsWith('https://')) {
         decoded = 'https://' + decoded;
       }
@@ -76,6 +84,7 @@ export default function ListicleDetailPage() {
       console.error('=== DETAIL PAGE URL ERROR ===', e);
       // Fallback construction
       let fallback = encoded.replace(/^https?:\/\/(?:www\.)?getlisticled\.com\//, '');
+      fallback = fallback.replace(/^https:\/\/https:\//, 'https://');
       if (!fallback.startsWith('http')) {
         fallback = 'https://' + fallback;
       }
