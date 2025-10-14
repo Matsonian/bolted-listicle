@@ -120,7 +120,7 @@ export default function SearchPage() {
 
   const handleGetListicled = (article: ListicleResult) => {
   const encodedUrl = encodeURIComponent(article.url)
-  router.push(`/analyze/${encodedUrl}`)
+  window.open(`/analyze/${encodedUrl}`, '_blank')
 }
 
   return (
@@ -340,13 +340,16 @@ export default function SearchPage() {
                     <ExternalLink className="w-4 h-4" />
                   </a>
                   
-                  <button
-                    onClick={() => handleGetListicled(article)}
-                    className="inline-flex items-center space-x-2 bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-all duration-200 shadow-md hover:shadow-lg"
-                  >
-                    <span>GetListicled</span>
-                    <ArrowUpRight className="w-4 h-4" />
-                  </button>
+                  <div className="text-center">
+                    <button
+                      onClick={() => handleGetListicled(article)}
+                      className="inline-flex items-center space-x-2 bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-all duration-200 shadow-md hover:shadow-lg"
+                    >
+                      <span>GetListicled</span>
+                      <ArrowUpRight className="w-4 h-4" />
+                    </button>
+                    <p className="text-xs text-gray-500 mt-1">(opens in new tab)</p>
+                  </div>
                 </div>
               </div>
             ))}
