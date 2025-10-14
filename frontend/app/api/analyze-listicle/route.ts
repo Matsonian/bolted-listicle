@@ -48,20 +48,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'URL and user profile are required' }, { status: 400 });
     }
 
-    // FIX #1: Clean the URL properly to remove getlisticled.com prefix
-    let cleanUrl = url;
-    
-    // Remove any getlisticled.com prefix that might be in the URL
-    cleanUrl = cleanUrl.replace(/^https?:\/\/(?:www\.)?getlisticled\.com\//, '');
-    
-    // Ensure proper protocol
-    if (!cleanUrl.startsWith('http://') && !cleanUrl.startsWith('https://')) {
-      cleanUrl = 'https://' + cleanUrl;
-    }
-    
-    console.log('=== URL CLEANED ===', { original: url, cleaned: cleanUrl });
-
-    console.log('=== STARTING FETCH ===', new Date().toISOString(), cleanUrl);
+    console.log('=== STARTING FETCH ===', new Date().toISOString(), url);
     
     // Create AbortController for timeout
     const controller = new AbortController();
@@ -73,7 +60,7 @@ export async function POST(req: NextRequest) {
     let html: string;
     
     try {
-      const response = await fetch(cleanUrl, {
+      const response = await fetch(url, {
         headers: {
           'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/118.0.0.0 Safari/537.36',
           'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
@@ -88,15 +75,16 @@ export async function POST(req: NextRequest) {
           'Sec-Fetch-User': '?1',
           'Cache-Control': 'max-age=0'
         },
-        signal: controller.signal,
+        signal: controller.signal, // This enables the timeout
       });
 
+      // Clear the timeout since fetch completed
       clearTimeout(timeoutId);
       console.log('=== FETCH COMPLETED ===', new Date().toISOString());
 
       if (!response.ok) {
         if (response.status === 403) {
-          throw new Error(`Website blocked our request (403 Forbidden). The site ${new URL(cleanUrl).hostname} may be blocking automated access.`);
+          throw new Error(`Website blocked our request (403 Forbidden). The site ${new URL(url).hostname} may be blocking automated access.`);
         }
         throw new Error(`HTTP error! status: ${response.status}`);
       }
@@ -105,185 +93,100 @@ export async function POST(req: NextRequest) {
       console.log('=== HTML RECEIVED ===', new Date().toISOString(), 'Length:', html.length);
 
     } catch (error) {
-      clearTimeout(timeoutId);
+      clearTimeout(timeoutId); // Clean up timeout on error
       console.log('=== FETCH ERROR ===', new Date().toISOString(), error);
       
       if (error instanceof Error && error.name === 'AbortError') {
         throw new Error('Request timed out after 10 seconds');
       }
-      throw error;
+      throw error; // Re-throw other errors
     }
 
     console.log('=== STARTING CHEERIO PARSE ===', new Date().toISOString());
 
+    // Parse HTML and extract content
     const $ = cheerio.load(html);
     console.log('=== CHEERIO LOADED ===', new Date().toISOString());
     
-    // FIX #2: More aggressive cleanup to remove social media icons and SVGs
-    $('script, style, nav, header, footer, aside, .ad, .advertisement, .social-share, svg, .social-icons, .share-buttons, .social-media, .icon').remove();
+    // Remove unwanted elements
+    $('script, style, nav, header, footer, aside, .ad, .advertisement, .social-share').remove();
     console.log('=== CLEANUP COMPLETE ===', new Date().toISOString());
     
-    // FIX #2: Better title extraction and cleaning
-    let title = $('h1').first().text().trim() || 
-                $('title').text().trim() || 
-                $('meta[property="og:title"]').attr('content') || 
-                'No title found';
-    
-    // More aggressive cleaning of social media pollution
-    title = title
-      .replace(/facebook|instagram|pinterest|twitter|search|envelope|check|plus|minus|chevron|times|rectangle|circle|right|left|up|down/gi, '')
-      .replace(/[^\w\s\-:,.'!?()\|&]/g, ' ') // Keep basic punctuation including |
-      .replace(/\s+/g, ' ') // Collapse multiple spaces
-      .trim();
-    
-    console.log('=== TITLE EXTRACTED ===', title);
+    // Extract metadata
+    const title = $('h1').first().text().trim() || 
+                  $('title').text().trim() || 
+                  $('meta[property="og:title"]').attr('content') || 
+                  'No title found';
     
     const description = $('meta[name="description"]').attr('content') || 
                        $('meta[property="og:description"]').attr('content') || 
                        $('p').first().text().substring(0, 200) + '...' || 
                        'No description found';
 
+    // FAST extraction - minimal selectors only
     let openingContent = '';
     
+    // Quick paragraph extraction - just first 2 paragraphs
     const firstParagraphs = $('p').slice(0, 2).map((i, el) => $(el).text().trim()).get()
       .filter(p => p.length > 30).join('\n\n');
     
-    openingContent = firstParagraphs.substring(0, 800);
+    openingContent = firstParagraphs.substring(0, 800); // Smaller limit for speed
 
     console.log('Opening content extraction method: fast paragraphs only');
 
-    // FIX #3: Enhanced author extraction specifically for OutdoorGearLab patterns
-    const authorSelectors = [
-      '.byline',              // Common byline class
-      '.author',              // Generic author class  
-      '.author-name',         // Specific author name class
-      '[rel="author"]',       // Author rel attribute
-      '.post-author',         // Post author class
-      '.article-author',      // Article author class
-      '.staff-author',        // Staff author class
-      'p:contains("By ")',    // Paragraph containing "By "
-      'div:contains("By ")',  // Div containing "By "
-      'span:contains("By ")', // Span containing "By "
-    ];
+    // FAST AUTHOR & CONTACT EXTRACTION - fewer selectors
+    const quickAuthorSelectors = ['.author', '[rel="author"]', '.byline'];
     
     let authorName: string | null = null;
     let authorEmail: string | null = null;
     
-    // Enhanced author search with better pattern matching
-    for (const selector of authorSelectors) {
+    // Quick author search
+    for (const selector of quickAuthorSelectors) {
       const element = $(selector).first();
       if (element.length && element.text().trim()) {
-        let text = element.text().trim();
-        console.log(`=== CHECKING SELECTOR ${selector} ===`, text.substring(0, 100));
-        
-        // Handle "By [Name]" patterns specifically
-        if (text.toLowerCase().includes('by ')) {
-          // Extract everything after "By " and before any special characters or job titles
-          const byMatch = text.match(/by\s+([A-Z][a-z]+(?:\s[A-Z][a-z]+)*)/i);
-          if (byMatch) {
-            authorName = byMatch[1].trim();
-            console.log('=== FOUND AUTHOR BY PATTERN ===', authorName);
-            break;
-          }
-        }
-        
-        // Look for name patterns like "Myrha Colt ⋅ Senior Review Editor"
-        const nameMatch = text.match(/^([A-Z][a-z]+\s[A-Z][a-z]+(?:\s[A-Z][a-z]+)?)\s*[⋅•\-\|]/);
-        if (nameMatch) {
-          authorName = nameMatch[1].trim();
-          console.log('=== FOUND AUTHOR BY NAME PATTERN ===', authorName);
-          break;
-        }
-        
-        // Fallback: if it looks like a clean name (2-3 capitalized words)
-        const words = text.split(/\s+/).filter(w => w.length > 1);
-        if (words.length >= 2 && words.length <= 3 && 
-            words.every(w => /^[A-Z][a-z]+/.test(w)) &&
-            text.length < 50 && !text.includes('⋅') && !text.includes('•')) {
-          authorName = text;
-          console.log('=== FOUND AUTHOR BY WORD PATTERN ===', authorName);
-          break;
-        }
+        authorName = element.text().trim();
+        break;
       }
     }
     
-    // Fallback to meta tags
+    // Fallback to meta tag only
     if (!authorName) {
-      authorName = $('meta[name="author"]').attr('content') || 
-                  $('meta[property="article:author"]').attr('content') || null;
-      if (authorName) {
-        console.log('=== FOUND AUTHOR IN META ===', authorName);
-      }
+      authorName = $('meta[name="author"]').attr('content') || null;
     }
 
-    // Enhanced email extraction
+    // FAST EMAIL EXTRACTION - simple regex only
     const emailRegex = /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/g;
-    
-    // First check in author/contact specific areas
-    const authorSections = $('.author, .byline, .contact, .author-contact, .about-author, .contributor-info, .staff-info').text();
-    const contactEmails = authorSections.match(emailRegex);
-    
-    if (contactEmails && contactEmails.length > 0) {
-      // Filter out obvious non-author emails
-      const filteredEmails = contactEmails.filter(email => 
-        !email.toLowerCase().includes('noreply') &&
-        !email.toLowerCase().includes('no-reply') &&
-        !email.toLowerCase().includes('admin') &&
-        !email.toLowerCase().includes('info@') &&
-        !email.toLowerCase().includes('support@') &&
-        !email.toLowerCase().includes('contact@')
-      );
-      
-      if (filteredEmails.length > 0) {
-        authorEmail = filteredEmails[0];
-        console.log('=== FOUND EMAIL IN AUTHOR SECTION ===', authorEmail);
-      }
-    }
-    
-    // Fallback to page-wide search
-    if (!authorEmail) {
-      const pageText = $('body').text();
-      const allEmails = pageText.match(emailRegex);
-      if (allEmails && allEmails.length > 0) {
-        const filteredEmails = allEmails.filter(email => 
-          !email.toLowerCase().includes('noreply') &&
-          !email.toLowerCase().includes('no-reply') &&
-          !email.toLowerCase().includes('admin') &&
-          !email.toLowerCase().includes('info@') &&
-          !email.toLowerCase().includes('support@') &&
-          !email.toLowerCase().includes('contact@')
-        );
-        
-        if (filteredEmails.length > 0) {
-          authorEmail = filteredEmails[0];
-          console.log('=== FOUND EMAIL IN PAGE TEXT ===', authorEmail);
-        }
-      }
+    const pageText = $('body').text();
+    const emailMatches = pageText.match(emailRegex);
+    if (emailMatches && emailMatches.length > 0) {
+      authorEmail = emailMatches[0];
     }
 
-    // Contact URL extraction
+    // FAST CONTACT URL - just look for contact links
     let contactUrl: string | null = null;
     const contactLink = $('a[href*="contact"]').first().attr('href');
     if (contactLink) {
-      contactUrl = contactLink.startsWith('http') ? contactLink : new URL(contactLink, cleanUrl).toString();
+      contactUrl = contactLink.startsWith('http') ? contactLink : new URL(contactLink, url).toString();
     }
 
-    // Date extraction
+    // FAST DATE EXTRACTION
     let pubDate: string | null = null;
     pubDate = $('time[datetime]').first().attr('datetime') || 
              $('meta[property="article:published_time"]').attr('content') || null;
 
+    // Streamlined content for faster processing
     const truncatedContent = openingContent.substring(0, 800);
 
-    console.log('=== FINAL EXTRACTION RESULTS ===');
-    console.log(`Title: "${title}"`);
+    // Debug logging focused on contact information
+    console.log('=== FAST EXTRACTION RESULTS ===');
     console.log(`Author: ${authorName || 'None'}`);
     console.log(`Email: ${authorEmail || 'None'}`);
     console.log(`Contact: ${contactUrl || 'None'}`);
     console.log(`Date: ${pubDate || 'None'}`);
-    console.log('=== END EXTRACTION ===');
+    console.log(`Content: ${truncatedContent.length} chars`);
+    console.log('=== END FAST EXTRACTION ===');
 
-    // Keep original prompt structure
+    // STREAMLINED PROMPT for faster OpenAI processing
     const prompt = `
 Analyze this listicle quickly for ${userProfile.business_name}.
 
@@ -297,11 +200,11 @@ Rate 1-10 for outreach value considering:
 
 JSON response only:
 {
-  "title": "${title.replace(/"/g, '\\"')}",
-  "author_name": ${authorName ? `"${authorName.replace(/"/g, '\\"')}"` : 'null'},
-  "author_email": ${authorEmail ? `"${authorEmail}"` : 'null'},
-  "contact_url": ${contactUrl ? `"${contactUrl}"` : 'null'},
-  "publication_date": ${pubDate ? `"${pubDate}"` : 'null'},
+  "title": "${title}",
+  "author_name": "${authorName}",
+  "author_email": "${authorEmail}",
+  "contact_url": "${contactUrl}",
+  "publication_date": "${pubDate}",
   "description": "Brief summary (150 chars max)",
   "llm_quality_rating": "HIGH/MED/LOW",
   "quality_reasons": "Brief explanation",
@@ -315,8 +218,9 @@ JSON response only:
 
     console.log('=== STARTING OPENAI CALL ===', new Date().toISOString());
     
+    // Call OpenAI API with faster settings
     const completion = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
+      model: "gpt-4o-mini", // Already using the fastest model
       messages: [
         {
           role: "system", 
@@ -327,8 +231,8 @@ JSON response only:
           content: prompt
         }
       ],
-      temperature: 0.2,
-      max_tokens: 1500,
+      temperature: 0.2, // Slightly higher for more creative personalization
+      max_tokens: 1500, // Increased for detailed personalized analysis
     });
 
     console.log('=== OPENAI RESPONSE RECEIVED ===', new Date().toISOString());
@@ -339,57 +243,50 @@ JSON response only:
       throw new Error('No analysis generated');
     }
 
+    // Parse JSON response
     let analysis;
     try {
+      // Clean the response - sometimes OpenAI adds markdown code blocks
       let cleanedResponse = analysisText.trim();
       
+      // Remove markdown code blocks if present
       if (cleanedResponse.startsWith('```json')) {
         cleanedResponse = cleanedResponse.replace(/^```json\s*/, '').replace(/\s*```$/, '');
       } else if (cleanedResponse.startsWith('```')) {
         cleanedResponse = cleanedResponse.replace(/^```\s*/, '').replace(/\s*```$/, '');
       }
       
+      // Try to extract JSON if there's extra text
       const jsonMatch = cleanedResponse.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
         cleanedResponse = jsonMatch[0];
       }
       
       analysis = JSON.parse(cleanedResponse);
-      
-      // Ensure we preserve our extracted data
-      analysis.title = title;
-      analysis.author_name = authorName;
-      analysis.author_email = authorEmail;
-      analysis.contact_url = contactUrl;
-      analysis.publication_date = pubDate;
-      
     } catch (parseError) {
-      console.error('Failed to parse OpenAI response:', parseError);
+      console.error('Failed to parse OpenAI response:');
       console.error('Raw response:', analysisText);
+      console.error('Parse error:', parseError);
       
-      // Use extracted data as fallback
+      // Return a fallback response instead of failing completely
       analysis = {
-        title: title,
+        title: title || 'Unknown Title',
         author_name: authorName,
-        author_email: authorEmail,
+        author_email: null,
         contact_url: contactUrl,
         publication_date: pubDate,
-        description: description.substring(0, 150) || 'Analysis could not be completed',
-        llm_quality_rating: 'MED',
-        quality_reasons: 'Using extracted data - AI parsing had issues',
-        importance_score: authorEmail ? 7 : (authorName ? 5 : 3),
-        importance_breakdown: { 
-          auth: authorName ? 2 : 1, 
-          rel: 2, 
-          fresh: pubDate ? 1 : 0, 
-          eng: authorEmail ? 2 : 1 
-        },
-        outreach_priority: authorEmail ? 'P1' : (authorName ? 'P2' : 'P3'),
-        suggested_outreach_angle: 'Good outreach opportunity with contact information available',
-        model_email: `Hi ${authorName || 'there'},\n\nI enjoyed your article "${title}". I'd love to discuss a potential collaboration.\n\nBest regards,\n${userProfile.first_name}`
+        description: description || 'Analysis could not be completed',
+        llm_quality_rating: 'LOW',
+        quality_reasons: 'AI response parsing failed',
+        importance_score: 3,
+        importance_breakdown: { auth: 1, rel: 1, fresh: 0, eng: 1 },
+        outreach_priority: 'P3',
+        suggested_outreach_angle: 'Manual review recommended',
+        model_email: 'Please create custom outreach email'
       };
     }
 
+    // Validate and clean the response
     const validatedResponse = validateAnalysisResponse(analysis, {
       title,
       authorName,
@@ -410,12 +307,14 @@ JSON response only:
 }
 
 function validateAnalysisResponse(response: any, fallbacks: any): AnalysisResponse {
+  // Calculate importance score from breakdown
   const breakdown = response.importance_breakdown || {};
   const calculatedScore = (breakdown.auth || 0) + (breakdown.rel || 0) + 
                          (breakdown.fresh || 0) + (breakdown.eng || 0);
   
   const score = response.importance_score || calculatedScore || 5;
   
+  // Determine priority based on score
   let priority: 'P1' | 'P2' | 'P3';
   if (score >= 8) priority = 'P1';
   else if (score >= 5) priority = 'P2';
@@ -444,6 +343,7 @@ function validateAnalysisResponse(response: any, fallbacks: any): AnalysisRespon
     model_email: response.model_email || 'Email template not generated'
   };
 
+  // Ensure description is within character limit
   if (validated.description.length > 200) {
     validated.description = validated.description.substring(0, 197) + '...';
   }
