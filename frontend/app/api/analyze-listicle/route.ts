@@ -143,15 +143,24 @@ export async function POST(req: NextRequest) {
     const $ = cheerio.load(html);
     console.log('=== CHEERIO LOADED ===', new Date().toISOString());
     
-    // Remove unwanted elements
-    $('script, style, nav, header, footer, aside, .ad, .advertisement, .social-share').remove();
+    // Remove unwanted elements INCLUDING SVG icons that pollute titles
+    $('script, style, nav, header, footer, aside, .ad, .advertisement, .social-share, svg').remove();
     console.log('=== CLEANUP COMPLETE ===', new Date().toISOString());
     
-    // Extract metadata
-    const title = $('h1').first().text().trim() || 
-                  $('title').text().trim() || 
-                  $('meta[property="og:title"]').attr('content') || 
-                  'No title found';
+    // Extract and clean title to remove social media icon pollution
+    let title = $('h1').first().text().trim() || 
+                $('title').text().trim() || 
+                $('meta[property="og:title"]').attr('content') || 
+                'No title found';
+    
+    // Clean title of social media icon text
+    title = title
+      .replace(/facebook|instagram|pinterest|twitter|search|envelope|check|plus|minus|chevron|times|rectangle|circle|right|left|up|down/gi, '')
+      .replace(/[^\w\s\-:,.'!?()\|&]/g, ' ') // Keep basic punctuation
+      .replace(/\s+/g, ' ') // Collapse multiple spaces
+      .trim();
+    
+    console.log('=== TITLE EXTRACTED AND CLEANED ===', title);
     
     const description = $('meta[name="description"]').attr('content') || 
                        $('meta[property="og:description"]').attr('content') || 
@@ -169,17 +178,40 @@ export async function POST(req: NextRequest) {
 
     console.log('Opening content extraction method: fast paragraphs only');
 
-    // FAST AUTHOR & CONTACT EXTRACTION - fewer selectors
-    const quickAuthorSelectors = ['.author', '[rel="author"]', '.byline'];
+    // ENHANCED AUTHOR & CONTACT EXTRACTION - Add specific selectors for OutdoorGearLab
+    const quickAuthorSelectors = ['.byline', '.author', '[rel="author"]', '.author-name', 'p:contains("By ")', 'div:contains("By ")'];
     
     let authorName: string | null = null;
     let authorEmail: string | null = null;
     
-    // Quick author search
+    // Enhanced author search with pattern matching
     for (const selector of quickAuthorSelectors) {
       const element = $(selector).first();
       if (element.length && element.text().trim()) {
-        authorName = element.text().trim();
+        let text = element.text().trim();
+        console.log(`=== CHECKING SELECTOR ${selector} ===`, text.substring(0, 100));
+        
+        // Handle "By [Name]" patterns specifically
+        if (text.toLowerCase().includes('by ')) {
+          // Extract everything after "By " and before any special characters
+          const byMatch = text.match(/by\s+([A-Z][a-z]+(?:\s[A-Z][a-z]+)*)/i);
+          if (byMatch) {
+            authorName = byMatch[1].trim();
+            console.log('=== FOUND AUTHOR BY PATTERN ===', authorName);
+            break;
+          }
+        }
+        
+        // Look for name patterns like "Myrha Colt ⋅ Senior Review Editor"
+        const nameMatch = text.match(/^([A-Z][a-z]+\s[A-Z][a-z]+(?:\s[A-Z][a-z]+)?)\s*[⋅•\-\|]/);
+        if (nameMatch) {
+          authorName = nameMatch[1].trim();
+          console.log('=== FOUND AUTHOR BY NAME PATTERN ===', authorName);
+          break;
+        }
+        
+        // Original fallback logic
+        authorName = text;
         break;
       }
     }
