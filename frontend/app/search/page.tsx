@@ -110,7 +110,7 @@ export default function SearchPage() {
     setSearchProgress({ phase: '', progress: 0, message: '' })
   }
 
-  const handleSearch = (e: React.FormEvent) => {
+    const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
     if (searchQuery.trim()) {
       hasSearched.current = false
@@ -119,8 +119,9 @@ export default function SearchPage() {
   }
 
     const handleGetListicled = (article: ListicleResult) => {
-    const encodedUrl = encodeURIComponent(article.url)
-    window.open(`/analyze/${encodedUrl}`, '_blank')
+    // No changes - just pass the URL through normally
+    const encodedUrl = encodeURIComponent(article.url);
+    window.open(`/analyze/${encodedUrl}`, '_blank');
   }
 
   return (
