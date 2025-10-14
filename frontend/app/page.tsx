@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState } from 'react'
-import { Search, Loader2, TrendingUp, Zap, Users, ArrowRight, Star, CheckCircle, BarChart3, Target, Mail, Eye } from 'lucide-react'
+import { Search, Loader2, TrendingUp, Zap, Users, ArrowRight, Star, CheckCircle, BarChart3, Target, Mail, Eye, BookOpen, ExternalLink } from 'lucide-react'
 import { useSearchHandler } from '@/hooks/useSearchHandler'
 import Link from 'next/link'
 
@@ -45,6 +45,30 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen">
+      {/* New Book Announcement Banner */}
+      <section className="bg-gradient-to-r from-orange-500 to-red-500 text-white py-4 px-4">
+        <div className="container mx-auto max-w-6xl">
+          <div className="flex flex-col md:flex-row items-center justify-center gap-4 text-center md:text-left">
+            <div className="flex items-center gap-3">
+              <BookOpen className="w-6 h-6 flex-shrink-0" />
+              <div>
+                <span className="font-semibold">NEW BOOK:</span>
+                <span className="ml-2">"GetListicled: The Secret to Getting Ahead with AI Indexing"</span>
+              </div>
+            </div>
+            <a
+              href="https://amzn.to/3KP1ddB"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="bg-white text-orange-600 px-4 py-2 rounded-lg font-semibold hover:bg-orange-50 transition-colors duration-200 flex items-center gap-2 text-sm whitespace-nowrap"
+            >
+              Get on Amazon
+              <ExternalLink className="w-4 h-4" />
+            </a>
+          </div>
+        </div>
+      </section>
+
       {/* Hero Section */}
       <section className="relative bg-gradient-to-br from-blue-600 via-purple-600 to-blue-800 text-white py-20 px-4">
         <div className="container mx-auto max-w-4xl text-center">
