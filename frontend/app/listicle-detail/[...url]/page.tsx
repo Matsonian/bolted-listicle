@@ -57,9 +57,36 @@ export default function ListicleDetailPage() {
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState<string | null>(null);
 
-  // Extract URL from params
+  // FIX #1: Better URL extraction and validation
   const encodedUrl = Array.isArray(params.url) ? params.url.join('/') : params.url;
-  const decodedUrl = encodedUrl ? decodeURIComponent(encodedUrl) : '';
+  
+  function getCleanUrl(encoded: string): string {
+    try {
+      let decoded = decodeURIComponent(encoded);
+      
+      // Remove any getlisticled.com prefix that might have been added
+      decoded = decoded.replace(/^https?:\/\/(?:www\.)?getlisticled\.com\//, '');
+      
+      // Ensure it has proper protocol
+      if (!decoded.startsWith('http://') && !decoded.startsWith('https://')) {
+        decoded = 'https://' + decoded;
+      }
+      
+      // Validate the URL
+      new URL(decoded); // This will throw if invalid
+      return decoded;
+    } catch (e) {
+      console.error('URL parsing error:', e);
+      // Fallback: try to construct a valid URL
+      let fallback = encoded.replace(/^https?:\/\/(?:www\.)?getlisticled\.com\//, '');
+      if (!fallback.startsWith('http')) {
+        fallback = 'https://' + fallback;
+      }
+      return fallback;
+    }
+  }
+
+  const decodedUrl = encodedUrl ? getCleanUrl(encodedUrl) : '';
 
   useEffect(() => {
     if (!decodedUrl) return;
@@ -114,7 +141,7 @@ export default function ListicleDetailPage() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          url: decodedUrl,
+          url: decodedUrl, // This is now clean
           userProfile
         }),
       });
@@ -227,6 +254,7 @@ export default function ListicleDetailPage() {
               <h1 className="text-3xl font-bold text-gray-900 mb-2">
                 Listicle Analysis
               </h1>
+              {/* FIX #1: Display clean URL */}
               <a 
                 href={decodedUrl} 
                 target="_blank" 
