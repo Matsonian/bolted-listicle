@@ -89,10 +89,9 @@ export async function POST(req: NextRequest) {
           'Sec-Fetch-User': '?1',
           'Cache-Control': 'max-age=0'
         },
-        signal: controller.signal, // This enables the timeout
+        signal: controller.signal,
       });
 
-      // Clear the timeout since fetch completed
       clearTimeout(timeoutId);
       console.log('=== FETCH COMPLETED ===', new Date().toISOString());
 
@@ -107,18 +106,17 @@ export async function POST(req: NextRequest) {
       console.log('=== HTML RECEIVED ===', new Date().toISOString(), 'Length:', html.length);
 
     } catch (error) {
-      clearTimeout(timeoutId); // Clean up timeout on error
+      clearTimeout(timeoutId);
       console.log('=== FETCH ERROR ===', new Date().toISOString(), error);
       
       if (error instanceof Error && error.name === 'AbortError') {
         throw new Error('Request timed out after 10 seconds');
       }
-      throw error; // Re-throw other errors
+      throw error;
     }
 
     console.log('=== STARTING CHEERIO PARSE ===', new Date().toISOString());
 
-    // Parse HTML and extract content
     const $ = cheerio.load(html);
     console.log('=== CHEERIO LOADED ===', new Date().toISOString());
     
@@ -146,14 +144,13 @@ export async function POST(req: NextRequest) {
                        $('p').first().text().substring(0, 200) + '...' || 
                        'No description found';
 
-    // FAST extraction - minimal selectors only
+    // Content extraction
     let openingContent = '';
     
-    // Quick paragraph extraction - just first 2 paragraphs
     const firstParagraphs = $('p').slice(0, 2).map((i, el) => $(el).text().trim()).get()
       .filter(p => p.length > 30).join('\n\n');
     
-    openingContent = firstParagraphs.substring(0, 800); // Smaller limit for speed
+    openingContent = firstParagraphs.substring(0, 800);
 
     console.log('Opening content extraction method: fast paragraphs only');
 
@@ -224,48 +221,43 @@ export async function POST(req: NextRequest) {
     const truncatedContent = openingContent.substring(0, 800);
 
     // Debug logging focused on contact information
-    console.log('=== FAST EXTRACTION RESULTS ===');
+    console.log('=== EXTRACTION RESULTS ===');
     console.log(`Author: ${authorName || 'None'}`);
     console.log(`Email: ${authorEmail || 'None'}`);
     console.log(`Contact: ${contactUrl || 'None'}`);
     console.log(`Date: ${pubDate || 'None'}`);
     console.log(`Content: ${truncatedContent.length} chars`);
-    console.log('=== END FAST EXTRACTION ===');
+    console.log('=== END EXTRACTION ===');
 
-    // Enhanced prompt for better author and contact extraction
-    const prompt = `You are an expert outreach strategist, media researcher, and business development specialist.
-Your task is to:
-1. Analyze a given **listicle** webpage.  
-2. Identify the **author's full name** and — through reasonable research — locate their **direct email address**.  
-   - If no email is found, provide the **best available contact page URL** (author profile, contact form, or publication "contact us" link).  
-3. Evaluate the **quality and outreach potential** of the article for the provided business niche.
-Return your full analysis **strictly in valid JSON format** (no commentary or markdown).
+    // Conservative prompt focused on accuracy over speculation
+    const prompt = `You are an expert outreach strategist and business development researcher. 
+Your task is to locate real, verifiable contact details and evaluate listicle outreach value.
+You MUST follow these rules:
+- Do NOT fabricate or guess ANY information.
+- Only return author_name or author_email if they are explicitly present or confidently inferred from the article or linked author pages.
+- If not found, leave the field as an empty string ("").
+- Always prefer official sources (author bio, publication contact, LinkedIn, Twitter, or About page).
+- Be conservative — accuracy is more important than completeness.
+- Return strictly valid JSON (no markdown or commentary).
 ---
 ### Input Variables:
-- **Business Name:** ${userProfile.business_name}  
-- **Business Description:** ${userProfile.business_description}  
-- **Article Title:** ${title}  
-- **Author (if known):** ${authorName || 'Unknown'}  
-- **Publication Date:** ${pubDate || 'Unknown'}  
-- **Article Content (truncated):** ${truncatedContent}
----
-### Evaluation Criteria:
-Rate the article's **outreach value** for ${userProfile.business_name} on a scale of 1–10 based on:
-- **Contact Availability** – Can you reach the author directly via email or contact form?  
-- **Business Relevance** – How closely the article aligns with ${userProfile.business_description}.  
-- **Freshness** – How recent and currently indexed the content is.  
-- **Engagement** – How compelling or well-structured the listicle is for readers and AI models.
+Business Name: ${userProfile.business_name}  
+Business Description: ${userProfile.business_description}  
+Article Title: ${title}  
+Known Author: ${authorName || 'Unknown'}  
+Publication Date: ${pubDate || 'Unknown'}  
+Article Content: ${truncatedContent}
 ---
 ### Output (Strict JSON Only):
 {
   "title": "${title.replace(/"/g, '\\"')}",
-  "author_name": "Full author name (if found)",
-  "author_email": "Direct email (if found, else blank)",
-  "contact_url": "Best alternative contact page URL (if no email found)",
+  "author_name": "Exact author name as shown on page ('' if missing)",
+  "author_email": "Exact public email ('' if not found)",
+  "contact_url": "URL of verified author/contact/about page ('' if not found)",
   "publication_date": "${pubDate || 'Unknown'}",
-  "description": "Brief summary of the article (max 150 characters)",
+  "description": "Brief factual summary (max 150 chars, no filler)",
   "llm_quality_rating": "HIGH | MED | LOW",
-  "quality_reasons": "Short explanation of why the article scores this way for AI indexing",
+  "quality_reasons": "1–2 factual reasons for LLM quality rating (no speculation)",
   "importance_score": 1-10,
   "importance_breakdown": {
     "auth": 0-3,
@@ -274,15 +266,14 @@ Rate the article's **outreach value** for ${userProfile.business_name} on a scal
     "eng": 0-2
   },
   "outreach_priority": "P1 | P2 | P3",
-  "suggested_outreach_angle": "One concise, strategic sentence explaining why this article is worth contacting",
-  "model_email": "Short, professional sample outreach email (personalized to the author/publication)"
+  "suggested_outreach_angle": "One factual, strategic outreach reason (no guessing)",
+  "model_email": "Short, realistic outreach email (no fake data)"
 }`;
 
     console.log('=== STARTING OPENAI CALL ===', new Date().toISOString());
     
-    // Call OpenAI API with faster settings
     const completion = await openai.chat.completions.create({
-      model: "gpt-4o-mini", // Already using the fastest model
+      model: "gpt-4o-mini",
       messages: [
         {
           role: "system", 
@@ -293,8 +284,8 @@ Rate the article's **outreach value** for ${userProfile.business_name} on a scal
           content: prompt
         }
       ],
-      temperature: 0.2, // Slightly higher for more creative personalization
-      max_tokens: 1500, // Increased for detailed personalized analysis
+      temperature: 0.2,
+      max_tokens: 1500,
     });
 
     console.log('=== OPENAI RESPONSE RECEIVED ===', new Date().toISOString());
@@ -305,50 +296,57 @@ Rate the article's **outreach value** for ${userProfile.business_name} on a scal
       throw new Error('No analysis generated');
     }
 
-    // Parse JSON response
     let analysis;
     try {
-      // Clean the response - sometimes OpenAI adds markdown code blocks
       let cleanedResponse = analysisText.trim();
       
-      // Remove markdown code blocks if present
       if (cleanedResponse.startsWith('```json')) {
         cleanedResponse = cleanedResponse.replace(/^```json\s*/, '').replace(/\s*```$/, '');
       } else if (cleanedResponse.startsWith('```')) {
         cleanedResponse = cleanedResponse.replace(/^```\s*/, '').replace(/\s*```$/, '');
       }
       
-      // Try to extract JSON if there's extra text
       const jsonMatch = cleanedResponse.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
         cleanedResponse = jsonMatch[0];
       }
       
       analysis = JSON.parse(cleanedResponse);
-    } catch (parseError) {
-      console.error('Failed to parse OpenAI response:');
-      console.error('Raw response:', analysisText);
-      console.error('Parse error:', parseError);
       
-      // Return a fallback response instead of failing completely
+      // Ensure we preserve our extracted data
+      analysis.title = title;
+      analysis.author_name = authorName;
+      analysis.author_email = authorEmail;
+      analysis.contact_url = contactUrl;
+      analysis.publication_date = pubDate;
+      
+    } catch (parseError) {
+      console.error('Failed to parse OpenAI response:', parseError);
+      console.error('Raw response:', analysisText);
+      
+      // Use extracted data as fallback
       analysis = {
-        title: title || 'Unknown Title',
+        title: title,
         author_name: authorName,
-        author_email: null,
+        author_email: authorEmail,
         contact_url: contactUrl,
         publication_date: pubDate,
-        description: description || 'Analysis could not be completed',
-        llm_quality_rating: 'LOW',
-        quality_reasons: 'AI response parsing failed',
-        importance_score: 3,
-        importance_breakdown: { auth: 1, rel: 1, fresh: 0, eng: 1 },
-        outreach_priority: 'P3',
-        suggested_outreach_angle: 'Manual review recommended',
-        model_email: 'Please create custom outreach email'
+        description: description.substring(0, 150) || 'Analysis could not be completed',
+        llm_quality_rating: 'MED',
+        quality_reasons: 'Using extracted data - AI parsing had issues',
+        importance_score: authorEmail ? 7 : (authorName ? 5 : 3),
+        importance_breakdown: { 
+          auth: authorName ? 2 : 1, 
+          rel: 2, 
+          fresh: pubDate ? 1 : 0, 
+          eng: authorEmail ? 2 : 1 
+        },
+        outreach_priority: authorEmail ? 'P1' : (authorName ? 'P2' : 'P3'),
+        suggested_outreach_angle: 'Good outreach opportunity with contact information available',
+        model_email: `Hi ${authorName || 'there'},\n\nI enjoyed your article "${title}". I'd love to discuss a potential collaboration.\n\nBest regards,\n${userProfile.first_name}`
       };
     }
 
-    // Validate and clean the response
     const validatedResponse = validateAnalysisResponse(analysis, {
       title,
       authorName,
@@ -373,14 +371,12 @@ Rate the article's **outreach value** for ${userProfile.business_name} on a scal
 }
 
 function validateAnalysisResponse(response: any, fallbacks: any): AnalysisResponse {
-  // Calculate importance score from breakdown
   const breakdown = response.importance_breakdown || {};
   const calculatedScore = (breakdown.auth || 0) + (breakdown.rel || 0) + 
                          (breakdown.fresh || 0) + (breakdown.eng || 0);
   
   const score = response.importance_score || calculatedScore || 5;
   
-  // Determine priority based on score
   let priority: 'P1' | 'P2' | 'P3';
   if (score >= 8) priority = 'P1';
   else if (score >= 5) priority = 'P2';
@@ -409,7 +405,6 @@ function validateAnalysisResponse(response: any, fallbacks: any): AnalysisRespon
     model_email: response.model_email || 'Email template not generated'
   };
 
-  // Ensure description is within character limit
   if (validated.description.length > 200) {
     validated.description = validated.description.substring(0, 197) + '...';
   }
