@@ -56,43 +56,8 @@ export default function ListicleDetailPage() {
   // FIX #1: Proper URL extraction and cleaning to coordinate with API
   const encodedUrl = Array.isArray(params.url) ? params.url.join('/') : params.url;
   
-  function getCleanUrl(encoded: string): string {
-    try {
-      let decoded = decodeURIComponent(encoded);
-      
-      // Remove any getlisticled.com prefix
-      decoded = decoded.replace(/^https?:\/\/(?:www\.)?getlisticled\.com\//, '');
-      
-      // Fix the specific malformed pattern: https://https:/ -> https://
-      decoded = decoded.replace(/^https:\/\/https:\//, 'https://');
-      
-      // Fix other double protocol patterns
-      decoded = decoded.replace(/^https:\/\/https:\/\//, 'https://');
-      decoded = decoded.replace(/^http:\/\/https:\/\//, 'https://');
-      decoded = decoded.replace(/^https:\/\/http:\/\//, 'https://');
-      
-      // Ensure proper protocol if none exists
-      if (!decoded.startsWith('http://') && !decoded.startsWith('https://')) {
-        decoded = 'https://' + decoded;
-      }
-      
-      // Validate URL
-      new URL(decoded);
-      console.log('=== DETAIL PAGE URL CLEANED ===', { original: encoded, cleaned: decoded });
-      return decoded;
-    } catch (e) {
-      console.error('=== DETAIL PAGE URL ERROR ===', e);
-      // Fallback construction
-      let fallback = encoded.replace(/^https?:\/\/(?:www\.)?getlisticled\.com\//, '');
-      fallback = fallback.replace(/^https:\/\/https:\//, 'https://');
-      if (!fallback.startsWith('http')) {
-        fallback = 'https://' + fallback;
-      }
-      return fallback;
-    }
-  }
-
-  const decodedUrl = encodedUrl ? getCleanUrl(encodedUrl) : '';
+  // Simple URL decoding without manipulation
+  const decodedUrl = encodedUrl ? decodeURIComponent(encodedUrl) : '';
 
   useEffect(() => {
     if (!decodedUrl) return;
