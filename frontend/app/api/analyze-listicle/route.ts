@@ -41,14 +41,46 @@ export async function POST(req: NextRequest) {
   try {
     console.log('=== API START ===', new Date().toISOString());
     
-    const { url, userProfile } = await req.json();
-    console.log('=== REQUEST PARSED ===', new Date().toISOString());
+    let requestBody;
+    try {
+      requestBody = await req.json();
+    } catch (parseError) {
+      console.error('=== JSON PARSE ERROR ===', parseError);
+      return NextResponse.json({ error: 'Invalid JSON in request body' }, { status: 400 });
+    }
+    
+    const { url, userProfile } = requestBody;
+    console.log('=== REQUEST PARSED ===', new Date().toISOString(), { url: url?.substring(0, 50) + '...', hasUserProfile: !!userProfile });
+
+    // Check if OpenAI API key exists
+    if (!process.env.OPENAI_API_KEY) {
+      console.error('=== MISSING OPENAI API KEY ===');
+      return NextResponse.json({ error: 'OpenAI API key not configured' }, { status: 500 });
+    }
 
     if (!url || !userProfile) {
       return NextResponse.json({ error: 'URL and user profile are required' }, { status: 400 });
     }
 
-    console.log('=== STARTING FETCH ===', new Date().toISOString(), url);
+    // Clean the URL to fix double https:// and other issues
+    let cleanUrl = url;
+    
+    // Remove any getlisticled.com prefix
+    cleanUrl = cleanUrl.replace(/^https?:\/\/(?:www\.)?getlisticled\.com\//, '');
+    
+    // Fix double https:// issues
+    cleanUrl = cleanUrl.replace(/^https:\/\/https:\/\//, 'https://');
+    cleanUrl = cleanUrl.replace(/^http:\/\/https:\/\//, 'https://');
+    cleanUrl = cleanUrl.replace(/^https:\/\/http:\/\//, 'https://');
+    
+    // Ensure single protocol
+    if (!cleanUrl.startsWith('http://') && !cleanUrl.startsWith('https://')) {
+      cleanUrl = 'https://' + cleanUrl;
+    }
+    
+    console.log('=== URL CLEANED ===', { original: url, cleaned: cleanUrl });
+
+    console.log('=== STARTING FETCH ===', new Date().toISOString(), cleanUrl);
     
     // Create AbortController for timeout
     const controller = new AbortController();
@@ -60,7 +92,7 @@ export async function POST(req: NextRequest) {
     let html: string;
     
     try {
-      const response = await fetch(url, {
+      const response = await fetch(cleanUrl, {
         headers: {
           'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/118.0.0.0 Safari/537.36',
           'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
@@ -84,7 +116,7 @@ export async function POST(req: NextRequest) {
 
       if (!response.ok) {
         if (response.status === 403) {
-          throw new Error(`Website blocked our request (403 Forbidden). The site ${new URL(url).hostname} may be blocking automated access.`);
+          throw new Error(`Website blocked our request (403 Forbidden). The site ${new URL(cleanUrl).hostname} may be blocking automated access.`);
         }
         throw new Error(`HTTP error! status: ${response.status}`);
       }
@@ -166,7 +198,7 @@ export async function POST(req: NextRequest) {
     let contactUrl: string | null = null;
     const contactLink = $('a[href*="contact"]').first().attr('href');
     if (contactLink) {
-      contactUrl = contactLink.startsWith('http') ? contactLink : new URL(contactLink, url).toString();
+      contactUrl = contactLink.startsWith('http') ? contactLink : new URL(contactLink, cleanUrl).toString();
     }
 
     // FAST DATE EXTRACTION
@@ -298,9 +330,13 @@ JSON response only:
     return NextResponse.json(validatedResponse);
 
   } catch (error) {
-    console.error('Analysis error:', error);
+    console.error('=== GENERAL API ERROR ===', error);
+    console.error('=== ERROR STACK ===', error instanceof Error ? error.stack : 'No stack trace');
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Analysis failed' },
+      { 
+        error: error instanceof Error ? error.message : 'Analysis failed',
+        details: error instanceof Error ? error.stack : undefined
+      },
       { status: 500 }
     );
   }
