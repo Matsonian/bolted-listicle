@@ -45,10 +45,6 @@ interface ExtendedAnalysisResponse extends AnalysisResponse {
   author_url?: string;
 }
 
-declare global {
-  var analysisCache: Map<string, any>
-}
-
 export default function ListicleDetailPage() {
   const params = useParams();
   const router = useRouter();
@@ -57,27 +53,28 @@ export default function ListicleDetailPage() {
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState<string | null>(null);
 
-  // FIX #1: Better URL extraction and validation
+  // FIX #1: Proper URL extraction and cleaning to coordinate with API
   const encodedUrl = Array.isArray(params.url) ? params.url.join('/') : params.url;
   
   function getCleanUrl(encoded: string): string {
     try {
       let decoded = decodeURIComponent(encoded);
       
-      // Remove any getlisticled.com prefix that might have been added
+      // Remove any getlisticled.com prefix (this matches the API cleaning)
       decoded = decoded.replace(/^https?:\/\/(?:www\.)?getlisticled\.com\//, '');
       
-      // Ensure it has proper protocol
+      // Ensure proper protocol
       if (!decoded.startsWith('http://') && !decoded.startsWith('https://')) {
         decoded = 'https://' + decoded;
       }
       
-      // Validate the URL
-      new URL(decoded); // This will throw if invalid
+      // Validate URL
+      new URL(decoded);
+      console.log('=== DETAIL PAGE URL CLEANED ===', { original: encoded, cleaned: decoded });
       return decoded;
     } catch (e) {
-      console.error('URL parsing error:', e);
-      // Fallback: try to construct a valid URL
+      console.error('=== DETAIL PAGE URL ERROR ===', e);
+      // Fallback construction
       let fallback = encoded.replace(/^https?:\/\/(?:www\.)?getlisticled\.com\//, '');
       if (!fallback.startsWith('http')) {
         fallback = 'https://' + fallback;
@@ -105,7 +102,6 @@ export default function ListicleDetailPage() {
         if (parsed.data) {
           setAnalysis(parsed.data);
           setLoading(false);
-          // Clear the stored data after using it
           sessionStorage.removeItem(analysisKey);
           return;
         }
@@ -114,18 +110,16 @@ export default function ListicleDetailPage() {
       }
     }
 
-    // Fallback: if no stored analysis, analyze now
     console.log('=== DETAIL PAGE: No stored analysis, starting fallback analysis ===');
     analyzeListicle();
   }, [decodedUrl]);
 
   const analyzeListicle = async () => {
     try {
-      console.log('=== DETAIL PAGE: Starting fallback analysis ===');
+      console.log('=== DETAIL PAGE: Starting fallback analysis for ===', decodedUrl);
       setLoading(true);
       setError(null);
       
-      // Mock user profile - in real app, get from auth/context
       const userProfile = {
         first_name: 'John',
         last_name: 'Doe',
@@ -135,13 +129,14 @@ export default function ListicleDetailPage() {
         years_in_business: 5
       };
 
+      // Send the clean URL to the API (it will clean it again, but that's fine for consistency)
       const response = await fetch('/api/analyze-listicle', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          url: decodedUrl, // This is now clean
+          url: decodedUrl, // This is our cleaned URL
           userProfile
         }),
       });
@@ -152,6 +147,7 @@ export default function ListicleDetailPage() {
       }
 
       const result = await response.json();
+      console.log('=== DETAIL PAGE: Analysis result ===', result);
       setAnalysis(result);
     } catch (err) {
       console.error('=== DETAIL PAGE: Fallback analysis error ===', err);
@@ -254,7 +250,7 @@ export default function ListicleDetailPage() {
               <h1 className="text-3xl font-bold text-gray-900 mb-2">
                 Listicle Analysis
               </h1>
-              {/* FIX #1: Display clean URL */}
+              {/* FIX #1: Display the properly cleaned URL */}
               <a 
                 href={decodedUrl} 
                 target="_blank" 
@@ -281,6 +277,7 @@ export default function ListicleDetailPage() {
           <div className="lg:col-span-2 space-y-6">
             {/* Article Overview */}
             <div className="bg-white rounded-xl shadow-sm border p-6">
+              {/* FIX #2: Display the cleaned title */}
               <h2 className="text-2xl font-semibold text-gray-900 mb-4">
                 {analysis.title}
               </h2>
@@ -305,7 +302,7 @@ export default function ListicleDetailPage() {
               </div>
             </div>
 
-            {/* Quality Assessment - Made More Prominent */}
+            {/* Quality Assessment */}
             <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl shadow-sm border border-blue-200 p-6">
               <h3 className="text-xl font-semibold text-gray-900 mb-4 flex items-center gap-2">
                 <Star className="w-5 h-5 text-yellow-500" />
@@ -408,12 +405,15 @@ export default function ListicleDetailPage() {
               </h3>
               
               <div className="space-y-4">
-                {/* Author Name */}
+                {/* FIX #3: Display found author information */}
                 {analysis.author_name && (
                   <div className="border-b pb-3">
                     <div className="flex items-center justify-between">
                       <div>
-                        <h4 className="font-medium text-gray-900">Author</h4>
+                        <h4 className="font-medium text-gray-900 flex items-center gap-2">
+                          <CheckCircle className="w-4 h-4 text-green-600" />
+                          Author Found
+                        </h4>
                         <p className="text-gray-700">{analysis.author_name}</p>
                       </div>
                       <User className="w-5 h-5 text-gray-400" />
@@ -421,7 +421,7 @@ export default function ListicleDetailPage() {
                   </div>
                 )}
 
-                {/* Author Email */}
+                {/* Display found email */}
                 {analysis.author_email && (
                   <div className="border-b pb-3">
                     <div className="flex items-center justify-between">
@@ -456,7 +456,7 @@ export default function ListicleDetailPage() {
                   </div>
                 )}
 
-                {/* Contact URLs - Only show if exists */}
+                {/* Contact URLs */}
                 {analysis.contact_url && (
                   <div className="border-b pb-3">
                     <div>
@@ -477,7 +477,7 @@ export default function ListicleDetailPage() {
                   </div>
                 )}
 
-                {/* No Contact Info Found - Show alternative suggestions */}
+                {/* Show status based on what we found */}
                 {!analysis.author_email && !analysis.contact_url && !analysis.author_name && (
                   <div className="text-center py-6 bg-yellow-50 rounded-lg border border-yellow-200">
                     <XCircle className="w-8 h-8 text-yellow-600 mx-auto mb-3" />
@@ -492,7 +492,7 @@ export default function ListicleDetailPage() {
                   </div>
                 )}
 
-                {/* Partial Contact Info */}
+                {/* Partial contact info found */}
                 {(analysis.author_name && !analysis.author_email && !analysis.contact_url) && (
                   <div className="bg-blue-50 rounded-lg border border-blue-200 p-4">
                     <h4 className="font-medium text-blue-900 mb-2">Author Found - Research Needed</h4>
@@ -519,7 +519,6 @@ export default function ListicleDetailPage() {
                   View Article
                 </button>
                 
-                {/* Only show email button if email exists */}
                 {analysis.author_email && (
                   <button
                     onClick={() => window.location.href = `mailto:${analysis.author_email}?subject=Collaboration Opportunity&body=${encodeURIComponent(analysis.model_email)}`}
