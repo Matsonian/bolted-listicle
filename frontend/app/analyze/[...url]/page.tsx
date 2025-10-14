@@ -23,35 +23,9 @@ export default function AnalyzePage() {
   });
   const [error, setError] = useState<string | null>(null);
 
-  // Extract and clean URL from params
+  // Extract URL from params - simple decode only
   const encodedUrl = Array.isArray(params.url) ? params.url.join('/') : params.url;
-  
-  function getCleanUrl(encoded: string): string {
-    try {
-      let decoded = decodeURIComponent(encoded);
-      
-      // Remove any getlisticled.com prefix that might be in the URL
-      decoded = decoded.replace(/^https?:\/\/(?:www\.)?getlisticled\.com\//, '');
-      
-      // Ensure proper protocol
-      if (!decoded.startsWith('http://') && !decoded.startsWith('https://')) {
-        decoded = 'https://' + decoded;
-      }
-      
-      console.log('=== ANALYZE PAGE URL CLEANING ===', { original: encoded, cleaned: decoded });
-      return decoded;
-    } catch (e) {
-      console.error('=== ANALYZE PAGE URL ERROR ===', e);
-      // Fallback construction
-      let fallback = encoded.replace(/^https?:\/\/(?:www\.)?getlisticled\.com\//, '');
-      if (!fallback.startsWith('http')) {
-        fallback = 'https://' + fallback;
-      }
-      return fallback;
-    }
-  }
-
-  const decodedUrl = encodedUrl ? getCleanUrl(encodedUrl) : '';
+  const decodedUrl = encodedUrl ? decodeURIComponent(encodedUrl) : '';
 
   useEffect(() => {
     if (decodedUrl) {
@@ -89,16 +63,16 @@ export default function AnalyzePage() {
         years_in_business: 5
       };
 
-      console.log('=== ANALYZE ROUTE: Making API call ===', { url: decodedUrl, userProfile });
+      console.log('=== ANALYZE ROUTE: Making API call ===', { url: originalUrl, userProfile });
 
-      // Make API call with cleaned URL
+      // Make API call with exact original URL
       const response = await fetch('/api/analyze-listicle', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          url: decodedUrl, // This is now properly cleaned
+          url: originalUrl, // EXACT original URL, no changes
           userProfile
         }),
       });
@@ -130,16 +104,19 @@ export default function AnalyzePage() {
 
       await new Promise(resolve => setTimeout(resolve, 500)); // Brief pause to show completion
 
-      // Store results in sessionStorage for detail page
-      sessionStorage.setItem(`analysis_${decodedUrl}`, JSON.stringify({
+      // Store results with original URL for detail page
+      sessionStorage.setItem(`analysis_${originalUrl}`, JSON.stringify({
         data: analysisData,
         timestamp: Date.now()
       }));
 
+      // Also store the original URL for the detail page
+      sessionStorage.setItem(`url_for_detail`, originalUrl);
+
       console.log('=== ANALYZE ROUTE: Redirecting to detail page ===');
 
-      // Redirect to detail page with the original encoded URL
-      router.push(`/listicle-detail/${encodedUrl}?analyzed=true`);
+      // Redirect to detail page with the storage key
+      router.push(`/listicle-detail/${storageKey}?analyzed=true`);
 
     } catch (err) {
       console.error('=== ANALYZE ROUTE: Error ===', err);
@@ -201,7 +178,7 @@ export default function AnalyzePage() {
               Analyzing Listicle
             </h1>
             <p className="text-gray-600 text-sm break-all">
-              {decodedUrl}
+              {originalUrl}
             </p>
           </div>
 
