@@ -23,9 +23,35 @@ export default function AnalyzePage() {
   });
   const [error, setError] = useState<string | null>(null);
 
-  // Extract URL from params
+  // Extract and clean URL from params
   const encodedUrl = Array.isArray(params.url) ? params.url.join('/') : params.url;
-  const decodedUrl = encodedUrl ? decodeURIComponent(encodedUrl) : '';
+  
+  function getCleanUrl(encoded: string): string {
+    try {
+      let decoded = decodeURIComponent(encoded);
+      
+      // Remove any getlisticled.com prefix that might be in the URL
+      decoded = decoded.replace(/^https?:\/\/(?:www\.)?getlisticled\.com\//, '');
+      
+      // Ensure proper protocol
+      if (!decoded.startsWith('http://') && !decoded.startsWith('https://')) {
+        decoded = 'https://' + decoded;
+      }
+      
+      console.log('=== ANALYZE PAGE URL CLEANING ===', { original: encoded, cleaned: decoded });
+      return decoded;
+    } catch (e) {
+      console.error('=== ANALYZE PAGE URL ERROR ===', e);
+      // Fallback construction
+      let fallback = encoded.replace(/^https?:\/\/(?:www\.)?getlisticled\.com\//, '');
+      if (!fallback.startsWith('http')) {
+        fallback = 'https://' + fallback;
+      }
+      return fallback;
+    }
+  }
+
+  const decodedUrl = encodedUrl ? getCleanUrl(encodedUrl) : '';
 
   useEffect(() => {
     if (decodedUrl) {
@@ -63,20 +89,25 @@ export default function AnalyzePage() {
         years_in_business: 5
       };
 
-      // Make API call
+      console.log('=== ANALYZE ROUTE: Making API call ===', { url: decodedUrl, userProfile });
+
+      // Make API call with cleaned URL
       const response = await fetch('/api/analyze-listicle', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          url: decodedUrl,
+          url: decodedUrl, // This is now properly cleaned
           userProfile
         }),
       });
 
+      console.log('=== ANALYZE ROUTE: API response ===', response.status, response.statusText);
+
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
+        console.error('=== ANALYZE ROUTE: API error ===', errorData);
         throw new Error(errorData.error || `API error: ${response.status} ${response.statusText}`);
       }
 
@@ -88,6 +119,7 @@ export default function AnalyzePage() {
       });
 
       const analysisData = await response.json();
+      console.log('=== ANALYZE ROUTE: Analysis data received ===', analysisData);
       
       // Phase 4: Complete
       setProgress({ 
@@ -104,7 +136,9 @@ export default function AnalyzePage() {
         timestamp: Date.now()
       }));
 
-      // Redirect to detail page
+      console.log('=== ANALYZE ROUTE: Redirecting to detail page ===');
+
+      // Redirect to detail page with the original encoded URL
       router.push(`/listicle-detail/${encodedUrl}?analyzed=true`);
 
     } catch (err) {
