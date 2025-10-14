@@ -224,14 +224,14 @@ export default function ListicleDetailPage() {
               <h1 className="text-3xl font-bold text-gray-900 mb-2">
                 Listicle Analysis
               </h1>
-              {/* FIX #1: Display the properly cleaned URL */}
+              {/* Display the URL properly formatted */}
               <a 
-                href={decodedUrl} 
+                href={decodedUrl.startsWith('http') ? decodedUrl : `https://${decodedUrl}`} 
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="text-blue-600 hover:text-blue-700 text-sm break-all inline-flex items-center gap-1"
               >
-                {decodedUrl}
+                {decodedUrl.startsWith('http') ? decodedUrl : `https://${decodedUrl}`}
                 <ExternalLink className="w-3 h-3" />
               </a>
             </div>
@@ -486,7 +486,7 @@ export default function ListicleDetailPage() {
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
               <div className="space-y-3">
                 <button
-                  onClick={() => window.open(decodedUrl, '_blank')}
+                  onClick={() => window.open(decodedUrl.startsWith('http') ? decodedUrl : `https://${decodedUrl}`, '_blank')}
                   className="w-full flex items-center justify-center gap-2 bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors"
                 >
                   <Globe className="w-4 h-4" />
