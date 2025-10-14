@@ -53,18 +53,28 @@ export default function ListicleDetailPage() {
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState<string | null>(null);
 
-  // FIX #1: Proper URL extraction and cleaning to coordinate with API
+  // Simple URL decoding - no sessionStorage
   const encodedUrl = Array.isArray(params.url) ? params.url.join('/') : params.url;
-  
-  // Simple URL decoding without manipulation
   const decodedUrl = encodedUrl ? decodeURIComponent(encodedUrl) : '';
+
+  // Function to fix URLs for display/navigation only
+  const fixUrlForDisplay = (url: string) => {
+    if (!url) return '';
+    
+    // Only fix clearly broken URLs
+    if (url.startsWith('www.') || (!url.startsWith('http') && url.includes('.'))) {
+      return `https://${url}`;
+    }
+    
+    return url; // Return as-is for valid URLs
+  };
 
   useEffect(() => {
     if (!decodedUrl) return;
 
     console.log('=== DETAIL PAGE: Component mounted ===', decodedUrl);
     
-    // Check if we have analysis results from the analyze route
+    // Check if we have analysis results
     const analysisKey = `analysis_${decodedUrl}`;
     const storedAnalysis = sessionStorage.getItem(analysisKey);
     
@@ -103,14 +113,13 @@ export default function ListicleDetailPage() {
         years_in_business: 5
       };
 
-      // Send the clean URL to the API (it will clean it again, but that's fine for consistency)
       const response = await fetch('/api/analyze-listicle', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          url: decodedUrl, // This is our cleaned URL
+          url: decodedUrl, // Simple decoded URL
           userProfile
         }),
       });
@@ -224,14 +233,14 @@ export default function ListicleDetailPage() {
               <h1 className="text-3xl font-bold text-gray-900 mb-2">
                 Listicle Analysis
               </h1>
-              {/* Display the URL properly formatted */}
+              {/* Display URL with fix for display */}
               <a 
-                href={decodedUrl.startsWith('http') ? decodedUrl : `https://${decodedUrl}`} 
+                href={fixUrlForDisplay(decodedUrl)} 
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="text-blue-600 hover:text-blue-700 text-sm break-all inline-flex items-center gap-1"
               >
-                {decodedUrl.startsWith('http') ? decodedUrl : `https://${decodedUrl}`}
+                {decodedUrl}
                 <ExternalLink className="w-3 h-3" />
               </a>
             </div>
@@ -251,7 +260,6 @@ export default function ListicleDetailPage() {
           <div className="lg:col-span-2 space-y-6">
             {/* Article Overview */}
             <div className="bg-white rounded-xl shadow-sm border p-6">
-              {/* FIX #2: Display the cleaned title */}
               <h2 className="text-2xl font-semibold text-gray-900 mb-4">
                 {analysis.title}
               </h2>
@@ -379,7 +387,7 @@ export default function ListicleDetailPage() {
               </h3>
               
               <div className="space-y-4">
-                {/* FIX #3: Display found author information */}
+                {/* Display found author information */}
                 {analysis.author_name && (
                   <div className="border-b pb-3">
                     <div className="flex items-center justify-between">
@@ -486,7 +494,7 @@ export default function ListicleDetailPage() {
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
               <div className="space-y-3">
                 <button
-                  onClick={() => window.open(decodedUrl.startsWith('http') ? decodedUrl : `https://${decodedUrl}`, '_blank')}
+                  onClick={() => window.open(fixUrlForDisplay(decodedUrl), '_blank')}
                   className="w-full flex items-center justify-center gap-2 bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors"
                 >
                   <Globe className="w-4 h-4" />
