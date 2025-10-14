@@ -68,12 +68,15 @@ export async function POST(req: NextRequest) {
     // Remove any getlisticled.com prefix
     cleanUrl = cleanUrl.replace(/^https?:\/\/(?:www\.)?getlisticled\.com\//, '');
     
-    // Fix double https:// issues
+    // Fix the specific pattern: https://https:/ -> https://
+    cleanUrl = cleanUrl.replace(/^https:\/\/https:\//, 'https://');
+    
+    // Fix other double protocol patterns
     cleanUrl = cleanUrl.replace(/^https:\/\/https:\/\//, 'https://');
     cleanUrl = cleanUrl.replace(/^http:\/\/https:\/\//, 'https://');
     cleanUrl = cleanUrl.replace(/^https:\/\/http:\/\//, 'https://');
     
-    // Ensure single protocol
+    // Ensure single protocol if none exists
     if (!cleanUrl.startsWith('http://') && !cleanUrl.startsWith('https://')) {
       cleanUrl = 'https://' + cleanUrl;
     }
