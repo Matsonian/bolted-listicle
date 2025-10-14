@@ -118,10 +118,16 @@ export default function SearchPage() {
     }
   }
 
-  const handleGetListicled = (article: ListicleResult) => {
-  const encodedUrl = encodeURIComponent(article.url)
-  window.open(`/analyze/${encodedUrl}`, '_blank')
-}
+   const handleGetListicled = (article: ListicleResult) => {
+    // Store the EXACT original URL in sessionStorage
+    const originalUrl = article.url;
+    const storageKey = `original_url_${Date.now()}`;
+  
+    sessionStorage.setItem(storageKey, originalUrl);
+  
+    // Use the storage key in the route instead of the URL
+    window.open(`/analyze/${storageKey}`, '_blank');
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
