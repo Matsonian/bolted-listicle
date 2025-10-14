@@ -63,16 +63,16 @@ export default function AnalyzePage() {
         years_in_business: 5
       };
 
-      console.log('=== ANALYZE ROUTE: Making API call ===', { url: originalUrl, userProfile });
+      console.log('=== ANALYZE ROUTE: Making API call ===', { url: decodedUrl, userProfile });
 
-      // Make API call with exact original URL
+      // Make API call with decoded URL
       const response = await fetch('/api/analyze-listicle', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          url: originalUrl, // EXACT original URL, no changes
+          url: decodedUrl, // Simple decoded URL
           userProfile
         }),
       });
@@ -104,19 +104,16 @@ export default function AnalyzePage() {
 
       await new Promise(resolve => setTimeout(resolve, 500)); // Brief pause to show completion
 
-      // Store results with original URL for detail page
-      sessionStorage.setItem(`analysis_${originalUrl}`, JSON.stringify({
+      // Store results for detail page
+      sessionStorage.setItem(`analysis_${decodedUrl}`, JSON.stringify({
         data: analysisData,
         timestamp: Date.now()
       }));
 
-      // Also store the original URL for the detail page
-      sessionStorage.setItem(`url_for_detail`, originalUrl);
-
       console.log('=== ANALYZE ROUTE: Redirecting to detail page ===');
 
-      // Redirect to detail page with the storage key
-      router.push(`/listicle-detail/${storageKey}?analyzed=true`);
+      // Redirect to detail page
+      router.push(`/listicle-detail/${encodedUrl}?analyzed=true`);
 
     } catch (err) {
       console.error('=== ANALYZE ROUTE: Error ===', err);
@@ -178,7 +175,7 @@ export default function AnalyzePage() {
               Analyzing Listicle
             </h1>
             <p className="text-gray-600 text-sm break-all">
-              {originalUrl}
+              {decodedUrl}
             </p>
           </div>
 
