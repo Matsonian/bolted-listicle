@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import { SearchSession } from '@/lib/supabase'
+
 interface UseSearchHistoryReturn {
   searchHistory: SearchSession[]
   loading: boolean
@@ -10,6 +11,7 @@ interface UseSearchHistoryReturn {
   hasMore: boolean
   refetch: () => Promise<void>
 }
+
 export function useSearchHistory(initialLimit = 10): UseSearchHistoryReturn {
   const { data: session } = useSession()
   const [searchHistory, setSearchHistory] = useState<SearchSession[]>([])
@@ -17,6 +19,7 @@ export function useSearchHistory(initialLimit = 10): UseSearchHistoryReturn {
   const [error, setError] = useState<string | null>(null)
   const [offset, setOffset] = useState(0)
   const [hasMore, setHasMore] = useState(true)
+
   useEffect(() => {
     if (session?.user?.id) {
       fetchSearchHistory(0, initialLimit, true)
@@ -24,28 +27,29 @@ export function useSearchHistory(initialLimit = 10): UseSearchHistoryReturn {
       setLoading(false)
     }
   }, [session?.user?.id, initialLimit])
+
   const fetchSearchHistory = async (currentOffset: number, limit: number, reset = false) => {
     try {
       if (reset) {
         setLoading(true)
         setError(null)
       }
-
-      const response = await fetch(/api/search/history?limit=${limit}&offset=${currentOffset})
+      
+      const response = await fetch(`/api/search/history?limit=${limit}&offset=${currentOffset}`)
       const data = await response.json()
-
+      
       if (!response.ok) {
         throw new Error(data.error || 'Failed to fetch search history')
       }
-
+      
       const newHistory = data.searchHistory || []
-
+      
       if (reset) {
         setSearchHistory(newHistory)
       } else {
         setSearchHistory(prev => [...prev, ...newHistory])
       }
-
+      
       setHasMore(newHistory.length === limit)
       setOffset(currentOffset + newHistory.length)
     } catch (err) {
@@ -55,14 +59,17 @@ export function useSearchHistory(initialLimit = 10): UseSearchHistoryReturn {
       setLoading(false)
     }
   }
+
   const loadMore = async () => {
     if (!hasMore || loading) return
     await fetchSearchHistory(offset, initialLimit, false)
   }
+
   const refetch = async () => {
     setOffset(0)
     await fetchSearchHistory(0, initialLimit, true)
   }
+
   return {
     searchHistory,
     loading,
