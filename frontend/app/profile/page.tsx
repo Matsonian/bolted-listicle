@@ -3,7 +3,8 @@
 import React, { useState } from 'react'
 import { useSession } from 'next-auth/react'
 import Link from 'next/link'
-import { useProfile, useSearchHistory } from '@/hooks/useProfile'
+import { useProfile } from '@/hooks/useProfile'
+import { useSearchHistory } from '@/hooks/useSearchHistory'
 import { 
   User, 
   Mail, 
