@@ -6,7 +6,7 @@ import { supabaseAdmin } from '@/lib/supabase'
 
 export async function GET(request: NextRequest) {
   const session = await getServerSession(authOptions)
-  if (!session?.user?.id) {
+  if (!session?.user?.email) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
           position_in_results
         )
       `)
-      .eq('render_user_id', session.user.id)
+      .eq('render_user_id', session.user.email)
       .order('search_timestamp', { ascending: false })
       .range(offset, offset + limit - 1)
 
