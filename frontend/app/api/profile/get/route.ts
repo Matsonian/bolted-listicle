@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
     const { data: profile, error } = await supabaseAdmin
       .from('user_profiles')
       .select('*')
-      .eq('render_user_id', session.user.id)
+      .eq('render_user_id', session.user.email)
       .single()
 
     if (error && error.code !== 'PGRST116') { // Not found is OK
