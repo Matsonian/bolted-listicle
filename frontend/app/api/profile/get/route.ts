@@ -6,7 +6,7 @@ import { supabaseAdmin } from '@/lib/supabase'
 
 export async function GET(request: NextRequest) {
   const session = await getServerSession(authOptions)
-  if (!session?.user?.id) {
+  if (!session?.user?.email) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
     const { data: dailyActivity, error: activityError } = await supabaseAdmin
       .from('user_daily_activity')
       .select('*')
-      .eq('render_user_id', session.user.id)
+      .eq('render_user_id', session.user.email)
       .eq('activity_date', today)
       .single()
 
