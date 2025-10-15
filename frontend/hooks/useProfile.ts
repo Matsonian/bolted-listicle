@@ -20,12 +20,12 @@ export function useProfile(): UseProfileReturn {
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    if (session?.user?.id) {
+    if (session?.user?.email) {
       fetchProfile()
     } else {
       setLoading(false)
     }
-  }, [session?.user?.id])
+  }, [session?.user?.email])
 
   const fetchProfile = async () => {
     try {
