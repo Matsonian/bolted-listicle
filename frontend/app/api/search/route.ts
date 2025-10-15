@@ -421,7 +421,7 @@ async function saveSearchToSupabase(query: string, results: ListicleResult[], se
   try {
     console.log('💾 Saving search to Supabase:', { query, resultCount: results.length, userEmail });
     
-    const response = await fetch(`${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/api/search/save`, {
+    const response = await fetch('/api/search/save', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
