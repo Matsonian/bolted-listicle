@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth/next';
+import { authOptions } from '../auth/[...nextauth]/route';
 
 interface ListicleResult {
   id: string;
@@ -415,7 +417,39 @@ Only verified, actual listicle articles with real titles and working URLs from e
   }
 }
 
+async function saveSearchToSupabase(query: string, results: ListicleResult[], searchDuration: number, userEmail: string) {
+  try {
+    console.log('💾 Saving search to Supabase:', { query, resultCount: results.length, userEmail });
+    
+    const response = await fetch(`${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/api/search/save`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        searchQuery: query,
+        results: results,
+        searchDuration: searchDuration,
+        searchParameters: null
+      })
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Failed to save search');
+    }
+
+    const data = await response.json();
+    console.log('✅ Search saved successfully. Session ID:', data.sessionId);
+    return data.sessionId;
+  } catch (error) {
+    console.error('❌ Failed to save search to Supabase:', error);
+    // Don't fail the search if saving fails
+    return null;
+  }
+}
+
 export async function POST(request: NextRequest) {
+  const searchStartTime = Date.now();
+  
   try {
     const body = await request.json();
     const { query } = body;
@@ -437,8 +471,28 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Get user session for tracking
+    const session = await getServerSession(authOptions);
+    
+    console.log('🔍 Starting search for:', query);
+    console.log('👤 User session:', session?.user?.email ? 'Found' : 'Anonymous');
+
     const perplexityService = new PerplexitySearchService(apiKey);
     const results = await perplexityService.searchListicles(query);
+    
+    const searchEndTime = Date.now();
+    const searchDuration = searchEndTime - searchStartTime;
+    
+    console.log(`⏱️ Search completed in ${searchDuration}ms with ${results.length} results`);
+
+    // Save search to Supabase if user is logged in
+    if (session?.user?.email) {
+      // Save search asynchronously (don't block the response)
+      saveSearchToSupabase(query, results, searchDuration, session.user.email)
+        .catch(error => console.error('Background search save failed:', error));
+    } else {
+      console.log('⚠️ Skipping search save - user not logged in');
+    }
     
     return NextResponse.json({ results });
   } catch (error) {
