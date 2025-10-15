@@ -6,7 +6,7 @@ import { supabaseAdmin } from '@/lib/supabase'
 
 export async function POST(request: NextRequest) {
   const session = await getServerSession(authOptions)
-  if (!session?.user?.id) {
+  if (!session?.user?.email) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
@@ -22,7 +22,7 @@ export async function POST(request: NextRequest) {
     const { data: searchSession, error: sessionError } = await supabaseAdmin
       .from('user_search_sessions')
       .insert({
-        render_user_id: session.user.id,
+        render_user_id: session.user.email,
         search_query: searchQuery,
         results_count: results.length,
         search_duration_ms: searchDuration || null,
