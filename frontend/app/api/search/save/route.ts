@@ -70,7 +70,7 @@ export async function POST(request: NextRequest) {
     const { data: existingActivity } = await supabaseAdmin
       .from('user_daily_activity')
       .select('searches_performed, total_results_found')
-      .eq('render_user_id', session.user.id)
+      .eq('render_user_id', session.user.email)
       .eq('activity_date', today)
       .single()
 
@@ -78,7 +78,7 @@ export async function POST(request: NextRequest) {
     await supabaseAdmin
       .from('user_daily_activity')
       .upsert({
-        render_user_id: session.user.id,
+        render_user_id: session.user.email,
         activity_date: today,
         searches_performed: (existingActivity?.searches_performed || 0) + 1,
         total_results_found: (existingActivity?.total_results_found || 0) + results.length,
