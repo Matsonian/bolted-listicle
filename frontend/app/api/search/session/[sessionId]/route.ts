@@ -9,7 +9,7 @@ export async function GET(
   { params }: { params: { sessionId: string } }
 ) {
   const session = await getServerSession(authOptions)
-  if (!session?.user?.id) {
+  if (!session?.user?.email) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
@@ -44,7 +44,7 @@ export async function GET(
         )
       `)
       .eq('id', sessionId)
-      .eq('render_user_id', session.user.id) // Ensure user owns this session
+      .eq('render_user_id', session.user.email) // Ensure user owns this session
       .single()
 
     if (error) {
