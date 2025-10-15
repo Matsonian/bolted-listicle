@@ -3,7 +3,7 @@
 import React, { useState } from 'react'
 import { useSession } from 'next-auth/react'
 import Link from 'next/link'
-import { useUserQuery } from '../../generated/graphql'
+import { useProfile, useSearchHistory } from '@/hooks/useProfile'
 import { 
   User, 
   Mail, 
@@ -23,15 +23,63 @@ import {
   Trash2,
   Key,
   ExternalLink,
-  Clock
+  Clock,
+  Edit3,
+  Save,
+  X
 } from 'lucide-react'
 
 export default function ProfilePage() {
   const { data: session, status } = useSession()
-  const { data: userData, loading: userLoading } = useUserQuery()
+  const { profile, dailyActivity, loading: profileLoading, error: profileError, updateProfile } = useProfile()
+  const { searchHistory, loading: historyLoading, error: historyError } = useSearchHistory(10)
+  
   const [activeTab, setActiveTab] = useState<'overview' | 'business' | 'history'>('overview')
+  const [editingBusiness, setEditingBusiness] = useState(false)
+  const [businessForm, setBusinessForm] = useState({
+    first_name: '',
+    last_name: '',
+    location: '',
+    business_name: '',
+    business_description: '',
+    business_website: '',
+    primary_product: ''
+  })
 
-  if (status === 'loading' || userLoading) {
+  // Initialize business form when profile data loads
+  React.useEffect(() => {
+    if (profile) {
+      setBusinessForm({
+        first_name: profile.first_name || '',
+        last_name: profile.last_name || '',
+        location: profile.location || '',
+        business_name: profile.business_name || '',
+        business_description: profile.business_description || '',
+        business_website: profile.business_website || '',
+        primary_product: profile.primary_product || ''
+      })
+    }
+  }, [profile])
+
+  const handleBusinessSubmit = async () => {
+    try {
+      await updateProfile({
+        first_name: businessForm.first_name,
+        last_name: businessForm.last_name,
+        location: businessForm.location,
+        business_name: businessForm.business_name,
+        business_description: businessForm.business_description,
+        business_website: businessForm.business_website,
+        primary_product: businessForm.primary_product
+      })
+      setEditingBusiness(false)
+    } catch (error) {
+      console.error('Error updating profile:', error)
+      alert('Failed to update profile. Please try again.')
+    }
+  }
+
+  if (status === 'loading' || profileLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
@@ -42,7 +90,7 @@ export default function ProfilePage() {
     )
   }
 
-  if (!session?.user || !userData?.user) {
+  if (!session?.user) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
@@ -52,35 +100,39 @@ export default function ProfilePage() {
     )
   }
 
-  const user = userData.user
-
-  // Mock data - replace with actual data from GraphQL queries
-  const todayStats = {
-    searchesUsed: 1,
-    searchesLimit: 2,
-    totalResults: 45
+  if (profileError) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-red-600">Error loading profile: {profileError}</p>
+        </div>
+      </div>
+    )
   }
 
+  // Default subscription limits for basic tier
+  const subscriptionLimits = {
+    subscription_tier: 'basic',
+    daily_search_limit: 2,
+    results_per_search_limit: 20
+  }
+
+  // Account level display
   const accountLevel = {
-    tier: 'Basic Monthly', // or 'Basic Annual'
-    isMonthly: true,
+    tier: 'Basic Monthly',
     price: 29,
-    nextBillingDate: '2025-10-29'
+    nextBillingDate: '2025-10-29',
+    isMonthly: true
   }
 
-  const businessInfo = {
-    name: user.businessName || '',
-    location: (user as any).businessLocation || '',
-    description: user.businessDescription || '',
-    product: (user as any).primaryProduct || '',
-    website: (user as any).businessWebsite || ''
+  // Use real daily activity or defaults
+  const todayActivity = dailyActivity || {
+    searches_performed: 0,
+    total_results_found: 0,
+    results_clicked: 0,
+    results_bookmarked: 0,
+    time_spent_minutes: 0
   }
-
-  const searchHistory = [
-    { id: '1', query: 'best project management tools', date: '2025-09-28', resultsCount: 23 },
-    { id: '2', query: 'top CRM software', date: '2025-09-27', resultsCount: 18 },
-    { id: '3', query: 'email marketing platforms', date: '2025-09-26', resultsCount: 31 },
-  ]
 
   return (
     <div className="min-h-screen bg-gray-50 py-12">
@@ -95,9 +147,9 @@ export default function ProfilePage() {
                 </div>
                 <div>
                   <h1 className="text-2xl font-bold text-white">
-                    {user.firstName && user.lastName
-                      ? `${user.firstName} ${user.lastName}`
-                      : user.email}
+                    {profile?.first_name && profile?.last_name
+                      ? `${profile.first_name} ${profile.last_name}`
+                      : session.user.email}
                   </h1>
                   <p className="text-blue-100">GetListicled Member</p>
                 </div>
@@ -155,7 +207,7 @@ export default function ProfilePage() {
             <div className="bg-white rounded-lg shadow-lg p-6">
               <h2 className="text-xl font-semibold text-gray-900 mb-6 flex items-center">
                 <TrendingUp className="h-5 w-5 mr-2 text-blue-600" />
-                Today&apos;s Activity
+                Today's Activity
               </h2>
               <div className="grid md:grid-cols-2 gap-6">
                 <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg p-6">
@@ -163,7 +215,7 @@ export default function ProfilePage() {
                     <div>
                       <p className="text-sm font-medium text-blue-600 mb-1">Searches Used</p>
                       <p className="text-3xl font-bold text-blue-900">
-                        {todayStats.searchesUsed} <span className="text-lg text-blue-600">/ {todayStats.searchesLimit}</span>
+                        {todayActivity.searches_performed} <span className="text-lg text-blue-600">/ {subscriptionLimits.daily_search_limit}</span>
                       </p>
                     </div>
                     <Search className="h-10 w-10 text-blue-600" />
@@ -172,7 +224,7 @@ export default function ProfilePage() {
                     <div className="bg-blue-200 rounded-full h-2 overflow-hidden">
                       <div 
                         className="bg-blue-600 h-full transition-all duration-300"
-                        style={{ width: `${(todayStats.searchesUsed / todayStats.searchesLimit) * 100}%` }}
+                        style={{ width: `${Math.min((todayActivity.searches_performed / subscriptionLimits.daily_search_limit) * 100, 100)}%` }}
                       />
                     </div>
                   </div>
@@ -182,7 +234,7 @@ export default function ProfilePage() {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm font-medium text-purple-600 mb-1">Total Results Today</p>
-                      <p className="text-3xl font-bold text-purple-900">{todayStats.totalResults}</p>
+                      <p className="text-3xl font-bold text-purple-900">{todayActivity.total_results_found}</p>
                     </div>
                     <Database className="h-10 w-10 text-purple-600" />
                   </div>
@@ -201,8 +253,8 @@ export default function ProfilePage() {
                     <div className="flex-1">
                       <p className="text-sm font-medium text-gray-500">Name</p>
                       <p className="text-gray-900">
-                        {user.firstName && user.lastName
-                          ? `${user.firstName} ${user.lastName}`
+                        {profile?.first_name && profile?.last_name
+                          ? `${profile.first_name} ${profile.last_name}`
                           : 'Not provided'}
                       </p>
                     </div>
@@ -212,7 +264,7 @@ export default function ProfilePage() {
                     <Mail className="h-5 w-5 text-gray-400 mr-3 mt-0.5" />
                     <div className="flex-1">
                       <p className="text-sm font-medium text-gray-500">Account ID (Email)</p>
-                      <p className="text-gray-900">{user.email}</p>
+                      <p className="text-gray-900">{session.user.email}</p>
                     </div>
                   </div>
 
@@ -221,11 +273,11 @@ export default function ProfilePage() {
                     <div className="flex-1">
                       <p className="text-sm font-medium text-gray-500">Member Since</p>
                       <p className="text-gray-900">
-                        {user.createdAt ? new Date(user.createdAt).toLocaleDateString('en-US', { 
+                        {profile?.created_at ? new Date(profile.created_at).toLocaleDateString('en-US', { 
                           year: 'numeric', 
                           month: 'long', 
                           day: 'numeric' 
-                        }) : 'N/A'}
+                        }) : 'Recently joined'}
                       </p>
                     </div>
                   </div>
@@ -250,7 +302,7 @@ export default function ProfilePage() {
                   <div className="flex items-center justify-between mb-4">
                     <div>
                       <h3 className="text-lg font-medium text-gray-900">{accountLevel.tier}</h3>
-                      <p className="text-sm text-gray-600">2 searches/day • 20 results/search</p>
+                      <p className="text-sm text-gray-600">{subscriptionLimits.daily_search_limit} searches/day • {subscriptionLimits.results_per_search_limit} results/search</p>
                     </div>
                     <div className="text-right">
                       <p className="text-2xl font-bold text-blue-600">${accountLevel.price}</p>
@@ -279,31 +331,21 @@ export default function ProfilePage() {
                 </div>
 
                 <div className="space-y-3">
-                  <Link 
-                    href="https://billing.stripe.com/p/login/test_xxxxxxxxxxxx" 
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center justify-between w-full px-4 py-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors"
-                  >
+                  <button className="flex items-center justify-between w-full px-4 py-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors">
                     <div className="flex items-center">
                       <CreditCard className="h-5 w-5 text-gray-600 mr-3" />
                       <span className="text-sm font-medium text-gray-700">Manage Billing</span>
                     </div>
                     <ExternalLink className="h-4 w-4 text-gray-400" />
-                  </Link>
+                  </button>
 
-                  <Link 
-                    href="https://billing.stripe.com/p/login/test_xxxxxxxxxxxx" 
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center justify-between w-full px-4 py-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors"
-                  >
+                  <button className="flex items-center justify-between w-full px-4 py-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors">
                     <div className="flex items-center">
                       <Receipt className="h-5 w-5 text-gray-600 mr-3" />
                       <span className="text-sm font-medium text-gray-700">View Transactions</span>
                     </div>
                     <ExternalLink className="h-4 w-4 text-gray-400" />
-                  </Link>
+                  </button>
                 </div>
               </div>
             </div>
@@ -312,7 +354,7 @@ export default function ProfilePage() {
             <div className="bg-white rounded-lg shadow-lg p-6">
               <h2 className="text-xl font-semibold text-gray-900 mb-6">Account Settings</h2>
               
-              <div className="grid sm:grid-cols-2 gap-4">
+              <div className="grid sm:grid-cols-3 gap-4">
                 <button className="flex items-center justify-center bg-gray-600 hover:bg-gray-700 text-white font-medium px-4 py-3 rounded-md transition-colors">
                   <Key className="h-4 w-4 mr-2" />
                   Change Password
@@ -323,8 +365,8 @@ export default function ProfilePage() {
                   Account Settings
                 </button>
 
-                <button className="flex items-center justify-center bg-red-600 hover:bg-red-700 text-white font-medium px-4 py-3 rounded-md transition-colors sm:col-span-2">
-                  <Trash2 className="h-4 w-4 mr-2" />
+                <button className="flex items-center justify-center bg-red-500 hover:bg-red-600 text-white text-sm font-medium px-3 py-2 rounded-md transition-colors">
+                  <Trash2 className="h-3 w-3 mr-1" />
                   Delete Account
                 </button>
               </div>
@@ -337,13 +379,97 @@ export default function ProfilePage() {
           <div className="bg-white rounded-lg shadow-lg p-6">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-xl font-semibold text-gray-900">Business Information</h2>
-              <button className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-md transition-colors">
-                Edit
-              </button>
+              {!editingBusiness ? (
+                <button 
+                  onClick={() => setEditingBusiness(true)}
+                  className="flex items-center bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-md transition-colors"
+                >
+                  <Edit3 className="h-4 w-4 mr-2" />
+                  Edit
+                </button>
+              ) : (
+                <div className="flex space-x-2">
+                  <button
+                    onClick={handleBusinessSubmit}
+                    className="flex items-center bg-green-600 hover:bg-green-700 text-white text-sm font-medium px-4 py-2 rounded-md transition-colors"
+                  >
+                    <Save className="h-4 w-4 mr-2" />
+                    Save
+                  </button>
+                  <button
+                    onClick={() => {
+                      setEditingBusiness(false)
+                      // Reset form to original values
+                      if (profile) {
+                        setBusinessForm({
+                          first_name: profile.first_name || '',
+                          last_name: profile.last_name || '',
+                          location: profile.location || '',
+                          business_name: profile.business_name || '',
+                          business_description: profile.business_description || '',
+                          business_website: profile.business_website || '',
+                          primary_product: profile.primary_product || ''
+                        })
+                      }
+                    }}
+                    className="flex items-center bg-gray-600 hover:bg-gray-700 text-white text-sm font-medium px-4 py-2 rounded-md transition-colors"
+                  >
+                    <X className="h-4 w-4 mr-2" />
+                    Cancel
+                  </button>
+                </div>
+              )}
             </div>
 
             <div className="space-y-6">
               <div className="grid md:grid-cols-2 gap-6">
+                <div>
+                  <label className="flex items-center text-sm font-medium text-gray-700 mb-2">
+                    <User className="h-4 w-4 mr-2 text-gray-400" />
+                    First Name
+                  </label>
+                  <input
+                    type="text"
+                    value={businessForm.first_name}
+                    onChange={(e) => setBusinessForm({ ...businessForm, first_name: e.target.value })}
+                    placeholder="Enter your first name"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    readOnly={!editingBusiness}
+                  />
+                </div>
+
+                <div>
+                  <label className="flex items-center text-sm font-medium text-gray-700 mb-2">
+                    <User className="h-4 w-4 mr-2 text-gray-400" />
+                    Last Name
+                  </label>
+                  <input
+                    type="text"
+                    value={businessForm.last_name}
+                    onChange={(e) => setBusinessForm({ ...businessForm, last_name: e.target.value })}
+                    placeholder="Enter your last name"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    readOnly={!editingBusiness}
+                  />
+                </div>
+              </div>
+
+              <div className="grid md:grid-cols-2 gap-6">
+                <div>
+                  <label className="flex items-center text-sm font-medium text-gray-700 mb-2">
+                    <MapPin className="h-4 w-4 mr-2 text-gray-400" />
+                    Location
+                  </label>
+                  <input
+                    type="text"
+                    value={businessForm.location}
+                    onChange={(e) => setBusinessForm({ ...businessForm, location: e.target.value })}
+                    placeholder="City, State"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    readOnly={!editingBusiness}
+                  />
+                </div>
+
                 <div>
                   <label className="flex items-center text-sm font-medium text-gray-700 mb-2">
                     <Building2 className="h-4 w-4 mr-2 text-gray-400" />
@@ -351,24 +477,11 @@ export default function ProfilePage() {
                   </label>
                   <input
                     type="text"
-                    value={businessInfo.name}
+                    value={businessForm.business_name}
+                    onChange={(e) => setBusinessForm({ ...businessForm, business_name: e.target.value })}
                     placeholder="Enter your business name"
                     className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    readOnly
-                  />
-                </div>
-
-                <div>
-                  <label className="flex items-center text-sm font-medium text-gray-700 mb-2">
-                    <MapPin className="h-4 w-4 mr-2 text-gray-400" />
-                    Business Location
-                  </label>
-                  <input
-                    type="text"
-                    value={businessInfo.location}
-                    placeholder="City, State"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    readOnly
+                    readOnly={!editingBusiness}
                   />
                 </div>
               </div>
@@ -379,11 +492,12 @@ export default function ProfilePage() {
                   Business Description
                 </label>
                 <textarea
-                  value={businessInfo.description}
+                  value={businessForm.business_description}
+                  onChange={(e) => setBusinessForm({ ...businessForm, business_description: e.target.value })}
                   placeholder="Describe your business..."
                   rows={4}
                   className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  readOnly
+                  readOnly={!editingBusiness}
                 />
               </div>
 
@@ -395,10 +509,11 @@ export default function ProfilePage() {
                   </label>
                   <input
                     type="text"
-                    value={businessInfo.product}
+                    value={businessForm.primary_product}
+                    onChange={(e) => setBusinessForm({ ...businessForm, primary_product: e.target.value })}
                     placeholder="Your main product or service"
                     className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    readOnly
+                    readOnly={!editingBusiness}
                   />
                 </div>
 
@@ -409,10 +524,11 @@ export default function ProfilePage() {
                   </label>
                   <input
                     type="url"
-                    value={businessInfo.website}
+                    value={businessForm.business_website}
+                    onChange={(e) => setBusinessForm({ ...businessForm, business_website: e.target.value })}
                     placeholder="https://example.com"
                     className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    readOnly
+                    readOnly={!editingBusiness}
                   />
                 </div>
               </div>
@@ -431,54 +547,69 @@ export default function ProfilePage() {
           <div className="bg-white rounded-lg shadow-lg p-6">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-xl font-semibold text-gray-900">Search History</h2>
-              <p className="text-sm text-gray-500">Saved results from your previous searches</p>
+              <p className="text-sm text-gray-500">Your previous searches and results</p>
             </div>
 
-            <div className="space-y-4">
-              {searchHistory.map((search) => (
-                <div 
-                  key={search.id}
-                  className="border border-gray-200 rounded-lg p-4 hover:border-blue-300 hover:shadow-md transition-all"
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="flex-1">
-                      <h3 className="font-medium text-gray-900 mb-1">{search.query}</h3>
-                      <div className="flex items-center space-x-4 text-sm text-gray-500">
-                        <span className="flex items-center">
-                          <Calendar className="h-4 w-4 mr-1" />
-                          {new Date(search.date).toLocaleDateString('en-US', { 
-                            year: 'numeric', 
-                            month: 'short', 
-                            day: 'numeric' 
-                          })}
-                        </span>
-                        <span className="flex items-center">
-                          <Database className="h-4 w-4 mr-1" />
-                          {search.resultsCount} results
-                        </span>
+            {historyLoading ? (
+              <div className="text-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                <p className="text-gray-600">Loading search history...</p>
+              </div>
+            ) : historyError ? (
+              <div className="text-center py-8">
+                <p className="text-red-600">Error loading search history: {historyError}</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {searchHistory.map((search) => (
+                  <div 
+                    key={search.id}
+                    className="border border-gray-200 rounded-lg p-4 hover:border-blue-300 hover:shadow-md transition-all"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1">
+                        <h3 className="font-medium text-gray-900 mb-1">{search.search_query}</h3>
+                        <div className="flex items-center space-x-4 text-sm text-gray-500">
+                          <span className="flex items-center">
+                            <Calendar className="h-4 w-4 mr-1" />
+                            {new Date(search.search_timestamp).toLocaleDateString('en-US', { 
+                              year: 'numeric', 
+                              month: 'short', 
+                              day: 'numeric' 
+                            })}
+                          </span>
+                          <span className="flex items-center">
+                            <Database className="h-4 w-4 mr-1" />
+                            {search.results_count} results
+                          </span>
+                          {search.search_duration_ms && (
+                            <span className="flex items-center">
+                              <Clock className="h-4 w-4 mr-1" />
+                              {Math.round(search.search_duration_ms / 1000)}s
+                            </span>
+                          )}
+                        </div>
                       </div>
+                      <Link
+                        href={`/search/results/${search.id}`}
+                        className="flex items-center bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-md transition-colors"
+                      >
+                        View Results
+                        <ExternalLink className="h-4 w-4 ml-2" />
+                      </Link>
                     </div>
-                    <Link
-                      href={`/search/results/${search.id}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-md transition-colors"
-                    >
-                      View Results
-                      <ExternalLink className="h-4 w-4 ml-2" />
-                    </Link>
                   </div>
-                </div>
-              ))}
+                ))}
 
-              {searchHistory.length === 0 && (
-                <div className="text-center py-12">
-                  <Search className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-                  <p className="text-gray-500">No search history yet</p>
-                  <p className="text-sm text-gray-400 mt-2">Your saved searches will appear here</p>
-                </div>
-              )}
-            </div>
+                {searchHistory.length === 0 && (
+                  <div className="text-center py-12">
+                    <Search className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+                    <p className="text-gray-500">No search history yet</p>
+                    <p className="text-sm text-gray-400 mt-2">Your searches will appear here as you use GetListicled</p>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         )}
       </div>
