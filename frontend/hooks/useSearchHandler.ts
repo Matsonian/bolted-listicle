@@ -1,45 +1,81 @@
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+// hooks/useSearchHistory.ts
+import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
+import { SearchSession } from '@/lib/supabase'
 
-export function useSearchHandler() {
-  const [isSearching, setIsSearching] = useState(false)
-  const router = useRouter()
-  const { data: session, status } = useSession()
+interface UseSearchHistoryReturn {
+  searchHistory: SearchSession[]
+  loading: boolean
+  error: string | null
+  loadMore: () => Promise<void>
+  hasMore: boolean
+  refetch: () => Promise<void>
+}
 
-  const handleSearch = async (query: string) => {
-    if (!query.trim() || status === 'loading') return
+export function useSearchHistory(initialLimit = 10): UseSearchHistoryReturn {
+  const { data: session } = useSession()
+  const [searchHistory, setSearchHistory] = useState<SearchSession[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [offset, setOffset] = useState(0)
+  const [hasMore, setHasMore] = useState(true)
 
-    setIsSearching(true)
+  useEffect(() => {
+    if (session?.user?.id) {
+      fetchSearchHistory(0, initialLimit, true)
+    } else {
+      setLoading(false)
+    }
+  }, [session?.user?.id, initialLimit])
 
+  const fetchSearchHistory = async (currentOffset: number, limit: number, reset = false) => {
     try {
-      const trimmedQuery = query.trim()
-
-      // Guest user - get estimate
-      if (!session) {
-        const response = await fetch('/api/estimate-search', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ query: trimmedQuery })
-        })
-
-        if (response.ok) {
-          const data = await response.json()
-          router.push(`/guest-search?q=${encodeURIComponent(trimmedQuery)}&count=${data.estimatedCount}`)
-        } else {
-          throw new Error('Search failed')
-        }
-      } else {
-        // Logged in user - go to full search
-        router.push(`/search?q=${encodeURIComponent(trimmedQuery)}`)
+      if (reset) {
+        setLoading(true)
+        setError(null)
       }
-    } catch (error) {
-      console.error('Search error:', error)
-      throw error
+      
+      const response = await fetch(`/api/search/history?limit=${limit}&offset=${currentOffset}`)
+      const data = await response.json()
+      
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to fetch search history')
+      }
+      
+      const newHistory = data.searchHistory || []
+      
+      if (reset) {
+        setSearchHistory(newHistory)
+      } else {
+        setSearchHistory(prev => [...prev, ...newHistory])
+      }
+      
+      setHasMore(newHistory.length === limit)
+      setOffset(currentOffset + newHistory.length)
+    } catch (err) {
+      console.error('Search history fetch error:', err)
+      setError(err instanceof Error ? err.message : 'Failed to fetch search history')
     } finally {
-      setIsSearching(false)
+      setLoading(false)
     }
   }
 
-  return { handleSearch, isSearching, isAuthLoading: status === 'loading' }
+  const loadMore = async () => {
+    if (!hasMore || loading) return
+    await fetchSearchHistory(offset, initialLimit, false)
+  }
+
+  const refetch = async () => {
+    setOffset(0)
+    await fetchSearchHistory(0, initialLimit, true)
+  }
+
+  return {
+    searchHistory,
+    loading,
+    error,
+    loadMore,
+    hasMore,
+    refetch
+  }
 }
