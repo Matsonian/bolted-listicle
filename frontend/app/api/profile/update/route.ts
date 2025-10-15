@@ -6,7 +6,7 @@ import { supabaseAdmin } from '@/lib/supabase'
 
 export async function POST(request: NextRequest) {
   const session = await getServerSession(authOptions)
-  if (!session?.user?.id) {
+  if (!session?.user?.email) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
@@ -25,7 +25,7 @@ export async function POST(request: NextRequest) {
     const { data, error } = await supabaseAdmin
       .from('user_profiles')
       .upsert({
-        render_user_id: session.user.id,
+        render_user_id: session.user.email,
         first_name: firstName || null,
         last_name: lastName || null,
         location: location || null,
