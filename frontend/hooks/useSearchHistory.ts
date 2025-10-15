@@ -21,12 +21,12 @@ export function useSearchHistory(initialLimit = 10): UseSearchHistoryReturn {
   const [hasMore, setHasMore] = useState(true)
 
   useEffect(() => {
-    if (session?.user?.id) {
+    if (session?.user?.email) {
       fetchSearchHistory(0, initialLimit, true)
     } else {
       setLoading(false)
     }
-  }, [session?.user?.id, initialLimit])
+  }, [session?.user?.email, initialLimit])
 
   const fetchSearchHistory = async (currentOffset: number, limit: number, reset = false) => {
     try {
