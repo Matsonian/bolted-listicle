@@ -569,7 +569,7 @@ export default function HomePage() {
 
               <div className="flex flex-col sm:flex-row gap-4">
                 <a
-                  href="https://amzn.to/3KP1ddB"
+                  href="https://amzn.to/46WeHgp"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="bg-orange-500 hover:bg-orange-600 text-white px-8 py-4 rounded-xl font-bold text-lg transition-colors duration-200 flex items-center justify-center shadow-lg"
