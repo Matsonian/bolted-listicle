@@ -100,9 +100,9 @@ export default function EducationPage() {
           </p>
         </div>
 
-        {/* Content Area - Conditional Display */}
+      {/*  {/* Content Area - Conditional Display */}
         <div className="relative">
-          {/* FREE BOOK OFFER SECTION - NEW */}
+           {/* FREE BOOK OFFER SECTION - NEW */}
           <div className="mb-16">
             <div className="bg-gradient-to-r from-orange-500 to-red-500 rounded-2xl p-8 md:p-12 text-white shadow-xl">
               <div className="flex items-center mb-6">
@@ -186,7 +186,7 @@ export default function EducationPage() {
                 </div>
               </div>
             </div>
-          </div>
+          </div>  */}
 
           {/* MasterClasses Section */}
           <div className="mb-16">
