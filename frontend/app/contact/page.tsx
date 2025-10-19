@@ -12,19 +12,21 @@ export default function ContactPage() {
     
     script.onload = () => {
       try {
-        // @ts-ignore
-        const z1s0iqi1it1udq = new WufooForm();
-        z1s0iqi1it1udq.initialize({
-          'userName': 'matsonian2',
-          'formHash': 'z1s0iqi1it1udq',
-          'autoResize': true,
-          'height': '517',
-          'async': true,
-          'host': 'wufoo.com',
-          'header': 'show',
-          'ssl': true
-        });
-        z1s0iqi1it1udq.display();
+        // @ts-ignore - WufooForm is loaded by the external script
+        if (typeof WufooForm !== 'undefined') {
+          const z1s0iqi1it1udq = new WufooForm();
+          z1s0iqi1it1udq.initialize({
+            'userName': 'matsonian2',
+            'formHash': 'z1s0iqi1it1udq',
+            'autoResize': true,
+            'height': '517',
+            'async': true,
+            'host': 'wufoo.com',
+            'header': 'show',
+            'ssl': true
+          });
+          z1s0iqi1it1udq.display();
+        }
       } catch (e) {
         console.error('Wufoo form initialization error:', e);
       }
@@ -47,8 +49,9 @@ export default function ContactPage() {
           <h1 className="text-4xl font-bold text-gray-900 mb-8 text-center">
             We Always Like Hearing From You...
           </h1>
+          
           {/* Wufoo Form Embed */}
-         <script type="text/javascript"> var z1s0iqi1it1udq; (function(d, t) { var s = d.createElement(t), options = { 'userName':'matsonian2', 'formHash':'z1s0iqi1it1udq', 'autoResize':true, 'height':'517', 'async':true, 'host':'wufoo.com', 'header':'show', 'ssl':true }; s.src = ('https:' == d.location.protocol ?'https://':'http://') + 'secure.wufoo.com/scripts/embed/form.js'; s.onload = s.onreadystatechange = function() { var rs = this.readyState; if (rs) if (rs != 'complete') if (rs != 'loaded') return; try { z1s0iqi1it1udq = new WufooForm(); z1s0iqi1it1udq.initialize(options); z1s0iqi1it1udq.display(); } catch (e) { } }; var scr = d.getElementsByTagName(t)[0], par = scr.parentNode; par.insertBefore(s, scr); })(document, 'script'); </script>
+          <div id="wufoo-z1s0iqi1it1udq"></div>
         </div>
       </div>
     </div>
