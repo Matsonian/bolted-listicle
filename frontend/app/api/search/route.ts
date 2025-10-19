@@ -417,32 +417,90 @@ Only verified, actual listicle articles with real titles and working URLs from e
   }
 }
 
-async function saveSearchToSupabase(query: string, results: ListicleResult[], searchDuration: number, userEmail: string) {
+async function saveSearchToSupabase(
+  query: string, 
+  results: ListicleResult[], 
+  searchDuration: number, 
+  userEmail: string
+) {
   try {
     console.log('💾 Saving search to Supabase:', { query, resultCount: results.length, userEmail });
     
-    const response = await fetch('/api/search/save', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        searchQuery: query,
-        results: results,
-        searchDuration: searchDuration,
-        searchParameters: null
+    // Create search session
+    const { data: searchSession, error: sessionError } = await supabaseAdmin
+      .from('user_search_sessions')
+      .insert({
+        render_user_id: userEmail,
+        search_query: query,
+        results_count: results.length,
+        search_duration_ms: searchDuration,
+        search_parameters: null,
+        status: 'completed',
+        ip_address: null, // Can't easily access request object here
+        user_agent: null
       })
-    });
+      .select()
+      .single()
 
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error || 'Failed to save search');
+    if (sessionError) {
+      console.error('❌ Session creation error:', sessionError);
+      throw sessionError;
     }
 
-    const data = await response.json();
-    console.log('✅ Search saved successfully. Session ID:', data.sessionId);
-    return data.sessionId;
+    console.log('✅ Search session created:', searchSession.id);
+
+    // Save search results if any
+    if (results.length > 0) {
+      const searchResultsData = results.map((result, index) => ({
+        search_session_id: searchSession.id,
+        title: result.title || 'Untitled',
+        url: result.url || '',
+        domain: result.domain || null,
+        description: null,
+        position_in_results: index + 1,
+        authority_score: null,
+        listicle_type: null,
+        publication_date: null
+      }))
+
+      const { error: resultsError } = await supabaseAdmin
+        .from('search_results')
+        .insert(searchResultsData)
+
+      if (resultsError) {
+        console.error('❌ Results insertion error:', resultsError);
+        throw resultsError;
+      }
+
+      console.log('✅ Saved', results.length, 'search results');
+    }
+
+    // Update daily activity
+    const today = new Date().toISOString().split('T')[0]
+    
+    const { data: existingActivity } = await supabaseAdmin
+      .from('user_daily_activity')
+      .select('searches_performed, total_results_found')
+      .eq('render_user_id', userEmail)
+      .eq('activity_date', today)
+      .single()
+
+    await supabaseAdmin
+      .from('user_daily_activity')
+      .upsert({
+        render_user_id: userEmail,
+        activity_date: today,
+        searches_performed: (existingActivity?.searches_performed || 0) + 1,
+        total_results_found: (existingActivity?.total_results_found || 0) + results.length,
+        updated_at: new Date().toISOString()
+      }, {
+        onConflict: 'render_user_id,activity_date'
+      })
+
+    console.log('✅ Daily activity updated');
+    return searchSession.id;
   } catch (error) {
     console.error('❌ Failed to save search to Supabase:', error);
-    // Don't fail the search if saving fails
     return null;
   }
 }
