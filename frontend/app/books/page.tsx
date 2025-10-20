@@ -17,22 +17,19 @@ import {
   AlertTriangle,
   Zap
 } from 'lucide-react'
-import { useSearchHandler } from '@/hooks/useSearchHandler'
-import Link from 'next/link'
 
 export default function BookLandingPage() {
   const [searchQuery, setSearchQuery] = useState('')
-  const { handleSearch, isSearching, isAuthLoading } = useSearchHandler()
+  const [isSearching, setIsSearching] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!searchQuery.trim()) return
 
-    try {
-      await handleSearch(searchQuery)
-    } catch (error) {
-      alert('Search failed. Please try again.')
-    }
+    setIsSearching(true)
+    // Replace with your actual search handler
+    // await handleSearch(searchQuery)
+    setIsSearching(false)
   }
 
   const scrollToOffer = () => {
@@ -130,7 +127,8 @@ export default function BookLandingPage() {
               "We weren't even mentioned. Not once. Our #1 Google ranking meant NOTHING."
             </p>
             <div className="text-gray-600">
-              <p className="font-semibold">- Sarah Chen, CEO of TechFlow Solutions</p>
+              {/* <p className="font-semibold">- Sarah Chen, CEO of TechFlow Solutions</p> */}
+              <p className="font-semibold">- Sarah</p>
               <p className="text-sm">Before implementing the GetListicled system</p>
             </div>
           </div>
@@ -239,8 +237,10 @@ export default function BookLandingPage() {
                 "I was skeptical, but this actually works. Found 23 relevant listicles in my niche, got featured in 8 of them in 2 months. Now when people ask ChatGPT about kitchen tools, my product comes up first."
               </p>
               <div className="border-t pt-4">
-                <p className="font-bold text-gray-900">Maria Rodriguez</p>
-                <p className="text-sm text-gray-600">Founder, ChefCraft Tools</p>
+                {/* <p className="font-bold text-gray-900">Maria Rodriguez</p>
+                <p className="text-sm text-gray-600">Founder, ChefCraft Tools</p> */}
+                <p className="font-bold text-gray-900">Maria</p>
+                <p className="text-sm text-gray-600">Kitchen Tools Business Owner</p>
                 <p className="text-xs text-green-600 font-semibold">+$47K revenue attributed to AI mentions</p>
               </div>
             </div>
@@ -258,8 +258,10 @@ export default function BookLandingPage() {
                 "Spent $30K on SEO consultants. This $297 book did more for our visibility than all of that combined. We went from zero AI mentions to being recommended in 6 different AI platforms."
               </p>
               <div className="border-t pt-4">
-                <p className="font-bold text-gray-900">David Kim</p>
-                <p className="text-sm text-gray-600">VP Marketing, TechFlow</p>
+                {/* <p className="font-bold text-gray-900">David Kim</p>
+                <p className="text-sm text-gray-600">VP Marketing, TechFlow</p> */}
+                <p className="font-bold text-gray-900">David</p>
+                <p className="text-sm text-gray-600">VP Marketing</p>
                 <p className="text-xs text-green-600 font-semibold">Saved $25K+ on useless SEO</p>
               </div>
             </div>
@@ -277,8 +279,10 @@ export default function BookLandingPage() {
                 "The templates alone are worth 10x the price. I've never had a 34% response rate on cold outreach before. This system just works."
               </p>
               <div className="border-t pt-4">
-                <p className="font-bold text-gray-900">Jennifer Walsh</p>
-                <p className="text-sm text-gray-600">CEO, FitGear Pro</p>
+                {/* <p className="font-bold text-gray-900">Jennifer Walsh</p>
+                <p className="text-sm text-gray-600">CEO, FitGear Pro</p> */}
+                <p className="font-bold text-gray-900">Jennifer</p>
+                <p className="text-sm text-gray-600">Fitness Equipment CEO</p>
                 <p className="text-xs text-green-600 font-semibold">Featured in 12 listicles in 90 days</p>
               </div>
             </div>
@@ -467,7 +471,7 @@ export default function BookLandingPage() {
               </div>
 
               <div className="space-y-4">
-                <a
+                
                   href="https://amzn.to/3KP1ddB"
                   target="_blank"
                   rel="noopener noreferrer"
@@ -511,7 +515,7 @@ export default function BookLandingPage() {
             Try our platform for free. Search for listicles in your niche and see the power yourself.
           </p>
           
-          <form onSubmit={handleSubmit} className="max-w-lg mx-auto mb-8">
+          <div className="max-w-lg mx-auto mb-8">
             <div className="flex flex-col sm:flex-row gap-4">
               <input
                 type="text"
@@ -521,38 +525,6 @@ export default function BookLandingPage() {
                 className="flex-grow px-4 py-3 text-gray-900 rounded-lg"
               />
               <button
-                type="submit"
-                disabled={isSearching || isAuthLoading}
-                className="bg-blue-600 hover:bg-blue-700 px-6 py-3 rounded-lg font-medium transition-colors duration-200 disabled:opacity-50"
-              >
-                {isSearching ? 'Searching...' : 'Try Free Search'}
-              </button>
-            </div>
-          </form>
-
-          <p className="text-gray-400 text-sm">
-            No email required • See results instantly • Then get the book for the complete system
-          </p>
-        </div>
-      </section>
-
-      {/* Final Guarantee Section */}
-      <section className="py-16 px-4 bg-green-600 text-white">
-        <div className="container mx-auto max-w-4xl text-center">
-          <h2 className="text-3xl font-bold mb-6">
-            My Personal Guarantee to You
-          </h2>
-          <div className="bg-black/30 backdrop-blur-sm rounded-xl p-8 mb-8">
-            <p className="text-xl mb-4">
-              "If GetListicled doesn't help you get featured in at least 3 AI-cited listicles within 90 days, 
-              Amazon offers easy returns. Plus, if you have Kindle Unlimited, the book is completely FREE to try!"
-            </p>
-            <p className="text-lg text-green-200">
-              - Risk-free on Amazon with their return policy
-            </p>
-          </div>
-        </div>
-      </section>
-    </div>
-  )
-}
+                onClick={handleSubmit}
+                disabled={isSearching}
+                className="bg-blue-600 hover:bg-blue-700 px-6 py-3 rounded-lg font-medium transition-colors duration-200 disabled:opacity-50
