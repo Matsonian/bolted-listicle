@@ -2,6 +2,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import OpenAI from 'openai';
 import * as cheerio from 'cheerio';
+import { getServerSession } from 'next-auth/next';
+import { authOptions } from '@/lib/auth';
+import { supabaseAdmin } from '@/lib/supabase';
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -35,6 +38,59 @@ interface AnalysisResponse {
   outreach_priority: 'P1' | 'P2' | 'P3';
   suggested_outreach_angle: string;
   model_email: string;
+}
+
+async function saveAnalysisToDatabase(
+  userId: string, 
+  url: string, 
+  analysis: AnalysisResponse
+) {
+  try {
+    console.log('💾 Saving analysis to database:', { userId, url: url.substring(0, 50) });
+    
+    const domain = new URL(url).hostname.replace('www.', '');
+    
+    const { data, error } = await supabaseAdmin
+      .from('listicle_analyses')
+      .upsert({
+        user_id: userId,
+        url: url,
+        title: analysis.title,
+        domain: domain,
+        author_name: analysis.author_name,
+        author_email: analysis.author_email,
+        contact_url: analysis.contact_url,
+        publication_date: analysis.publication_date,
+        description: analysis.description,
+        llm_quality_rating: analysis.llm_quality_rating,
+        quality_reasons: analysis.quality_reasons,
+        importance_score: analysis.importance_score,
+        importance_auth: analysis.importance_breakdown.auth,
+        importance_rel: analysis.importance_breakdown.rel,
+        importance_fresh: analysis.importance_breakdown.fresh,
+        importance_eng: analysis.importance_breakdown.eng,
+        outreach_priority: analysis.outreach_priority,
+        suggested_outreach_angle: analysis.suggested_outreach_angle,
+        model_email: analysis.model_email,
+        updated_at: new Date().toISOString()
+      }, {
+        onConflict: 'user_id,url'
+      })
+      .select()
+      .single();
+    
+    if (error) {
+      console.error('❌ Database save error:', error);
+      throw error;
+    }
+    
+    console.log('✅ Analysis saved to database. ID:', data.id);
+    return data.id;
+  } catch (error) {
+    console.error('❌ Failed to save analysis:', error);
+    // Don't fail the analysis if saving fails
+    return null;
+  }
 }
 
 export async function POST(req: NextRequest) {
@@ -354,6 +410,14 @@ Article Content: ${truncatedContent}
       pubDate,
       description
     });
+
+    const session = await getServerSession(authOptions);
+    if (session?.user?.id) {
+      console.log('👤 User logged in, saving analysis to database');
+      await saveAnalysisToDatabase(session.user.id, url, validatedResponse);
+    } else {
+      console.log('⚠️ User not logged in, skipping database save');
+    }
 
     return NextResponse.json(validatedResponse);
 
