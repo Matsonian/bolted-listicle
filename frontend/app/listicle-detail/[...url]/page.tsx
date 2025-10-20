@@ -69,34 +69,48 @@ export default function ListicleDetailPage() {
     return url; // Return as-is for valid URLs
   };
 
-  useEffect(() => {
-    if (!decodedUrl) return;
+useEffect(() => {
+  if (!decodedUrl) return;
 
-    console.log('=== DETAIL PAGE: Component mounted ===', decodedUrl);
-    
-    // Check if we have analysis results
-    const analysisKey = `analysis_${decodedUrl}`;
-    const storedAnalysis = sessionStorage.getItem(analysisKey);
-    
-    if (storedAnalysis) {
-      try {
-        const parsed = JSON.parse(storedAnalysis);
-        console.log('=== DETAIL PAGE: Found stored analysis ===', parsed);
-        
-        if (parsed.data) {
-          setAnalysis(parsed.data);
-          setLoading(false);
-          sessionStorage.removeItem(analysisKey);
-          return;
-        }
-      } catch (error) {
-        console.error('=== DETAIL PAGE: Error parsing stored analysis ===', error);
-      }
+  console.log('=== DETAIL PAGE: Component mounted ===', decodedUrl);
+  
+  // First, check if we have a saved analysis in the database
+  checkForSavedAnalysis();
+}, [decodedUrl]);
+
+const checkForSavedAnalysis = async () => {
+  try {
+    console.log('🔍 Checking for saved analysis...');
+    setLoading(true);
+    setError(null);
+
+    const response = await fetch('/api/get-analysis', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url: decodedUrl })
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to check for saved analysis');
     }
 
-    console.log('=== DETAIL PAGE: No stored analysis, starting fallback analysis ===');
+    const result = await response.json();
+
+    if (result.found && result.analysis) {
+      console.log('✅ Found saved analysis from:', result.analysis.analyzed_at);
+      setAnalysis(result.analysis);
+      setLoading(false);
+    } else {
+      console.log('❌ No saved analysis found, performing new analysis...');
+      // No saved analysis, perform new analysis
+      analyzeListicle();
+    }
+  } catch (error) {
+    console.error('❌ Error checking for saved analysis:', error);
+    // If check fails, fall back to new analysis
     analyzeListicle();
-  }, [decodedUrl]);
+  }
+};
 
   const analyzeListicle = async () => {
     try {
