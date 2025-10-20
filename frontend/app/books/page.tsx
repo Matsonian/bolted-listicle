@@ -527,4 +527,35 @@ export default function BookLandingPage() {
               <button
                 onClick={handleSubmit}
                 disabled={isSearching}
-                className="bg-blue-600 hover:bg-blue-700 px-6 py-3 rounded-lg font-medium transition-colors duration-200 disabled:opacity-50
+                className="bg-blue-600 hover:bg-blue-700 px-6 py-3 rounded-lg font-medium transition-colors duration-200 disabled:opacity-50>
+                {isSearching ? 'Searching...' : 'Try Free Search'}
+              </button>
+            </div>
+          </div>
+
+          <p className="text-gray-400 text-sm">
+            No email required • See results instantly • Then get the book for the complete system
+          </p>
+        </div>
+      </section>
+
+      {/* Final Guarantee Section */}
+      <section className="py-16 px-4 bg-green-600 text-white">
+        <div className="container mx-auto max-w-4xl text-center">
+          <h2 className="text-3xl font-bold mb-6">
+            My Personal Guarantee to You
+          </h2>
+          <div className="bg-black/30 backdrop-blur-sm rounded-xl p-8 mb-8">
+            <p className="text-xl mb-4">
+              "If GetListicled doesn't help you get featured in at least 3 AI-cited listicles within 90 days, 
+              Amazon offers easy returns. Plus, if you have Kindle Unlimited, the book is completely FREE to try!"
+            </p>
+            <p className="text-lg text-green-200">
+              - Risk-free on Amazon with their return policy
+            </p>
+          </div>
+        </div>
+      </section>
+    </div>
+  )
+}
