@@ -43,7 +43,6 @@ export default function BookLandingPage() {
         <div className="absolute inset-0 bg-black/20"></div>
         <div className="container mx-auto max-w-6xl relative z-10">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
-            {/* Left Column - Copy */}
             <div>
               <div className="bg-red-500 text-white px-4 py-2 rounded-lg inline-block mb-6 font-bold text-sm uppercase tracking-wide">
                 🚨 Warning: Your Business is Invisible to AI
@@ -85,7 +84,6 @@ export default function BookLandingPage() {
               </button>
             </div>
 
-            {/* Right Column - Book Image */}
             <div className="text-center lg:text-right">
               <div className="relative inline-block">
                 <img 
@@ -127,7 +125,6 @@ export default function BookLandingPage() {
               "We weren't even mentioned. Not once. Our #1 Google ranking meant NOTHING."
             </p>
             <div className="text-gray-600">
-              {/* <p className="font-semibold">- Sarah Chen, CEO of TechFlow Solutions</p> */}
               <p className="font-semibold">- Sarah</p>
               <p className="text-sm">Before implementing the GetListicled system</p>
             </div>
@@ -237,8 +234,6 @@ export default function BookLandingPage() {
                 "I was skeptical, but this actually works. Found 23 relevant listicles in my niche, got featured in 8 of them in 2 months. Now when people ask ChatGPT about kitchen tools, my product comes up first."
               </p>
               <div className="border-t pt-4">
-                {/* <p className="font-bold text-gray-900">Maria Rodriguez</p>
-                <p className="text-sm text-gray-600">Founder, ChefCraft Tools</p> */}
                 <p className="font-bold text-gray-900">Maria</p>
                 <p className="text-sm text-gray-600">Kitchen Tools Business Owner</p>
                 <p className="text-xs text-green-600 font-semibold">+$47K revenue attributed to AI mentions</p>
@@ -258,8 +253,6 @@ export default function BookLandingPage() {
                 "Spent $30K on SEO consultants. This $297 book did more for our visibility than all of that combined. We went from zero AI mentions to being recommended in 6 different AI platforms."
               </p>
               <div className="border-t pt-4">
-                {/* <p className="font-bold text-gray-900">David Kim</p>
-                <p className="text-sm text-gray-600">VP Marketing, TechFlow</p> */}
                 <p className="font-bold text-gray-900">David</p>
                 <p className="text-sm text-gray-600">VP Marketing</p>
                 <p className="text-xs text-green-600 font-semibold">Saved $25K+ on useless SEO</p>
@@ -279,8 +272,6 @@ export default function BookLandingPage() {
                 "The templates alone are worth 10x the price. I've never had a 34% response rate on cold outreach before. This system just works."
               </p>
               <div className="border-t pt-4">
-                {/* <p className="font-bold text-gray-900">Jennifer Walsh</p>
-                <p className="text-sm text-gray-600">CEO, FitGear Pro</p> */}
                 <p className="font-bold text-gray-900">Jennifer</p>
                 <p className="text-sm text-gray-600">Fitness Equipment CEO</p>
                 <p className="text-xs text-green-600 font-semibold">Featured in 12 listicles in 90 days</p>
@@ -430,7 +421,6 @@ export default function BookLandingPage() {
       <section id="book-offer" className="py-20 px-4 bg-gradient-to-br from-green-600 to-blue-600 text-white">
         <div className="container mx-auto max-w-6xl">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
-            {/* Left - Book Image */}
             <div className="text-center">
               <img 
                 src="/getlisticledbookcoverontable.jpg" 
@@ -442,7 +432,6 @@ export default function BookLandingPage() {
               </div>
             </div>
 
-            {/* Right - Offer */}
             <div>
               <h2 className="text-4xl md:text-5xl font-black mb-6">
                 Get "GetListicled" + Free Platform Trial
@@ -527,7 +516,8 @@ export default function BookLandingPage() {
               <button
                 onClick={handleSubmit}
                 disabled={isSearching}
-                className="bg-blue-600 hover:bg-blue-700 px-6 py-3 rounded-lg font-medium transition-colors duration-200 disabled:opacity-50>
+                className="bg-blue-600 hover:bg-blue-700 px-6 py-3 rounded-lg font-medium transition-colors duration-200 disabled:opacity-50"
+              >
                 {isSearching ? 'Searching...' : 'Try Free Search'}
               </button>
             </div>
