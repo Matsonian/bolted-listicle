@@ -72,13 +72,10 @@ export default async function SearchResultsPage({
   // Fetch which listicles have been analyzed by this user
   const resultUrls = searchResults.map(r => r.url)
   
-  // Get the user's ID from auth
-  const { data: authUser } = await supabaseAdmin.auth.admin.getUserByEmail(session.user.email)
-  
   const { data: analyzedListicles } = await supabaseAdmin
     .from('listicle_analyses')
     .select('url, analyzed_at')
-    .eq('user_id', authUser?.user?.id || session.user.id)
+    .eq('render_user_id', session.user.email) // Using email, same as other tables
     .in('url', resultUrls)
 
   // Create a Set of analyzed URLs for quick lookup
