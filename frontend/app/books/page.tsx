@@ -2,17 +2,12 @@
 
 import React, { useState } from 'react'
 import { 
-  Search, 
   CheckCircle, 
   Star, 
   TrendingUp, 
   Target, 
   DollarSign, 
   Clock, 
-  Users, 
-  BookOpen, 
-  ExternalLink,
-  ArrowRight,
   Quote,
   AlertTriangle,
   Zap
@@ -22,18 +17,22 @@ export default function BookLandingPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [isSearching, setIsSearching] = useState(false)
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.MouseEvent | React.FormEvent) => {
     e.preventDefault()
     if (!searchQuery.trim()) return
 
     setIsSearching(true)
-    // Replace with your actual search handler
-    // await handleSearch(searchQuery)
-    setIsSearching(false)
+    setTimeout(() => {
+      setIsSearching(false)
+      alert('Search functionality - connect to your backend')
+    }, 1000)
   }
 
   const scrollToOffer = () => {
-    document.getElementById('book-offer')?.scrollIntoView({ behavior: 'smooth' })
+    const element = document.getElementById('book-offer')
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth' })
+    }
   }
 
   return (
@@ -49,21 +48,21 @@ export default function BookLandingPage() {
               </div>
               
               <h1 className="text-4xl md:text-6xl font-black mb-6 leading-tight">
-                While You're Playing SEO Games, Your Competitors Are Getting 
+                While You&apos;re Playing SEO Games, Your Competitors Are Getting 
                 <span className="text-yellow-300"> Listicled</span>
               </h1>
               
               <p className="text-xl md:text-2xl mb-8 font-semibold text-yellow-100">
                 The book that shows you exactly how companies are dominating ChatGPT, Claude, and every AI search... 
-                while you're still chasing Google rankings that don't matter anymore.
+                while you&apos;re still chasing Google rankings that don&apos;t matter anymore.
               </p>
 
               <div className="bg-black/30 backdrop-blur-sm border border-white/20 rounded-xl p-6 mb-8">
-                <h3 className="text-2xl font-bold mb-4 text-yellow-300">Here's What Nobody Tells You:</h3>
+                <h3 className="text-2xl font-bold mb-4 text-yellow-300">Here&apos;s What Nobody Tells You:</h3>
                 <ul className="space-y-3">
                   <li className="flex items-start">
                     <AlertTriangle className="w-6 h-6 text-red-300 mr-3 mt-1 flex-shrink-0" />
-                    <span>90% of AI recommendations come from just 3 types of content (and it's NOT what you think)</span>
+                    <span>90% of AI recommendations come from just 3 types of content (and it&apos;s NOT what you think)</span>
                   </li>
                   <li className="flex items-start">
                     <AlertTriangle className="w-6 h-6 text-red-300 mr-3 mt-1 flex-shrink-0" />
@@ -71,7 +70,7 @@ export default function BookLandingPage() {
                   </li>
                   <li className="flex items-start">
                     <AlertTriangle className="w-6 h-6 text-red-300 mr-3 mt-1 flex-shrink-0" />
-                    <span>Your "SEO strategy" is about to become as useful as a Yellow Pages ad</span>
+                    <span>Your &quot;SEO strategy&quot; is about to become as useful as a Yellow Pages ad</span>
                   </li>
                 </ul>
               </div>
@@ -108,21 +107,21 @@ export default function BookLandingPage() {
         <div className="container mx-auto max-w-4xl">
           <div className="text-center mb-16">
             <h2 className="text-4xl md:text-5xl font-black text-red-600 mb-6">
-              Stop. Read This Before You Waste Another Dollar on "SEO"
+              Stop. Read This Before You Waste Another Dollar on &quot;SEO&quot;
             </h2>
             <p className="text-xl text-gray-700 font-semibold">
-              Every day you wait, your competitors are getting mentioned by AI while you're invisible...
+              Every day you wait, your competitors are getting mentioned by AI while you&apos;re invisible...
             </p>
           </div>
 
           <div className="bg-white border-l-8 border-red-500 p-8 rounded-r-xl shadow-lg mb-12">
             <Quote className="w-12 h-12 text-red-500 mb-4" />
             <p className="text-2xl font-bold text-gray-900 mb-4">
-              "We spent $47,000 on SEO last year. Ranked #1 for our main keyword. 
-              Then I asked ChatGPT for recommendations in our space..."
+              &quot;We spent $47,000 on SEO last year. Ranked #1 for our main keyword. 
+              Then I asked ChatGPT for recommendations in our space...&quot;
             </p>
             <p className="text-xl text-red-600 font-semibold mb-4">
-              "We weren't even mentioned. Not once. Our #1 Google ranking meant NOTHING."
+              &quot;We weren&apos;t even mentioned. Not once. Our #1 Google ranking meant NOTHING.&quot;
             </p>
             <div className="text-gray-600">
               <p className="font-semibold">- Sarah</p>
@@ -152,7 +151,7 @@ export default function BookLandingPage() {
         <div className="container mx-auto max-w-6xl">
           <div className="text-center mb-16">
             <h2 className="text-4xl md:text-5xl font-black mb-6">
-              But What If I Told You There's a Backdoor?
+              But What If I Told You There&apos;s a Backdoor?
             </h2>
             <p className="text-2xl font-semibold text-green-100">
               A way to get mentioned by EVERY major AI system... without spending $50K on SEO...
@@ -161,13 +160,13 @@ export default function BookLandingPage() {
 
           <div className="grid md:grid-cols-2 gap-12 items-center">
             <div>
-              <h3 className="text-3xl font-bold mb-6 text-yellow-300">The "Listicle Loophole"</h3>
+              <h3 className="text-3xl font-bold mb-6 text-yellow-300">The &quot;Listicle Loophole&quot;</h3>
               <div className="space-y-6">
                 <div className="flex items-start">
                   <Zap className="w-8 h-8 text-yellow-300 mr-4 mt-1 flex-shrink-0" />
                   <div>
                     <h4 className="text-xl font-bold mb-2">Step 1: Find the Right Lists</h4>
-                    <p className="text-green-100">Not just any listicles. The specific "Top 10" and "Best of" articles that AI systems actually cite and reference.</p>
+                    <p className="text-green-100">Not just any listicles. The specific &quot;Top 10&quot; and &quot;Best of&quot; articles that AI systems actually cite and reference.</p>
                   </div>
                 </div>
                 <div className="flex items-start">
@@ -216,7 +215,7 @@ export default function BookLandingPage() {
         <div className="container mx-auto max-w-6xl">
           <div className="text-center mb-16">
             <h2 className="text-4xl md:text-5xl font-black text-gray-900 mb-6">
-              "This Book Paid for Itself in the First Week"
+              &quot;This Book Paid for Itself in the First Week&quot;
             </h2>
           </div>
 
@@ -224,14 +223,14 @@ export default function BookLandingPage() {
             <div className="bg-white p-8 rounded-xl shadow-lg">
               <div className="flex items-center mb-4">
                 <div className="flex space-x-1">
-                  {[...Array(5)].map((_, i) => (
+                  {[1, 2, 3, 4, 5].map((i) => (
                     <Star key={i} className="w-5 h-5 fill-yellow-400 text-yellow-400" />
                   ))}
                 </div>
                 <span className="ml-2 text-sm text-gray-600">Verified Purchase</span>
               </div>
               <p className="text-gray-700 mb-6 font-semibold">
-                "I was skeptical, but this actually works. Found 23 relevant listicles in my niche, got featured in 8 of them in 2 months. Now when people ask ChatGPT about kitchen tools, my product comes up first."
+                &quot;I was skeptical, but this actually works. Found 23 relevant listicles in my niche, got featured in 8 of them in 2 months. Now when people ask ChatGPT about kitchen tools, my product comes up first.&quot;
               </p>
               <div className="border-t pt-4">
                 <p className="font-bold text-gray-900">Maria</p>
@@ -243,14 +242,14 @@ export default function BookLandingPage() {
             <div className="bg-white p-8 rounded-xl shadow-lg">
               <div className="flex items-center mb-4">
                 <div className="flex space-x-1">
-                  {[...Array(5)].map((_, i) => (
+                  {[1, 2, 3, 4, 5].map((i) => (
                     <Star key={i} className="w-5 h-5 fill-yellow-400 text-yellow-400" />
                   ))}
                 </div>
                 <span className="ml-2 text-sm text-gray-600">Verified Purchase</span>
               </div>
               <p className="text-gray-700 mb-6 font-semibold">
-                "Spent $30K on SEO consultants. This $297 book did more for our visibility than all of that combined. We went from zero AI mentions to being recommended in 6 different AI platforms."
+                &quot;Spent $30K on SEO consultants. This $297 book did more for our visibility than all of that combined. We went from zero AI mentions to being recommended in 6 different AI platforms.&quot;
               </p>
               <div className="border-t pt-4">
                 <p className="font-bold text-gray-900">David</p>
@@ -262,14 +261,14 @@ export default function BookLandingPage() {
             <div className="bg-white p-8 rounded-xl shadow-lg">
               <div className="flex items-center mb-4">
                 <div className="flex space-x-1">
-                  {[...Array(5)].map((_, i) => (
+                  {[1, 2, 3, 4, 5].map((i) => (
                     <Star key={i} className="w-5 h-5 fill-yellow-400 text-yellow-400" />
                   ))}
                 </div>
                 <span className="ml-2 text-sm text-gray-600">Verified Purchase</span>
               </div>
               <p className="text-gray-700 mb-6 font-semibold">
-                "The templates alone are worth 10x the price. I've never had a 34% response rate on cold outreach before. This system just works."
+                &quot;The templates alone are worth 10x the price. I&apos;ve never had a 34% response rate on cold outreach before. This system just works.&quot;
               </p>
               <div className="border-t pt-4">
                 <p className="font-bold text-gray-900">Jennifer</p>
@@ -286,7 +285,7 @@ export default function BookLandingPage() {
         <div className="container mx-auto max-w-6xl">
           <div className="text-center mb-16">
             <h2 className="text-4xl md:text-5xl font-black mb-6">
-              What's Inside This Powerful System
+              What&apos;s Inside This Powerful System
             </h2>
             <p className="text-xl text-blue-200">
               Everything you need to dominate AI search results (no fluff, just systems that work)
@@ -303,11 +302,11 @@ export default function BookLandingPage() {
                 </div>
                 <div className="flex items-start">
                   <CheckCircle className="w-6 h-6 text-green-400 mr-3 mt-1 flex-shrink-0" />
-                  <span>How to identify "AI-friendly" listicles in any niche (page 41)</span>
+                  <span>How to identify &quot;AI-friendly&quot; listicles in any niche (page 41)</span>
                 </div>
                 <div className="flex items-start">
                   <CheckCircle className="w-6 h-6 text-green-400 mr-3 mt-1 flex-shrink-0" />
-                  <span>The "Authority Score" system that predicts AI citations (page 67)</span>
+                  <span>The &quot;Authority Score&quot; system that predicts AI citations (page 67)</span>
                 </div>
                 <div className="flex items-start">
                   <CheckCircle className="w-6 h-6 text-green-400 mr-3 mt-1 flex-shrink-0" />
@@ -329,7 +328,7 @@ export default function BookLandingPage() {
                 </div>
                 <div className="flex items-start">
                   <CheckCircle className="w-6 h-6 text-green-400 mr-3 mt-1 flex-shrink-0" />
-                  <span>The "Value First" framework that gets editors to respond (page 156)</span>
+                  <span>The &quot;Value First&quot; framework that gets editors to respond (page 156)</span>
                 </div>
                 <div className="flex items-start">
                   <CheckCircle className="w-6 h-6 text-green-400 mr-3 mt-1 flex-shrink-0" />
@@ -347,7 +346,7 @@ export default function BookLandingPage() {
                 </div>
                 <div className="flex items-start">
                   <CheckCircle className="w-6 h-6 text-green-400 mr-3 mt-1 flex-shrink-0" />
-                  <span>The "Citation Multiplier" effect across AI platforms (page 223)</span>
+                  <span>The &quot;Citation Multiplier&quot; effect across AI platforms (page 223)</span>
                 </div>
                 <div className="flex items-start">
                   <CheckCircle className="w-6 h-6 text-green-400 mr-3 mt-1 flex-shrink-0" />
@@ -360,15 +359,15 @@ export default function BookLandingPage() {
               <h3 className="text-2xl font-bold mb-6 text-yellow-300">Bonus: The GetListicled Platform</h3>
               <div className="space-y-4">
                 <div className="flex items-start">
-                  <CheckCircle className="w-6 h-6 text-green-400 mr-3 mt-1 flex-shrink-0" />
+                  <CheckCircle className="w-6 h-6 text-green-400 mr-3 flex-shrink-0" />
                   <span>Free access to our listicle discovery platform ($97/month value)</span>
                 </div>
                 <div className="flex items-start">
-                  <CheckCircle className="w-6 h-6 text-green-400 mr-3 mt-1 flex-shrink-0" />
+                  <CheckCircle className="w-6 h-6 text-green-400 mr-3 flex-shrink-0" />
                   <span>Database of 10,000+ AI-cited listicles</span>
                 </div>
                 <div className="flex items-start">
-                  <CheckCircle className="w-6 h-6 text-green-400 mr-3 mt-1 flex-shrink-0" />
+                  <CheckCircle className="w-6 h-6 text-green-400 mr-3 flex-shrink-0" />
                   <span>Contact information for 5,000+ writers and editors</span>
                 </div>
               </div>
@@ -389,7 +388,7 @@ export default function BookLandingPage() {
           </h2>
           
           <div className="bg-black/30 backdrop-blur-sm rounded-xl p-8 mb-8">
-            <h3 className="text-2xl font-bold mb-4 text-yellow-300">Here's What's Happening RIGHT NOW:</h3>
+            <h3 className="text-2xl font-bold mb-4 text-yellow-300">Here&apos;s What&apos;s Happening RIGHT NOW:</h3>
             <div className="grid md:grid-cols-3 gap-6 text-left">
               <div>
                 <Clock className="w-8 h-8 text-yellow-300 mb-2" />
@@ -399,12 +398,12 @@ export default function BookLandingPage() {
               <div>
                 <TrendingUp className="w-8 h-8 text-yellow-300 mb-2" />
                 <p className="font-semibold">This Week:</p>
-                <p className="text-red-200">They're getting featured in the lists AI systems read</p>
+                <p className="text-red-200">They&apos;re getting featured in the lists AI systems read</p>
               </div>
               <div>
                 <DollarSign className="w-8 h-8 text-yellow-300 mb-2" />
                 <p className="font-semibold">Next Month:</p>
-                <p className="text-red-200">They're stealing your AI-driven customers</p>
+                <p className="text-red-200">They&apos;re stealing your AI-driven customers</p>
               </div>
             </div>
           </div>
@@ -412,7 +411,7 @@ export default function BookLandingPage() {
           <p className="text-2xl mb-8 font-semibold">
             The companies that move first will dominate AI search results for YEARS.
             <br />
-            <span className="text-yellow-300">Don't let your competitors get there first.</span>
+            <span className="text-yellow-300">Don&apos;t let your competitors get there first.</span>
           </p>
         </div>
       </section>
@@ -434,7 +433,7 @@ export default function BookLandingPage() {
 
             <div>
               <h2 className="text-4xl md:text-5xl font-black mb-6">
-                Get "GetListicled" + Free Platform Trial
+                Get &quot;GetListicled&quot; + Free Platform Trial
               </h2>
               
               <div className="bg-black/30 backdrop-blur-sm rounded-xl p-6 mb-8">
@@ -471,10 +470,7 @@ export default function BookLandingPage() {
                 </a>
                 
                 <button
-                  onClick={() => {
-                    setSearchQuery('kitchen gadgets')
-                    handleSubmit(new Event('submit') as any)
-                  }}
+                  onClick={handleSubmit}
                   className="block w-full bg-transparent border-2 border-white text-white hover:bg-white hover:text-green-600 px-8 py-4 rounded-xl font-bold text-lg text-center transition-all duration-200"
                 >
                   Try The Platform First (Free Search)
@@ -537,8 +533,8 @@ export default function BookLandingPage() {
           </h2>
           <div className="bg-black/30 backdrop-blur-sm rounded-xl p-8 mb-8">
             <p className="text-xl mb-4">
-              "If GetListicled doesn't help you get featured in at least 3 AI-cited listicles within 90 days, 
-              Amazon offers easy returns. Plus, if you have Kindle Unlimited, the book is completely FREE to try!"
+              &quot;If GetListicled doesn&apos;t help you get featured in at least 3 AI-cited listicles within 90 days, 
+              Amazon offers easy returns. Plus, if you have Kindle Unlimited, the book is completely FREE to try!&quot;
             </p>
             <p className="text-lg text-green-200">
               - Risk-free on Amazon with their return policy
