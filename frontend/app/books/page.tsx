@@ -460,7 +460,7 @@ export default function BookLandingPage() {
 
               <div className="space-y-4">
                 
-                <a  href="https://amzn.to/3KP1ddB"
+                  href="https://amzn.to/49emhnY"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="block w-full bg-yellow-400 hover:bg-yellow-300 text-black px-8 py-6 rounded-xl font-black text-2xl text-center transition-all duration-200 shadow-2xl transform hover:scale-105"
@@ -469,12 +469,12 @@ export default function BookLandingPage() {
                   <div className="text-sm font-normal mt-1">FREE with Kindle Unlimited</div>
                 </a>
                 
-                <button
-                  onClick={handleSubmit}
+                
+                  href="https://www.getlisticled.com/search"
                   className="block w-full bg-transparent border-2 border-white text-white hover:bg-white hover:text-green-600 px-8 py-4 rounded-xl font-bold text-lg text-center transition-all duration-200"
                 >
                   Try The Platform First (Free Search)
-                </button>
+                </a>
               </div>
 
               <div className="mt-6 text-center">
@@ -509,13 +509,12 @@ export default function BookLandingPage() {
                 placeholder="Try: 'kitchen gadgets' or 'jeep accessories'"
                 className="flex-grow px-4 py-3 text-gray-900 rounded-lg"
               />
-              <button
-                onClick={handleSubmit}
-                disabled={isSearching}
-                className="bg-blue-600 hover:bg-blue-700 px-6 py-3 rounded-lg font-medium transition-colors duration-200 disabled:opacity-50"
+              
+                href="https://www.getlisticled.com/search"
+                className="bg-blue-600 hover:bg-blue-700 px-6 py-3 rounded-lg font-medium transition-colors duration-200 text-center"
               >
-                {isSearching ? 'Searching...' : 'Try Free Search'}
-              </button>
+                Try Free Search
+              </a>
             </div>
           </div>
 
