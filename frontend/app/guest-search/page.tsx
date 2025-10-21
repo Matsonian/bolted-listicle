@@ -18,11 +18,10 @@ export default function GuestSearchResultsPage() {
   const [isLoading, setIsLoading] = useState(false)
 
   const handleStartMembership = async () => {
-    // If not logged in, redirect to auth
-    if (!session) {
-      router.push('/auth?callbackUrl=' + encodeURIComponent(window.location.href))
-      return
-    }
+  if (!session) {
+    router.push('/api/auth/signin') // Use NextAuth default
+    return
+  }
 
     setIsLoading(true)
 
