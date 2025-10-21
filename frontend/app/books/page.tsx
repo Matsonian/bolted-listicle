@@ -470,7 +470,7 @@ export default function BookLandingPage() {
                 </a>
                 
                 
-                  href="https://www.getlisticled.com/search"
+               <a   href="https://www.getlisticled.com/search"
                   className="block w-full bg-transparent border-2 border-white text-white hover:bg-white hover:text-green-600 px-8 py-4 rounded-xl font-bold text-lg text-center transition-all duration-200"
                 >
                   Try The Platform First (Free Search)
@@ -510,7 +510,7 @@ export default function BookLandingPage() {
                 className="flex-grow px-4 py-3 text-gray-900 rounded-lg"
               />
               
-                href="https://www.getlisticled.com/search"
+             <a   href="https://www.getlisticled.com/search"
                 className="bg-blue-600 hover:bg-blue-700 px-6 py-3 rounded-lg font-medium transition-colors duration-200 text-center"
               >
                 Try Free Search
