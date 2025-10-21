@@ -460,7 +460,7 @@ export default function BookLandingPage() {
 
               <div className="space-y-4">
                 
-                  href="https://amzn.to/49emhnY"
+               <a   href="https://amzn.to/49emhnY"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="block w-full bg-yellow-400 hover:bg-yellow-300 text-black px-8 py-6 rounded-xl font-black text-2xl text-center transition-all duration-200 shadow-2xl transform hover:scale-105"
