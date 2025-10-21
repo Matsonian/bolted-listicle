@@ -412,9 +412,9 @@ Article Content: ${truncatedContent}
     });
 
     const session = await getServerSession(authOptions);
-    if (session?.user?.id) {
+    if (session?.user?.email) {
       console.log('👤 User logged in, saving analysis to database');
-      await saveAnalysisToDatabase(session.user.id, url, validatedResponse);
+      await saveAnalysisToDatabase(session.user.email, url, validatedResponse);
     } else {
       console.log('⚠️ User not logged in, skipping database save');
     }
