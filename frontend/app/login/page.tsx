@@ -421,7 +421,7 @@ const handleSignIn = async (e: React.FormEvent) => {
                     <span>Creating Account...</span>
                   </>
                 ) : (
-                  <span>Create Account</span>
+                  <span>Step 1: Create Account</span>
                 )}
               </button>
             </form>
