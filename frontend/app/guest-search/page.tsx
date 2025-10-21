@@ -17,42 +17,9 @@ export default function GuestSearchResultsPage() {
   const resultsCount = searchParams?.get('count') || '0'
   const [isLoading, setIsLoading] = useState(false)
 
-  const handleStartMembership = async () => {
-  if (!session) {
-    router.push('/api/auth/signin') // Use NextAuth default
-    return
-  }
-
-    setIsLoading(true)
-
-    try {
-      // Create checkout session
-      const response = await fetch('/api/create-checkout-session', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          priceId: process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_MONTHLY
-        }),
-      })
-
-      if (!response.ok) {
-        throw new Error('Failed to create checkout session')
-      }
-
-      const { sessionId } = await response.json()
-
-      // Redirect to Stripe Checkout
-      const stripe = await stripePromise
-      if (stripe) {
-        await stripe.redirectToCheckout({ sessionId })
-      }
-    } catch (error) {
-      console.error('Checkout error:', error)
-      alert('Failed to start checkout. Please try again.')
-    } finally {
-      setIsLoading(false)
-    }
-  }
+const handleStartMembership = () => {
+  router.push('/login')
+}
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -208,23 +175,13 @@ export default function GuestSearchResultsPage() {
                 </div>
               </div>
 
-              <button 
+             <button 
                 onClick={handleStartMembership}
-                disabled={isLoading}
-                className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-4 px-8 rounded-lg text-lg transition-colors w-full md:w-auto inline-flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {isLoading ? (
-                  <>
-                    <Loader2 className="w-5 h-5 animate-spin mr-2" />
-                    Processing...
-                  </>
-                ) : (
-                  <>
-                    Start Your Membership
-                    <ArrowRight className="w-5 h-5 ml-2" />
-                  </>
-                )}
-              </button>
+                className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-4 px-8 rounded-lg text-lg transition-colors w-full md:w-auto inline-flex items-center justify-center"
+                >
+                Start Your Membership
+                <ArrowRight className="w-5 h-5 ml-2" />
+            </button>
               
               <p className="text-sm text-gray-500 mt-4">
                 Cancel anytime • No setup fees • Immediate access
