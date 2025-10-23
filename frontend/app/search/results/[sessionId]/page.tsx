@@ -185,7 +185,7 @@ export default async function SearchResultsPage({
                               : 'bg-blue-600 text-white hover:bg-blue-700'
                           }`}
                         >
-                          {isAnalyzed ? 'View Analysis' : 'GetListicled'}
+                          {isAnalyzed ? 'View Saved Analysis' : 'GetListicled'}
                         </Link>
                       </div>
                     </div>
