@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import Link from 'next/link'
 import { useProfile } from '@/hooks/useProfile'
@@ -33,7 +33,7 @@ import {
 export default function ProfilePage() {
   const { data: session, status } = useSession()
   const { profile, dailyActivity, loading: profileLoading, error: profileError, updateProfile } = useProfile()
-  const { searchHistory, loading: historyLoading, error: historyError } = useSearchHistory(10)
+  const { searchHistory, loading: historyLoading, error: historyError, refetch } = useSearchHistory(10)
   
   const [activeTab, setActiveTab] = useState<'overview' | 'business' | 'history'>('overview')
   const [editingBusiness, setEditingBusiness] = useState(false)
@@ -47,8 +47,33 @@ export default function ProfilePage() {
     primary_product: ''
   })
 
+  // Refetch search history when page becomes visible
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!document.hidden && session?.user?.email) {
+        // Page became visible again, refetch data
+        refetch()
+      }
+    }
+
+    // Also refetch when window gains focus
+    const handleFocus = () => {
+      if (session?.user?.email) {
+        refetch()
+      }
+    }
+
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    window.addEventListener('focus', handleFocus)
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+      window.removeEventListener('focus', handleFocus)
+    }
+  }, [session?.user?.email, refetch])
+
   // Initialize business form when profile data loads
-  React.useEffect(() => {
+  useEffect(() => {
     if (profile) {
       setBusinessForm({
         first_name: profile.first_name || '',
@@ -400,7 +425,6 @@ export default function ProfilePage() {
                   <button
                     onClick={() => {
                       setEditingBusiness(false)
-                      // Reset form to original values
                       if (profile) {
                         setBusinessForm({
                           first_name: profile.first_name || '',
