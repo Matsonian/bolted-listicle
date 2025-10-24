@@ -119,9 +119,12 @@ export default function SearchPage() {
   }
 
     const handleGetListicled = (article: ListicleResult) => {
-    // No changes - just pass the URL through normally
-    const encodedUrl = encodeURIComponent(article.url);
-    window.open(`/analyze/${encodedUrl}`, '_blank');
+  // Store the exact original URL that works in View Article button
+  sessionStorage.setItem('originalUrl', article.url);
+  
+  // Use a simple identifier instead of encoding the URL
+  const urlId = btoa(article.url).replace(/[^a-zA-Z0-9]/g, '');
+  window.open(`/analyze/${urlId}`, '_blank');
   }
 
   return (
