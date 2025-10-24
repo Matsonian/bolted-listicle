@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 import { loadStripe } from '@stripe/stripe-js'
-import { CheckCircle, Search, Users, BookOpen, MessageCircle, ArrowRight, Loader2 } from 'lucide-react'
+import { CheckCircle, Search, Users, BookOpen, MessageCircle, ArrowRight, Loader2, Sparkles, Target, Mail, Zap } from 'lucide-react'
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!)
 
@@ -22,181 +22,191 @@ const handleStartMembership = () => {
 }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Search Info Header */}
-      <div className="bg-white shadow-sm">
-        <div className="container mx-auto px-4 py-4">
-          <div className="text-center text-sm text-gray-600">
-            Search results for: "<span className="font-medium text-blue-600">{query}</span>"
-          </div>
-        </div>
-      </div>
-
-      <main className="py-16">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-4xl">
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-green-50">
+      
+      <main className="py-8 md:py-16">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-5xl">
           
-          {/* Success Message */}
+          {/* HERO - WOW Moment */}
           <div className="text-center mb-12">
-            <div className="inline-flex items-center justify-center w-16 h-16 bg-green-100 rounded-full mb-6">
-              <CheckCircle className="w-8 h-8 text-green-600" />
+            <div className="inline-flex items-center justify-center px-6 py-2 bg-yellow-400 rounded-full mb-6 animate-pulse">
+              <Sparkles className="w-5 h-5 text-yellow-900 mr-2" />
+              <span className="text-yellow-900 font-bold text-sm uppercase tracking-wide">Analysis Complete!</span>
             </div>
-            <h1 className="text-4xl font-bold text-gray-900 mb-4">
-              Analysis Complete
-            </h1>
-            <div className="bg-white rounded-lg shadow-sm border p-6 max-w-lg mx-auto">
-              <div className="flex items-center justify-center space-x-2 mb-2">
-                <Search className="w-5 h-5 text-blue-600" />
-                <span className="text-2xl font-bold text-gray-900">{resultsCount}</span>
-                <span className="text-gray-600">listicles found</span>
-              </div>
-              <p className="text-gray-600 text-sm">
-                High-quality opportunities identified for "{query}"
-              </p>
-            </div>
-          </div>
-
-          {/* Results Preview */}
-          <div className="bg-white rounded-lg shadow-sm border p-8 mb-12">
-            <h2 className="text-2xl font-bold text-gray-900 mb-6 text-center">
-              Your results are ready to view
-            </h2>
             
-            <div className="grid md:grid-cols-3 gap-6 mb-8">
-              <div className="text-center">
-                <div className="bg-blue-50 rounded-lg w-16 h-16 flex items-center justify-center mx-auto mb-4">
-                  <Users className="w-8 h-8 text-blue-600" />
-                </div>
-                <h3 className="font-semibold text-gray-900 mb-2">Editor Contacts</h3>
-                <p className="text-gray-600 text-sm">Direct outreach information and submission guidelines</p>
-              </div>
-              
-              <div className="text-center">
-                <div className="bg-green-50 rounded-lg w-16 h-16 flex items-center justify-center mx-auto mb-4">
-                  <Search className="w-8 h-8 text-green-600" />
-                </div>
-                <h3 className="font-semibold text-gray-900 mb-2">Quality Analysis</h3>
-                <p className="text-gray-600 text-sm">Authority scores, traffic data, and update frequency</p>
-              </div>
-              
-              <div className="text-center">
-                <div className="bg-purple-50 rounded-lg w-16 h-16 flex items-center justify-center mx-auto mb-4">
-                  <BookOpen className="w-8 h-8 text-purple-600" />
-                </div>
-                <h3 className="font-semibold text-gray-900 mb-2">AI Outreach</h3>
-                <p className="text-gray-600 text-sm">Personalized email templates and pitch strategies</p>
-              </div>
-            </div>
+            <h1 className="text-5xl md:text-7xl font-black text-gray-900 mb-6 leading-tight">
+              WOW!
+            </h1>
+            
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-800 mb-8 leading-tight">
+              Your Analysis Estimate is Complete!
+            </h2>
 
-            {/* Locked Results Preview */}
-            <div className="border-2 border-dashed border-gray-200 rounded-lg p-8 bg-gray-50 text-center">
-              <div className="mb-4">
-                <div className="inline-flex items-center justify-center w-12 h-12 bg-gray-200 rounded-full mb-3">
-                  <Search className="w-6 h-6 text-gray-500" />
+            {/* MASSIVE NUMBER DISPLAY */}
+            <div className="bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 rounded-3xl shadow-2xl p-8 md:p-12 mb-8 transform hover:scale-105 transition-transform">
+              <div className="text-white mb-4">
+                <p className="text-xl md:text-2xl font-semibold mb-3">We Found</p>
+                <div className="text-8xl md:text-9xl font-black mb-3 drop-shadow-lg">
+                  {resultsCount}
                 </div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">Results Ready</h3>
-                <p className="text-gray-600">
-                  Your {resultsCount} listicles have been analyzed and are ready to view
+                <p className="text-3xl md:text-4xl font-bold">
+                  Listicles in Your Niche!
+                </p>
+              </div>
+              <div className="bg-white/20 backdrop-blur-sm rounded-2xl p-6 mt-6">
+                <p className="text-white text-xl md:text-2xl font-semibold">
+                  Searching for: <span className="font-black text-yellow-300">"{query}"</span>
                 </p>
               </div>
             </div>
-          </div>
 
-          {/* Membership Benefits */}
-          <div className="bg-white rounded-lg shadow-sm border p-8 mb-12">
-            <div className="text-center mb-8">
-              <h2 className="text-3xl font-bold text-gray-900 mb-4">
-                Unlock Your Results with Membership
-              </h2>
-              <p className="text-xl text-gray-600">
-                Everything you need to start getting featured in listicles
+            {/* VALUE PROP */}
+            <div className="bg-green-500 rounded-2xl p-6 md:p-8 mb-8 shadow-xl">
+              <p className="text-white text-2xl md:text-3xl font-bold leading-relaxed">
+                This is an <span className="text-yellow-300 underline decoration-4">EXCELLENT</span> Opportunity to Make Your Business Better Known to AI!
               </p>
             </div>
 
-            <div className="grid md:grid-cols-2 gap-8 mb-8">
-              <div className="space-y-4">
-                <div className="flex items-start space-x-3">
-                  <CheckCircle className="w-5 h-5 text-green-600 mt-1 flex-shrink-0" />
-                  <div>
-                    <div className="font-semibold text-gray-900">Up to 20 Results Daily</div>
-                    <div className="text-sm text-gray-600">Comprehensive listicle discovery across all niches</div>
-                  </div>
-                </div>
-                
-                <div className="flex items-start space-x-3">
-                  <CheckCircle className="w-5 h-5 text-green-600 mt-1 flex-shrink-0" />
-                  <div>
-                    <div className="font-semibold text-gray-900">Editor Contact Information</div>
-                    <div className="text-sm text-gray-600">Direct emails and submission guidelines</div>
-                  </div>
-                </div>
-                
-                <div className="flex items-start space-x-3">
-                  <CheckCircle className="w-5 h-5 text-green-600 mt-1 flex-shrink-0" />
-                  <div>
-                    <div className="font-semibold text-gray-900">AI-Powered Analysis</div>
-                    <div className="text-sm text-gray-600">Quality scores, priority rankings, and outreach strategies</div>
-                  </div>
-                </div>
-              </div>
+            {/* CTA QUESTION */}
+            <div className="bg-white rounded-2xl shadow-xl p-8 md:p-10 mb-8 border-4 border-blue-600">
+              <h3 className="text-3xl md:text-4xl font-black text-gray-900 mb-6">
+                Do You Want to See Your Results?
+              </h3>
               
-              <div className="space-y-4">
-                <div className="flex items-start space-x-3">
-                  <CheckCircle className="w-5 h-5 text-green-600 mt-1 flex-shrink-0" />
-                  <div>
-                    <div className="font-semibold text-gray-900">MasterClass Education</div>
-                    <div className="text-sm text-gray-600">Complete training programs on listicle outreach</div>
-                  </div>
-                </div>
-                
-                <div className="flex items-start space-x-3">
-                  <CheckCircle className="w-5 h-5 text-green-600 mt-1 flex-shrink-0" />
-                  <div>
-                    <div className="font-semibold text-gray-900">Priority Support</div>
-                    <div className="text-sm text-gray-600">Direct access to our outreach specialists</div>
-                  </div>
-                </div>
-                
-                <div className="flex items-start space-x-3">
-                  <CheckCircle className="w-5 h-5 text-green-600 mt-1 flex-shrink-0" />
-                  <div>
-                    <div className="font-semibold text-gray-900">Personalized Templates</div>
-                    <div className="text-sm text-gray-600">Custom email templates for your business</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="text-center border-t pt-8">
-              <div className="mb-6">
-                <div className="text-4xl font-bold text-gray-900 mb-2">$29</div>
-                <div className="text-gray-600 mb-2">per month</div>
-                <div className="text-sm text-green-600 font-medium">
-                  Less than $1 per day
-                </div>
+              <div className="bg-yellow-100 border-4 border-yellow-400 rounded-xl p-6 mb-8">
+                <p className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
+                  Sign Up Now... get <span className="text-green-600">7 Days FREE!</span>
+                </p>
+                <p className="text-gray-700 font-medium">
+                  Zero risk. Cancel anytime. Full access immediately.
+                </p>
               </div>
 
-             <button 
+              <button 
                 onClick={handleStartMembership}
-                className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-4 px-8 rounded-lg text-lg transition-colors w-full md:w-auto inline-flex items-center justify-center"
-                >
-                Start Your Membership
-                <ArrowRight className="w-5 h-5 ml-2" />
-            </button>
-              
-              <p className="text-sm text-gray-500 mt-4">
-                Cancel anytime • No setup fees • Immediate access
-              </p>
+                className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-black py-6 px-12 rounded-2xl text-2xl md:text-3xl transition-all transform hover:scale-105 shadow-2xl w-full md:w-auto inline-flex items-center justify-center border-4 border-green-700"
+              >
+                <Zap className="w-8 h-8 mr-3" />
+                CLICK HERE to Start Winning with AI!
+                <ArrowRight className="w-8 h-8 ml-3" />
+              </button>
             </div>
           </div>
 
-          {/* Simple Value Statement */}
-          <div className="text-center bg-blue-50 rounded-lg p-8">
-            <h3 className="text-xl font-semibold text-gray-900 mb-4">
-              Start Getting Featured Today
+          {/* HOW IT WORKS */}
+          <div className="bg-white rounded-3xl shadow-2xl p-8 md:p-12 mb-12 border-4 border-purple-600">
+            <div className="text-center mb-10">
+              <h2 className="text-4xl md:text-5xl font-black text-gray-900 mb-4">
+                How It Works
+              </h2>
+              <p className="text-xl text-gray-600 font-semibold">
+                It's So Simple, Anyone Can Do It!
+              </p>
+            </div>
+
+            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+              {/* Step 1 */}
+              <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl p-6 text-white transform hover:scale-105 transition-transform">
+                <div className="bg-white/20 backdrop-blur-sm rounded-full w-16 h-16 flex items-center justify-center mb-4 mx-auto">
+                  <span className="text-4xl font-black">1</span>
+                </div>
+                <div className="bg-white rounded-xl w-16 h-16 flex items-center justify-center mx-auto mb-4">
+                  <Search className="w-8 h-8 text-blue-600" />
+                </div>
+                <h3 className="text-xl font-black mb-3 text-center">You Find the Listicle</h3>
+                <p className="text-blue-100 text-center font-medium">
+                  We show you exactly which listicles are perfect for your business
+                </p>
+              </div>
+
+              {/* Step 2 */}
+              <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl p-6 text-white transform hover:scale-105 transition-transform">
+                <div className="bg-white/20 backdrop-blur-sm rounded-full w-16 h-16 flex items-center justify-center mb-4 mx-auto">
+                  <span className="text-4xl font-black">2</span>
+                </div>
+                <div className="bg-white rounded-xl w-16 h-16 flex items-center justify-center mx-auto mb-4">
+                  <Users className="w-8 h-8 text-purple-600" />
+                </div>
+                <h3 className="text-xl font-black mb-3 text-center">We Find the Contact</h3>
+                <p className="text-purple-100 text-center font-medium">
+                  We dig up the editor's info so you don't have to
+                </p>
+              </div>
+
+              {/* Step 3 */}
+              <div className="bg-gradient-to-br from-pink-500 to-pink-600 rounded-2xl p-6 text-white transform hover:scale-105 transition-transform">
+                <div className="bg-white/20 backdrop-blur-sm rounded-full w-16 h-16 flex items-center justify-center mb-4 mx-auto">
+                  <span className="text-4xl font-black">3</span>
+                </div>
+                <div className="bg-white rounded-xl w-16 h-16 flex items-center justify-center mx-auto mb-4">
+                  <Mail className="w-8 h-8 text-pink-600" />
+                </div>
+                <h3 className="text-xl font-black mb-3 text-center">We Provide What You Need</h3>
+                <p className="text-pink-100 text-center font-medium">
+                  Get templates, strategies, and everything to reach out
+                </p>
+              </div>
+
+              {/* Step 4 */}
+              <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-2xl p-6 text-white transform hover:scale-105 transition-transform">
+                <div className="bg-white/20 backdrop-blur-sm rounded-full w-16 h-16 flex items-center justify-center mb-4 mx-auto">
+                  <span className="text-4xl font-black">4</span>
+                </div>
+                <div className="bg-white rounded-xl w-16 h-16 flex items-center justify-center mx-auto mb-4">
+                  <Target className="w-8 h-8 text-green-600" />
+                </div>
+                <h3 className="text-xl font-black mb-3 text-center">You Get Listicled!</h3>
+                <p className="text-green-100 text-center font-medium">
+                  Watch your business get featured and grow your authority
+                </p>
+              </div>
+            </div>
+
+            {/* Arrow pointing down */}
+            <div className="text-center">
+              <div className="inline-block animate-bounce">
+                <ArrowRight className="w-12 h-12 text-purple-600 transform rotate-90" />
+              </div>
+            </div>
+          </div>
+
+          {/* FINAL CTA */}
+          <div className="bg-gradient-to-r from-orange-500 via-red-500 to-pink-500 rounded-3xl shadow-2xl p-8 md:p-12 text-center border-4 border-red-700">
+            <h3 className="text-4xl md:text-5xl font-black text-white mb-6 leading-tight">
+              Start Getting Featured Today!
             </h3>
-            <p className="text-gray-700 max-w-2xl mx-auto">
-              Join hundreds of businesses using GetListicled to discover high-quality 
-              listicle opportunities and build authority in their industry.
+            <p className="text-xl md:text-2xl text-white font-bold mb-8">
+              Join Hundreds of Businesses Already Winning with GetListicled
+            </p>
+            
+            <div className="bg-white rounded-2xl p-8 mb-8">
+              <div className="flex flex-col md:flex-row items-center justify-center gap-6 mb-6">
+                <div>
+                  <div className="text-5xl md:text-6xl font-black text-gray-900 mb-2">FREE</div>
+                  <div className="text-xl font-bold text-gray-600">7-Day Trial</div>
+                </div>
+                <div className="hidden md:block text-4xl font-black text-gray-300">+</div>
+                <div>
+                  <div className="text-5xl md:text-6xl font-black text-green-600 mb-2">$29</div>
+                  <div className="text-xl font-bold text-gray-600">per month after</div>
+                </div>
+              </div>
+              <p className="text-gray-600 font-semibold text-lg">
+                Less than a coffee a day to grow your business! 
+              </p>
+            </div>
+
+            <button 
+              onClick={handleStartMembership}
+              className="bg-gradient-to-r from-yellow-400 to-yellow-500 hover:from-yellow-500 hover:to-yellow-600 text-gray-900 font-black py-6 px-12 rounded-2xl text-2xl md:text-3xl transition-all transform hover:scale-105 shadow-2xl w-full md:w-auto inline-flex items-center justify-center border-4 border-yellow-600"
+            >
+              <Sparkles className="w-8 h-8 mr-3" />
+              YES! Show Me My {resultsCount} Listicles NOW!
+              <ArrowRight className="w-8 h-8 ml-3" />
+            </button>
+            
+            <p className="text-white text-sm font-bold mt-6">
+              ✓ Cancel Anytime ✓ No Setup Fees ✓ Instant Access ✓ 7 Days FREE
             </p>
           </div>
 
