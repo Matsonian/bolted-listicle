@@ -53,9 +53,23 @@ export default function ListicleDetailPage() {
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState<string | null>(null);
 
-  // Simple URL decoding - no sessionStorage
-  const encodedUrl = Array.isArray(params.url) ? params.url.join('/') : params.url;
-  const decodedUrl = encodedUrl ? decodeURIComponent(encodedUrl) : '';
+  // Get the original URL from sessionStorage (stored by search page)
+const [originalUrl, setOriginalUrl] = useState('');
+
+useEffect(() => {
+  // Try to get the original URL from sessionStorage first
+  const storedUrl = sessionStorage.getItem('originalUrl');
+  if (storedUrl) {
+    setOriginalUrl(storedUrl);
+    console.log('=== DETAIL PAGE: Using stored original URL ===', storedUrl);
+  } else {
+    // Fallback: decode from route params
+    const encodedUrl = Array.isArray(params.url) ? params.url.join('/') : params.url;
+    const decodedUrl = encodedUrl ? decodeURIComponent(encodedUrl) : '';
+    setOriginalUrl(decodedUrl);
+    console.log('=== DETAIL PAGE: Using decoded URL as fallback ===', decodedUrl);
+  }
+}, [params.url]);
 
   // Function to fix URLs for display/navigation only
   const fixUrlForDisplay = (url: string) => {
@@ -70,13 +84,12 @@ export default function ListicleDetailPage() {
   };
 
 useEffect(() => {
-  if (!decodedUrl) return;
-
-  console.log('=== DETAIL PAGE: Component mounted ===', decodedUrl);
+  if (!originalUrl) return;  // ← Use originalUrl instead
+  console.log('=== DETAIL PAGE: Component mounted ===', originalUrl);  // ← Use originalUrl instead
   
   // First, check if we have a saved analysis in the database
   checkForSavedAnalysis();
-}, [decodedUrl]);
+}, [originalUrl]);  // ← Use originalUrl instead
 
 const checkForSavedAnalysis = async () => {
   try {
