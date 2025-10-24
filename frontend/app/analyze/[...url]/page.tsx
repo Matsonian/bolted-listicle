@@ -31,7 +31,7 @@ useEffect(() => {
   const originalUrl = sessionStorage.getItem('originalUrl');
   if (originalUrl) {
     // Use the exact original URL - no encoding/decoding
-    startAnalysis(originalUrl);
+    startAnalysis();  // ← Call without parameters
   }
 }, []);
 
