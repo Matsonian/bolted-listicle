@@ -100,7 +100,7 @@ const checkForSavedAnalysis = async () => {
     const response = await fetch('/api/get-analysis', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ url: decodedUrl })
+      body: JSON.stringify({ url: originalUrl })
     });
 
     if (!response.ok) {
