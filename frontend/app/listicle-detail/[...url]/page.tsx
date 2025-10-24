@@ -127,7 +127,7 @@ const checkForSavedAnalysis = async () => {
 
   const analyzeListicle = async () => {
     try {
-      console.log('=== DETAIL PAGE: Starting fallback analysis for ===', decodedUrl);
+      console.log('=== DETAIL PAGE: Starting fallback analysis for ===', originalUrl);
       setLoading(true);
       setError(null);
       
@@ -146,7 +146,7 @@ const checkForSavedAnalysis = async () => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          url: decodedUrl, // Simple decoded URL
+          url: originalUrl, 
           userProfile
         }),
       });
@@ -262,12 +262,12 @@ const checkForSavedAnalysis = async () => {
               </h1>
               {/* Display URL with fix for display */}
               <a 
-                href={fixUrlForDisplay(decodedUrl)} 
+                href={fixUrlForDisplay(originalUrl)} 
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="text-blue-600 hover:text-blue-700 text-sm break-all inline-flex items-center gap-1"
               >
-                {decodedUrl}
+                {originalUrl}
                 <ExternalLink className="w-3 h-3" />
               </a>
             </div>
@@ -521,7 +521,7 @@ const checkForSavedAnalysis = async () => {
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
               <div className="space-y-3">
                 <button
-                  onClick={() => window.open(fixUrlForDisplay(decodedUrl), '_blank')}
+                  onClick={() => window.open(fixUrlForDisplay(originalUrl), '_blank')}
                   className="w-full flex items-center justify-center gap-2 bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors"
                 >
                   <Globe className="w-4 h-4" />
