@@ -35,93 +35,110 @@ useEffect(() => {
   }
 }, []);
 
-  const startAnalysis = async () => {
-    try {
-      console.log('=== ANALYZE ROUTE: Starting analysis ===', decodedUrl);
-
-      // Phase 1: Web Scraping
-      setProgress({ 
-        phase: 'scraping', 
-        progress: 25, 
-        message: 'Scraping website for content and contact information...' 
-      });
-      
-      await new Promise(resolve => setTimeout(resolve, 1000)); // Give user visual feedback
-      
-      // Phase 2: AI Analysis
-      setProgress({ 
-        phase: 'analyzing', 
-        progress: 50, 
-        message: 'Analyzing content with AI for outreach potential...' 
-      });
-
-      // Get user profile
-      const userProfile = {
-        first_name: session?.user?.name?.split(' ')[0] || 'User',
-        last_name: session?.user?.name?.split(' ')[1] || '',
-        business_name: 'Your Business',
-        business_description: 'Your business description',
-        website: 'https://yourbusiness.com',
-        years_in_business: 5
-      };
-
-      console.log('=== ANALYZE ROUTE: Making API call ===', { url: decodedUrl, userProfile });
-
-      // Make API call with decoded URL
-      const response = await fetch('/api/analyze-listicle', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          url: decodedUrl, // Simple decoded URL
-          userProfile
-        }),
-      });
-
-      console.log('=== ANALYZE ROUTE: API response ===', response.status, response.statusText);
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        console.error('=== ANALYZE ROUTE: API error ===', errorData);
-        throw new Error(errorData.error || `API error: ${response.status} ${response.statusText}`);
-      }
-
-      // Phase 3: Processing Results
-      setProgress({ 
-        phase: 'processing', 
-        progress: 75, 
-        message: 'Processing analysis and generating outreach strategy...' 
-      });
-
-      const analysisData = await response.json();
-      console.log('=== ANALYZE ROUTE: Analysis data received ===', analysisData);
-      
-      // Phase 4: Complete
-      setProgress({ 
-        phase: 'complete', 
-        progress: 100, 
-        message: 'Analysis complete! Redirecting to results...' 
-      });
-
-      await new Promise(resolve => setTimeout(resolve, 500)); // Brief pause to show completion
-
-      // Store results for detail page
-      sessionStorage.setItem(`analysis_${decodedUrl}`, JSON.stringify({
-        data: analysisData,
-        timestamp: Date.now()
-      }));
-
-      console.log('=== ANALYZE ROUTE: Redirecting to detail page ===');
-
-      // Redirect to detail page
-      router.push(`/listicle-detail/${encodedUrl}?analyzed=true`);
-
-    } catch (err) {
-      console.error('=== ANALYZE ROUTE: Error ===', err);
-      setError(err instanceof Error ? err.message : 'Analysis failed');
+const startAnalysis = async () => {
+  try {
+    // Get the original URL from sessionStorage first, fallback to route params
+    let urlToAnalyze = sessionStorage.getItem('originalUrl');
+    
+    if (!urlToAnalyze) {
+      // Fallback: decode from route params
+      const encodedUrl = Array.isArray(params.url) ? params.url.join('/') : params.url;
+      urlToAnalyze = encodedUrl ? decodeURIComponent(encodedUrl) : '';
     }
-  };
+    
+    if (!urlToAnalyze) {
+      setError('No URL provided for analysis');
+      return;
+    }
+    
+    console.log('=== ANALYZE ROUTE: Starting analysis ===', urlToAnalyze);
+    
+    // Phase 1: Web Scraping
+    setProgress({ 
+      phase: 'scraping', 
+      progress: 25, 
+      message: 'Scraping website for content and contact information...' 
+    });
+    
+    await new Promise(resolve => setTimeout(resolve, 1000)); // Give user visual feedback
+    
+    // Phase 2: AI Analysis
+    setProgress({ 
+      phase: 'analyzing', 
+      progress: 50, 
+      message: 'Analyzing content with AI for outreach potential...' 
+    });
+    
+    // Get user profile
+    const userProfile = {
+      first_name: session?.user?.name?.split(' ')[0] || 'User',
+      last_name: session?.user?.name?.split(' ')[1] || '',
+      business_name: 'Your Business',
+      business_description: 'Your business description',
+      website: 'https://yourbusiness.com',
+      years_in_business: 5
+    };
+    
+    console.log('=== ANALYZE ROUTE: Making API call ===', { url: urlToAnalyze, userProfile });
+    
+    // Make API call with original URL
+    const response = await fetch('/api/analyze-listicle', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        url: urlToAnalyze, // Use the original clean URL
+        userProfile
+      }),
+    });
+    
+    console.log('=== ANALYZE ROUTE: API response ===', response.status, response.statusText);
+    
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      console.error('=== ANALYZE ROUTE: API error ===', errorData);
+      throw new Error(errorData.error || `API error: ${response.status} ${response.statusText}`);
+    }
+    
+    // Phase 3: Processing Results
+    setProgress({ 
+      phase: 'processing', 
+      progress: 75, 
+      message: 'Processing analysis and generating outreach strategy...' 
+    });
+    
+    const analysisData = await response.json();
+    console.log('=== ANALYZE ROUTE: Analysis data received ===', analysisData);
+    
+    // Phase 4: Complete
+    setProgress({ 
+      phase: 'complete', 
+      progress: 100, 
+      message: 'Analysis complete! Redirecting to results...' 
+    });
+    
+    await new Promise(resolve => setTimeout(resolve, 500)); // Brief pause to show completion
+    
+    // Store results for detail page using the original URL as key
+    sessionStorage.setItem(`analysis_${urlToAnalyze}`, JSON.stringify({
+      data: analysisData,
+      timestamp: Date.now()
+    }));
+    
+    console.log('=== ANALYZE ROUTE: Redirecting to detail page ===');
+    
+    // Create a simple ID for the route (to avoid URL encoding issues)
+    const routeId = btoa(urlToAnalyze).replace(/[^a-zA-Z0-9]/g, '');
+    
+    // Redirect to detail page using the route ID
+    router.push(`/listicle-detail/${routeId}?analyzed=true`);
+    
+  } catch (err) {
+    console.error('=== ANALYZE ROUTE: Error ===', err);
+    setError(err instanceof Error ? err.message : 'Analysis failed');
+  }
+};
 
   const handleRetry = () => {
     setError(null);
