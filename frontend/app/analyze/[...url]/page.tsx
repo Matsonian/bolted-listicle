@@ -27,11 +27,13 @@ export default function AnalyzePage() {
   const encodedUrl = Array.isArray(params.url) ? params.url.join('/') : params.url;
   const decodedUrl = encodedUrl ? decodeURIComponent(encodedUrl) : '';
 
-  useEffect(() => {
-    if (decodedUrl) {
-      startAnalysis();
-    }
-  }, [decodedUrl]);
+useEffect(() => {
+  const originalUrl = sessionStorage.getItem('originalUrl');
+  if (originalUrl) {
+    // Use the exact original URL - no encoding/decoding
+    startAnalysis(originalUrl);
+  }
+}, []);
 
   const startAnalysis = async () => {
     try {
