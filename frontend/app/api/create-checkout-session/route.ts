@@ -24,17 +24,21 @@ export async function POST(request: NextRequest) {
     const selectedPriceId = priceId || process.env.STRIPE_PRICE_ID_MONTHLY;
     const origin = request.headers.get('origin') || process.env.NEXTAUTH_URL;
     const userId = (session.user as any).id;
+    const token = (session as any).accessToken;
 
-    // Check if user already has a Stripe customer ID
+    console.log('=== CHECKOUT SESSION START ===', { userId, hasToken: !!token });
+
+    // Check if user already has a Stripe customer ID (FIXED QUERY)
     const userResponse = await fetch(`${process.env.GRAPHQL_URL}/graphql`, {
       method: 'POST',
       headers: { 
         'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`, // Added auth header
       },
       body: JSON.stringify({
         query: `
-          query GetUser($userId: ID!) {
-            user(id: $userId) {
+          query GetUser {
+            user {
               id
               email
               stripeCustomerId
@@ -42,16 +46,19 @@ export async function POST(request: NextRequest) {
             }
           }
         `,
-        variables: { userId },
+        // Removed variables - backend uses ctx.user
       }),
     });
 
     const userData = await userResponse.json();
+    console.log('=== USER DATA RESPONSE ===', userData);
+
     let customerId = userData?.data?.user?.stripeCustomerId;
     const existingStatus = userData?.data?.user?.subscriptionStatus;
 
     // Create Stripe customer if doesn't exist
     if (!customerId) {
+      console.log('=== CREATING STRIPE CUSTOMER ===');
       const customer = await stripe.customers.create({
         email: session.user.email || undefined,
         metadata: {
@@ -59,11 +66,15 @@ export async function POST(request: NextRequest) {
         },
       });
       customerId = customer.id;
+      console.log('=== STRIPE CUSTOMER CREATED ===', customerId);
 
       // Save customer ID to database via GraphQL
-      await fetch(`${process.env.GRAPHQL_URL}/graphql`, {
+      const updateResponse = await fetch(`${process.env.GRAPHQL_URL}/graphql`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`, // Added auth header
+        },
         body: JSON.stringify({
           query: `
             mutation UpdateUser($stripeCustomerId: String) {
@@ -78,10 +89,14 @@ export async function POST(request: NextRequest) {
           },
         }),
       });
+
+      const updateResult = await updateResponse.json();
+      console.log('=== UPDATE USER RESULT ===', updateResult);
     }
 
     // Determine if user should get trial (only for new subscriptions)
     const shouldGetTrial = !existingStatus || existingStatus === 'incomplete' || existingStatus === 'canceled';
+    console.log('=== TRIAL STATUS ===', { existingStatus, shouldGetTrial });
 
     // Create Stripe checkout session
     const checkoutSession = await stripe.checkout.sessions.create({
@@ -108,9 +123,10 @@ export async function POST(request: NextRequest) {
       },
     });
 
+    console.log('=== CHECKOUT SESSION CREATED ===', checkoutSession.id);
     return NextResponse.json({ sessionId: checkoutSession.id });
   } catch (error) {
-    console.error('Stripe checkout error:', error);
+    console.error('=== STRIPE CHECKOUT ERROR ===', error);
     return NextResponse.json(
       { error: 'Failed to create checkout session' },
       { status: 500 }
