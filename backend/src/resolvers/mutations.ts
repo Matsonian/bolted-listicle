@@ -240,7 +240,7 @@ export const UserMutations = builder.mutationType({
                     ...query,
                     where: { stripeCustomerId: args.stripeCustomerId },
                     data: {
-                        tier: 'FREE',
+                        tier: 'FREE',  // ✅ Correct - straight quotes
                         subscriptionStatus: 'canceled',
                     },
                 });
