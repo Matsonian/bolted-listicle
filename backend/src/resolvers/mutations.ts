@@ -265,7 +265,8 @@ export const UserMutations = builder.mutationType({
                 yearOfFounding: t.arg.int(),
                 uniqueValueProposition: t.arg.string(),
                 website: t.arg.string(),
-                dailySearchesUsed: t.arg.int()
+                dailySearchesUsed: t.arg.int(),
+                stripeCustomerId: t.arg.string()
             },
             // updates the contextual user
             resolve: async (query, _parent, args, ctx) => {
