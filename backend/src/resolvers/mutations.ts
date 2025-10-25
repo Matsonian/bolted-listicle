@@ -289,18 +289,3 @@ export const UserMutations = builder.mutationType({
         }),
     }),
 });
-```
-
-**Key changes:**
-1. Updated existing `updateUserSubscription` to include `userId` and `stripeSubscriptionId` 
-2. Added `updateSubscriptionStatus` - for webhook to update trial status
-3. Added `updateSubscriptionStatusByCustomer` - for payment failures
-4. Added `downgradeUserByStripeId` - for subscription cancellations
-
-Now:
-1. **Save this file**
-2. **Run migration** (if you haven't already):
-```
-   cd backend
-   npx prisma migrate dev --name add_trial_fields
-   npx prisma generate
