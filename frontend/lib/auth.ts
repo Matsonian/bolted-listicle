@@ -1,156 +1,127 @@
-import * as jwt from 'jsonwebtoken';
-import { PrismaClient, User } from '@prisma/client';
-import { GraphQLError } from 'graphql';
-import * as bcrypt from 'bcrypt';
-// import { sendWelcomeEmail } from './email/emailService';
+import { type NextAuthOptions } from "next-auth"
+import CredentialsProvider from "next-auth/providers/credentials"
 
-export const APP_SECRET = process.env.APP_SECRET;
+export const authOptions: NextAuthOptions = {
+  providers: [
+    CredentialsProvider({
+      name: "credentials",
+      credentials: {
+        email: { label: "Email", type: "email" },
+        password: { label: "Password", type: "password" },
+        otp: { label: "Otp", type: "otp" },
+      },
+      async authorize(credentials) {
+        console.log('=== AUTHORIZE CALLED ===', credentials)
+        if (!credentials?.email || !credentials?.password) return null;
 
-export interface AuthTokenPayload {
-    userId: string;
-}
-
-export function decodeAuthHeader(authHeader: string): AuthTokenPayload {
-    const token = authHeader.replace('Bearer ', '');
-
-    if (!token) {
-        throw new Error('No token found');
-    }
-    return jwt.verify(token, APP_SECRET!) as AuthTokenPayload;
-}
-
-export async function getAuthenticatedUser(
-    prisma: PrismaClient,
-    authHeader?: string,
-): Promise<User | null> {
-    if (!authHeader) {
-        return null;
-    }
-
-    try {
-        const token = decodeAuthHeader(authHeader);
-        return await prisma.user.findUnique({ where: { id: token.userId } });
-    } catch (err) {
-        console.error(err);
-        return null;
-    }
-}
-export async function ssoLoginHandler({
-    provider,
-    accessToken,
-    prisma,
-}: {
-    provider: string;
-    accessToken: string;
-    prisma: PrismaClient;
-}) {
-    let userProfile;
-    if (provider === 'google') {
-        const response = await fetch(
-            'https://www.googleapis.com/oauth2/v2/userinfo',
-            {
-                headers: {
-                    Authorization: `Bearer ${accessToken}`,
+        try {
+          let res;
+          if (credentials.otp) {
+            res = await fetch(`${process.env.GRAPHQL_URL}/graphql`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                query: `
+                mutation SignInWithOtp($otpCode: String!) {
+                  signInWithOtp(otpCode: $otpCode) {
+                    token
+                    userId
+                  }
+                }
+              `,
+                variables: {
+                  otpCode: credentials.otp,
                 },
-            },
-        );
-        userProfile = await response.json();
+              }),
+            });
+          } else {
+            console.log('=== CALLING GRAPHQL ===', `${process.env.GRAPHQL_URL}/graphql`)
+            res = await fetch(`${process.env.GRAPHQL_URL}/graphql`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                query: `
+                mutation SignUpOrInWithPassword($email: String!, $password: String!) {
+                  signUpOrInWithPassword(email: $email, password: $password) {
+                    token
+                    userId
+                  }
+                }
+              `,
+                variables: {
+                  email: credentials.email,
+                  password: credentials.password,
+                },
+              }),
+            });
+          }
 
-        if (!response.ok) {
-            console.error('Google API Error:', userProfile);
-            throw new GraphQLError(
-                `Failed to fetch user profile from Google: ${JSON.stringify(
-                    userProfile,
-                )}`,
-            );
+          const result = await res.json();
+          console.log('=== GRAPHQL RESPONSE ===', result);
+
+          // Check for auth data even if errors exist (Manus's fix)
+          const loginData =
+            result?.data?.signUpOrInWithPassword || result?.data?.signInWithOtp;
+          
+          if (result.errors) {
+            console.error("GraphQL errors:", result.errors);
+            // Still check if we have valid auth data despite errors
+            if (loginData?.token && loginData?.userId) {
+              console.log('=== USER AUTHENTICATED DESPITE ERRORS ===');
+              const returnValue = {
+                id: loginData.userId,
+                email: credentials.email,
+                accessToken: loginData.token,
+              };
+              return returnValue;
+            }
+            return null;
+          }
+
+          console.log('=== LOGIN DATA ===', loginData);
+
+          if (loginData?.token && loginData?.userId) {
+            const returnValue = {
+              id: loginData.userId,
+              email: credentials.email,
+              accessToken: loginData.token,
+            };
+            console.log('=== RETURNING USER ===', returnValue);
+            return returnValue;
+          }
+
+          console.log('=== NO TOKEN OR USERID ===');
+          return null;
+        } catch (error) {
+          console.error("Login error:", error);
+          return null;
         }
-    } else if (provider === 'facebook') {
-        const response = await fetch(
-            `https://graph.facebook.com/me?fields=id,name,email&access_token=${accessToken}`,
-        );
-        userProfile = await response.json();
-        if (!response.ok) {
-            console.error('Facebook API Error:', userProfile);
-            throw new GraphQLError(
-                `Failed to fetch user profile from Facebook: ${JSON.stringify(
-                    userProfile,
-                )}`,
-            );
-        }
-    } else {
-        throw new Error('Unsupported SSO provider');
-    }
-
-    if (!userProfile.email) {
-        throw new Error('Email not provided by SSO provider');
-    }
-
-    let user = await prisma.user.findUnique({
-        where: { email: userProfile.email },
-    });
-
-    if (!user) {
-        user = await prisma.user.create({
-            data: {
-                email: userProfile.email,
-                firstName: userProfile.name,
-                provider,
-            },
-        });
-        // await sendWelcomeEmail(userProfile.email, userProfile.name);
-    }
-
-    const token = jwt.sign({ userId: user.id }, APP_SECRET!);
-    return {
-        token,
-        userId: user.id,
-    };
-}
-
-export async function signUpOrInWithPasswordHandler({
-    email,
-    password,
-    prisma,
-}: {
-    email: string;
-    password?: string;
-    prisma: PrismaClient;
-}) {
-    let user = await prisma.user.findUnique({
-        where: { email },
-    });
-
-    console.log("uesr: ", user)
-
-    if (user) {
-        if (!user.password) {
-            // User exists but created via SSO, so we can't compare passwords.
-            // We can either throw an error or link the password to the account.
-            // For now, we'll throw an error.
-            throw new GraphQLError(
-                'An account with this email already exists. Please sign in with your original method.',
-            );
-        }
-
-        const passwordMatch = await bcrypt.compare(password!, user.password);
-        if (!passwordMatch) {
-            throw new GraphQLError('Invalid password.');
-        }
-    } else {
-        const hashedPassword = await bcrypt.hash(password!, 10);
-        user = await prisma.user.create({
-            data: {
-                email,
-                password: hashedPassword,
-                provider: 'emailPassword',
-            },
-        });
-        // await sendWelcomeEmail(email);
-    }
-
-    const token = jwt.sign({ userId: user.id }, APP_SECRET!);
-    return {
-        token,
-        userId: user.id,
-    };
+      },
+    }),
+  ],
+  callbacks: {
+    async jwt({ token, user }) {
+      if (user) {
+        token.accessToken = (user as any).accessToken;
+        token.id = user.id;
+        token.email = user.email;
+      }
+      return token;
+    },
+    async session({ session, token }) {
+      (session as any).accessToken = token?.accessToken;
+      if (session.user) {
+        (session.user as any).id = token?.id as string;
+        session.user.email = token?.email;
+      }
+      console.log("=== SESSION DATA ===", session, token);
+      return session;
+    },
+  },
+  pages: {
+    signIn: "/auth",
+  },
+  session: {
+    strategy: "jwt" as const,
+  },
 }
