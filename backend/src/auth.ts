@@ -104,7 +104,6 @@ export async function ssoLoginHandler({
     return {
         token,
         userId: user.id,
-        user,
     };
 }
 
@@ -153,6 +152,5 @@ export async function signUpOrInWithPasswordHandler({
     return {
         token,
         userId: user.id,
-        user,
     };
 }
