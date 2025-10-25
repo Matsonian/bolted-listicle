@@ -22,13 +22,13 @@ export default function GuestSearchResultsPage() {
     { wow: "WOW!", subtitle: "Your Analysis Estimate is Complete!" },
     { wow: "Nailed it!", subtitle: "Your analysis just crossed the finish line!" },
     { wow: "BOOM!", subtitle: "The data gods have spoken — your estimate is ready!" },
-    { wow: "You did it!", subtitle: "Your estimate is officially complete!" },
+    { wow: "🏁 You did it!", subtitle: "Your estimate is officially complete!" },
     { wow: "Epic work!", subtitle: "Your numbers are in and ready to review!" },
-    { wow: "Bam!", subtitle: "Your analysis is wrapped, packed, and ready to attack!" },
-    { wow: "Ding ding ding!", subtitle: "Your estimate is complete — time to celebrate!" },
+    { wow: "📊 Bam!", subtitle: "Your analysis is wrapped, packed, and ready to attack!" },
+    { wow: "✨ Ding ding ding!", subtitle: "Your estimate is complete — time to celebrate!" },
     { wow: "YES!", subtitle: "That's a wrap — your data masterpiece is ready!" },
-    { wow: "Analysis complete!", subtitle: "You just hit the bullseye!" },
-    { wow: "Boom!", subtitle: "Your analysis is ready to roll!" },
+    { wow: "🎯 Analysis complete!", subtitle: "You just hit the bullseye!" },
+    { wow: "🎉 Boom!", subtitle: "Your analysis is ready to roll!" },
     { wow: "Mission accomplished!", subtitle: "Your estimate is locked and loaded!" },
     { wow: "Ka-pow!", subtitle: "The numbers are in!" },
     { wow: "All done!", subtitle: "Your analysis just crossed the finish line!" },
@@ -72,11 +72,9 @@ const handleStartMembership = () => {
             <div className="bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 rounded-3xl shadow-2xl p-8 md:p-12 mb-8 transform hover:scale-105 transition-transform">
               <div className="text-white mb-4">
                 <p className="text-xl md:text-2xl font-semibold mb-3">Quick Check Found</p>
-                <div className="flex items-center justify-center gap-3 mb-3">
-                  <span className="text-5xl md:text-6xl font-bold">[at least]</span>
-                  <div className="text-8xl md:text-9xl font-black drop-shadow-lg">
-                    {resultsCount}
-                  </div>
+                <p className="text-2xl md:text-3xl font-semibold mb-2">[at least]</p>
+                <div className="text-8xl md:text-9xl font-black mb-3 drop-shadow-lg">
+                  {resultsCount}+
                 </div>
                 <p className="text-3xl md:text-4xl font-bold">
                   Listicles in Your Niche!
