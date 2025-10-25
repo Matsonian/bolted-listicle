@@ -172,15 +172,77 @@ export const UserMutations = builder.mutationType({
         updateUserSubscription: t.prismaField({
             type: 'User',
             args: {
+                userId: t.arg.string({ required: true }),
                 tier: t.arg({ type: TierEnum, required: true }),
                 stripeCustomerId: t.arg.string({ required: true }),
-                subscriptionStatus: t.arg.string({ required: false }),
+                stripeSubscriptionId: t.arg.string({ required: true }),
+                subscriptionStatus: t.arg.string({ required: true }),
             },
-            resolve: async (query, _parent, args, ctx) => {
+            resolve: async (query, _parent, args) => {
                 return prisma.user.update({
                     ...query,
-                    where: { id: ctx.user?.id },
-                    data: args,
+                    where: { id: args.userId },
+                    data: {
+                        tier: args.tier,
+                        stripeCustomerId: args.stripeCustomerId,
+                        stripeSubscriptionId: args.stripeSubscriptionId,
+                        subscriptionStatus: args.subscriptionStatus,
+                    },
+                });
+            },
+        }),
+        // NEW: Update subscription status with trial info
+        updateSubscriptionStatus: t.prismaField({
+            type: 'User',
+            args: {
+                stripeCustomerId: t.arg.string({ required: true }),
+                stripeSubscriptionId: t.arg.string({ required: true }),
+                subscriptionStatus: t.arg.string({ required: true }),
+                trialEnd: t.arg.string({ required: false }),
+            },
+            resolve: async (query, _parent, args) => {
+                return prisma.user.update({
+                    ...query,
+                    where: { stripeCustomerId: args.stripeCustomerId },
+                    data: {
+                        stripeSubscriptionId: args.stripeSubscriptionId,
+                        subscriptionStatus: args.subscriptionStatus,
+                        trialEnd: args.trialEnd ? new Date(args.trialEnd) : null,
+                    },
+                });
+            },
+        }),
+        // NEW: Update subscription status by customer ID only
+        updateSubscriptionStatusByCustomer: t.prismaField({
+            type: 'User',
+            args: {
+                stripeCustomerId: t.arg.string({ required: true }),
+                subscriptionStatus: t.arg.string({ required: true }),
+            },
+            resolve: async (query, _parent, args) => {
+                return prisma.user.update({
+                    ...query,
+                    where: { stripeCustomerId: args.stripeCustomerId },
+                    data: {
+                        subscriptionStatus: args.subscriptionStatus,
+                    },
+                });
+            },
+        }),
+        // NEW: Downgrade user by Stripe ID
+        downgradeUserByStripeId: t.prismaField({
+            type: 'User',
+            args: {
+                stripeCustomerId: t.arg.string({ required: true }),
+            },
+            resolve: async (query, _parent, args) => {
+                return prisma.user.update({
+                    ...query,
+                    where: { stripeCustomerId: args.stripeCustomerId },
+                    data: {
+                        tier: 'FREE',
+                        subscriptionStatus: 'canceled',
+                    },
                 });
             },
         }),
@@ -226,4 +288,18 @@ export const UserMutations = builder.mutationType({
         }),
     }),
 });
+```
 
+**Key changes:**
+1. Updated existing `updateUserSubscription` to include `userId` and `stripeSubscriptionId` 
+2. Added `updateSubscriptionStatus` - for webhook to update trial status
+3. Added `updateSubscriptionStatusByCustomer` - for payment failures
+4. Added `downgradeUserByStripeId` - for subscription cancellations
+
+Now:
+1. **Save this file**
+2. **Run migration** (if you haven't already):
+```
+   cd backend
+   npx prisma migrate dev --name add_trial_fields
+   npx prisma generate
