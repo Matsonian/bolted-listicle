@@ -71,9 +71,12 @@ const handleStartMembership = () => {
             {/* MASSIVE NUMBER DISPLAY */}
             <div className="bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 rounded-3xl shadow-2xl p-8 md:p-12 mb-8 transform hover:scale-105 transition-transform">
               <div className="text-white mb-4">
-                <p className="text-xl md:text-2xl font-semibold mb-3">We Found</p>
-                <div className="text-8xl md:text-9xl font-black mb-3 drop-shadow-lg">
-                  {resultsCount}
+                <p className="text-xl md:text-2xl font-semibold mb-3">Quick Check Found</p>
+                <div className="flex items-center justify-center gap-3 mb-3">
+                  <span className="text-5xl md:text-6xl font-bold">[at least]</span>
+                  <div className="text-8xl md:text-9xl font-black drop-shadow-lg">
+                    {resultsCount}
+                  </div>
                 </div>
                 <p className="text-3xl md:text-4xl font-bold">
                   Listicles in Your Niche!
