@@ -37,10 +37,11 @@ export default function LoginPage() {
   }
 
   const handleSignUp = async (e: React.FormEvent) => {
-     
     e.preventDefault()
     setIsLoading(true)
     setError("")
+
+    console.log('=== SIGNUP STARTED ===')
 
     if (signUpData.password !== signUpData.confirmPassword) {
       setError("Passwords do not match")
@@ -56,21 +57,23 @@ export default function LoginPage() {
 
     try {
       // Step 1: Create account and sign in
+      console.log('=== CALLING SIGNIN ===')
       const result = await signIn("credentials", {
         email: signUpData.email,
         password: signUpData.password,
         redirect: false,
       })
-      console.log("Sign-in result:", result)
+      console.log("=== SIGNIN RESULT ===", result)
 
       if (result?.error) {
-        // More specific error message
+        console.error('=== SIGNIN ERROR ===', result.error)
         setError("Failed to create account. Please try again or use a different email.")
         setIsLoading(false)
         return
       }
 
       if (result?.ok) {
+        console.log('=== SIGNIN SUCCESS - CREATING CHECKOUT ===')
         // Step 2: Automatically create Stripe checkout session with trial
         try {
           const checkoutResponse = await fetch('/api/create-checkout-session', {
@@ -81,13 +84,19 @@ export default function LoginPage() {
             }),
           })
 
+          console.log('=== CHECKOUT RESPONSE STATUS ===', checkoutResponse.status)
+
           if (!checkoutResponse.ok) {
+            const errorData = await checkoutResponse.json()
+            console.error('=== CHECKOUT ERROR ===', errorData)
             throw new Error('Failed to create checkout session')
           }
 
           const checkoutData = await checkoutResponse.json()
+          console.log('=== CHECKOUT DATA ===', checkoutData)
 
           if (checkoutData.sessionId) {
+            console.log('=== REDIRECTING TO STRIPE ===')
             // Step 3: Redirect to Stripe checkout
             const { loadStripe } = await import('@stripe/stripe-js')
             const stripe = await loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!)
@@ -97,51 +106,48 @@ export default function LoginPage() {
             })
 
             if (stripeError) {
-              console.error('Stripe redirect error:', stripeError)
-              // Fallback to pricing page if Stripe redirect fails
+              console.error('=== STRIPE REDIRECT ERROR ===', stripeError)
               router.push("/pricing")
             }
           } else {
-            // Fallback: redirect to pricing page if no session ID
+            console.log('=== NO SESSION ID - FALLBACK TO PRICING ===')
             router.push("/pricing")
           }
         } catch (checkoutError) {
-          console.error('Checkout error:', checkoutError)
-          // On error, still redirect to pricing page so user isn't stuck
+          console.error('=== CHECKOUT EXCEPTION ===', checkoutError)
           router.push("/pricing")
         }
       }
     } catch (error: any) {
-      console.error('Sign-up error:', error)
+      console.error('=== SIGNUP EXCEPTION ===', error)
       setError(error.message || "Failed to create account")
       setIsLoading(false)
     }
   }
 
-const handleSignIn = async (e: React.FormEvent) => {
-  e.preventDefault()
-  setIsLoading(true)
-  setError("")
+  const handleSignIn = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setIsLoading(true)
+    setError("")
 
-  try {
-    const result = await signIn("credentials", {
-      email: signInData.email,
-      password: signInData.password,
-      redirect: false,
-    })
+    try {
+      const result = await signIn("credentials", {
+        email: signInData.email,
+        password: signInData.password,
+        redirect: false,
+      })
 
-    if (result?.error) {
-      setError("Invalid email or password")
-    } else if (result?.ok) {
-      // Route existing users to dashboard, not pricing
-      router.push("/profile")  // Changed from "/pricing"
+      if (result?.error) {
+        setError("Invalid email or password")
+      } else if (result?.ok) {
+        router.push("/profile")
+      }
+    } catch (error) {
+      setError("An unexpected error occurred. Please try again.")
+    } finally {
+      setIsLoading(false)
     }
-  } catch (error) {
-    setError("An unexpected error occurred. Please try again.")
-  } finally {
-    setIsLoading(false)
   }
-}
 
   const handleSendOtp = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -165,7 +171,6 @@ const handleSignIn = async (e: React.FormEvent) => {
         setOtpEmail(otpData.email)
         setCountdown(60)
 
-        // Start countdown timer
         const timer = setInterval(() => {
           setCountdown((prev) => {
             if (prev <= 1) {
@@ -191,10 +196,9 @@ const handleSignIn = async (e: React.FormEvent) => {
     setError("")
 
     try {
-      // Create a custom sign-in with the token
       const signInResult = await signIn("credentials", {
         email: otpData.email,
-        password: "otp-signin", // Special flag for OTP signin
+        password: "otp-signin",
         otp: otpData.otpCode,
         callbackUrl: "/profile",
       })
@@ -231,8 +235,6 @@ const handleSignIn = async (e: React.FormEvent) => {
 
       if (result.success) {
         setCountdown(60)
-
-        // Start countdown timer
         const timer = setInterval(() => {
           setCountdown((prev) => {
             if (prev <= 1) {
@@ -252,75 +254,61 @@ const handleSignIn = async (e: React.FormEvent) => {
     }
   }
 
-  // Countdown timer effect
-  useEffect(() => {
-    if (countdown > 0) {
-      const timer = setTimeout(() => setCountdown(countdown - 1), 1000)
-      return () => clearTimeout(timer)
-    }
-  }, [countdown])
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center p-4">
+      <div className="max-w-md w-full space-y-8 bg-white p-8 rounded-xl shadow-lg">
         <div className="text-center">
-          <Link href="/" className="inline-block">
-            <img 
-              src="/GetListicledLogo-BlueGreen.png" 
-              alt="Get Listicled" 
-              className="h-12 w-auto mx-auto"
-            />
-          </Link>
-          <h2 className="mt-6 text-3xl font-extrabold text-gray-900">
-            Welcome to Get Listicled
-          </h2>
-          <p className="mt-2 text-sm text-gray-600">
-            Sign in to your account or create a new one
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            Welcome to GetListicled
+          </h1>
+          <p className="text-gray-600">
+            {activeTab === 'signin' ? 'Sign in to your account' : 
+             activeTab === 'signup' ? 'Create your account' : 
+             'Sign in with OTP'}
           </p>
         </div>
 
-        <div className="bg-white rounded-lg shadow-md p-8">
+        {error && (
+          <div className="bg-red-50 border border-red-200 rounded-md p-3 flex items-center space-x-2 text-red-600">
+            <AlertCircle className="w-5 h-5 flex-shrink-0" />
+            <p className="text-sm">{error}</p>
+          </div>
+        )}
+
+        <div className="space-y-6">
           {/* Tab Navigation */}
-          <div className="flex space-x-1 bg-gray-100 rounded-lg p-1 mb-6">
-            <button
-              onClick={() => setActiveTab('signin')}
-              className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
-                activeTab === 'signin'
-                  ? 'bg-white text-blue-600 shadow-sm'
-                  : 'text-gray-500 hover:text-gray-700'
-              }`}
-            >
-              Sign In
-            </button>
+          <div className="flex space-x-2 bg-gray-100 p-1 rounded-lg">
             <button
               onClick={() => setActiveTab('signup')}
-              className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
-                activeTab === 'signup'
-                  ? 'bg-white text-blue-600 shadow-sm'
-                  : 'text-gray-500 hover:text-gray-700'
+              className={`flex-1 py-2 px-4 rounded-md font-medium transition-colors ${
+                activeTab === 'signup' 
+                  ? 'bg-white text-blue-600 shadow-sm' 
+                  : 'text-gray-600 hover:text-gray-900'
               }`}
             >
               Sign Up
             </button>
             <button
+              onClick={() => setActiveTab('signin')}
+              className={`flex-1 py-2 px-4 rounded-md font-medium transition-colors ${
+                activeTab === 'signin' 
+                  ? 'bg-white text-blue-600 shadow-sm' 
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              Sign In
+            </button>
+            <button
               onClick={() => setActiveTab('otp')}
-              className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
-                activeTab === 'otp'
-                  ? 'bg-white text-blue-600 shadow-sm'
-                  : 'text-gray-500 hover:text-gray-700'
+              className={`flex-1 py-2 px-4 rounded-md font-medium transition-colors ${
+                activeTab === 'otp' 
+                  ? 'bg-white text-blue-600 shadow-sm' 
+                  : 'text-gray-600 hover:text-gray-900'
               }`}
             >
               OTP
             </button>
           </div>
-
-          {/* Error Message */}
-          {error && (
-            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md flex items-center space-x-2">
-              <AlertCircle className="w-5 h-5 text-red-500" />
-              <span className="text-sm text-red-600">{error}</span>
-            </div>
-          )}
 
           {/* Sign In Form */}
           {activeTab === 'signin' && (
@@ -406,34 +394,34 @@ const handleSignIn = async (e: React.FormEvent) => {
                 </div>
               </div>
 
-<div>
-  <label htmlFor="signup-password" className="block text-sm font-medium text-gray-700 mb-1">
-    Password
-  </label>
-  <div className="relative">
-    <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-    <input
-      id="signup-password"
-      type={showPassword ? "text" : "password"}
-      value={signUpData.password}
-      onChange={(e) => setSignUpData({ ...signUpData, password: e.target.value })}
-      className="pl-10 pr-10 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-      placeholder="Create a password"
-      required
-    />
-    <button
-      type="button"
-      onClick={() => setShowPassword(!showPassword)}
-      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-    >
-      {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-    </button>
-  </div>
-  {/* ADD THIS PASSWORD HINT */}
-  <p className="mt-1 text-xs text-gray-500">
-    Must be at least 6 characters long
-  </p>
-</div>
+              <div>
+                <label htmlFor="signup-password" className="block text-sm font-medium text-gray-700 mb-1">
+                  Password
+                </label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                  <input
+                    id="signup-password"
+                    type={showPassword ? "text" : "password"}
+                    value={signUpData.password}
+                    onChange={(e) => setSignUpData({ ...signUpData, password: e.target.value })}
+                    className="pl-10 pr-10 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="Create a password"
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  >
+                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                  </button>
+                </div>
+                <p className="mt-1 text-xs text-gray-500">
+                  Must be at least 6 characters long
+                </p>
+              </div>
+
               <div>
                 <label htmlFor="signup-confirm-password" className="block text-sm font-medium text-gray-700 mb-1">
                   Confirm Password
