@@ -52,8 +52,11 @@ model User {
   uniqueValueProposition String?
   website                String?
   tier                   Tier                @default(FREE)
-  stripeCustomerId       String?
-  subscriptionStatus     String?
+  stripeCustomerId       String?             @unique  // Add @unique
+  stripeSubscriptionId   String?             // ADD THIS LINE
+  subscriptionStatus     String?             @default("incomplete")  // Update default
+  trialEnd               DateTime?           // ADD THIS LINE
+  currentPeriodEnd       DateTime?           // ADD THIS LINE
   dailySearchesUsed      Int?
   role                   UserRole            @default(USER)
   Conversations          AgentConversation[]
