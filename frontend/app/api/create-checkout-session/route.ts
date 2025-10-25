@@ -115,3 +115,5 @@ export async function POST(request: NextRequest) {
       { error: 'Failed to create checkout session' },
       { status: 500 }
     );
+  }
+}
