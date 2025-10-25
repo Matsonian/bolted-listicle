@@ -17,6 +17,32 @@ export default function GuestSearchResultsPage() {
   const resultsCount = searchParams?.get('count') || '0'
   const [isLoading, setIsLoading] = useState(false)
 
+  // Array of exciting headline variations
+  const headlines = [
+    { wow: "WOW!", subtitle: "Your Analysis Estimate is Complete!" },
+    { wow: "Nailed it!", subtitle: "Your analysis just crossed the finish line!" },
+    { wow: "BOOM!", subtitle: "The data gods have spoken — your estimate is ready!" },
+    { wow: "🏁 You did it!", subtitle: "Your estimate is officially complete!" },
+    { wow: "Epic work!", subtitle: "Your numbers are in and ready to review!" },
+    { wow: "📊 Bam!", subtitle: "Your analysis is wrapped, packed, and ready to attack!" },
+    { wow: "✨ Ding ding ding!", subtitle: "Your estimate is complete — time to celebrate!" },
+    { wow: "YES!", subtitle: "That's a wrap — your data masterpiece is ready!" },
+    { wow: "🎯 Analysis complete!", subtitle: "You just hit the bullseye!" },
+    { wow: "🎉 Boom!", subtitle: "Your analysis is ready to roll!" },
+    { wow: "Mission accomplished!", subtitle: "Your estimate is locked and loaded!" },
+    { wow: "Ka-pow!", subtitle: "The numbers are in!" },
+    { wow: "All done!", subtitle: "Your analysis just crossed the finish line!" },
+    { wow: "Sweet!", subtitle: "Your estimate's hot off the press!" },
+    { wow: "Done and dusted!", subtitle: "Your full analysis is ready!" },
+    { wow: "The data's in!", subtitle: "And it looks good!" },
+    { wow: "Victory!", subtitle: "Your analysis report is complete!" },
+    { wow: "Mic drop moment!", subtitle: "Your estimate is complete!" },
+    { wow: "You did it!", subtitle: "The analysis is complete and ready to view!" }
+  ]
+
+  // Pick a random headline on component mount
+  const [headline] = useState(() => headlines[Math.floor(Math.random() * headlines.length)])
+
 const handleStartMembership = () => {
   router.push('/login')
 }
@@ -35,11 +61,11 @@ const handleStartMembership = () => {
             </div>
             
             <h1 className="text-5xl md:text-7xl font-black text-gray-900 mb-6 leading-tight">
-              WOW!
+              {headline.wow}
             </h1>
             
             <h2 className="text-3xl md:text-4xl font-bold text-gray-800 mb-8 leading-tight">
-              Your Analysis Estimate is Complete!
+              {headline.subtitle}
             </h2>
 
             {/* MASSIVE NUMBER DISPLAY */}
