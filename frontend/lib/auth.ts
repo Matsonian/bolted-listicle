@@ -36,6 +36,7 @@ export const authOptions: NextAuthOptions = {
             });
           } else {
             console.log('=== CALLING GRAPHQL ===', `${process.env.GRAPHQL_URL}/graphql`)
+            console.log('=== GRAPHQL_URL VALUE ===', process.env.GRAPHQL_URL) // ADD THIS LINE
             res = await fetch(`${process.env.GRAPHQL_URL}/graphql`, {
               method: "POST",
               headers: { "Content-Type": "application/json" },
