@@ -54,24 +54,66 @@ export default function LoginPage() {
       return
     }
 
-   
-
     try {
+      // Step 1: Create account and sign in
       const result = await signIn("credentials", {
         email: signUpData.email,
         password: signUpData.password,
         redirect: false,
       })
-      console.log("result",result)
+      console.log("Sign-in result:", result)
 
       if (result?.error) {
-        setError("Account created but sign-in failed. Please try signing in manually.")
-      } else if (result?.ok) {
-        router.push("/pricing")
+        // More specific error message
+        setError("Failed to create account. Please try again or use a different email.")
+        setIsLoading(false)
+        return
+      }
+
+      if (result?.ok) {
+        // Step 2: Automatically create Stripe checkout session with trial
+        try {
+          const checkoutResponse = await fetch('/api/create-checkout-session', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              priceId: process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_MONTHLY
+            }),
+          })
+
+          if (!checkoutResponse.ok) {
+            throw new Error('Failed to create checkout session')
+          }
+
+          const checkoutData = await checkoutResponse.json()
+
+          if (checkoutData.sessionId) {
+            // Step 3: Redirect to Stripe checkout
+            const { loadStripe } = await import('@stripe/stripe-js')
+            const stripe = await loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!)
+            
+            const { error: stripeError } = await stripe!.redirectToCheckout({
+              sessionId: checkoutData.sessionId
+            })
+
+            if (stripeError) {
+              console.error('Stripe redirect error:', stripeError)
+              // Fallback to pricing page if Stripe redirect fails
+              router.push("/pricing")
+            }
+          } else {
+            // Fallback: redirect to pricing page if no session ID
+            router.push("/pricing")
+          }
+        } catch (checkoutError) {
+          console.error('Checkout error:', checkoutError)
+          // On error, still redirect to pricing page so user isn't stuck
+          router.push("/pricing")
+        }
       }
     } catch (error: any) {
+      console.error('Sign-up error:', error)
       setError(error.message || "Failed to create account")
-    } finally {
       setIsLoading(false)
     }
   }
