@@ -36,32 +36,43 @@ export async function POST(request: NextRequest) {
       const session = event.data.object as Stripe.Checkout.Session;
       const userId = session.metadata?.userId;
       const customerId = session.customer as string;
+      const subscriptionId = session.subscription as string;
 
       console.log('Checkout completed for user:', userId);
 
       if (userId) {
-        // Update user in your database via GraphQL
         try {
           const response = await fetch(`${process.env.GRAPHQL_URL}/graphql`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               query: `
-                mutation UpdateUserSubscription($userId: ID!, $stripeCustomerId: String!, $tier: String!) {
+                mutation UpdateUserSubscription(
+                  $userId: String!
+                  $stripeCustomerId: String!
+                  $stripeSubscriptionId: String!
+                  $subscriptionStatus: String!
+                  $tier: Tier!
+                ) {
                   updateUserSubscription(
                     userId: $userId
                     stripeCustomerId: $stripeCustomerId
+                    stripeSubscriptionId: $stripeSubscriptionId
+                    subscriptionStatus: $subscriptionStatus
                     tier: $tier
                   ) {
                     id
                     tier
+                    subscriptionStatus
                   }
                 }
               `,
               variables: {
                 userId,
                 stripeCustomerId: customerId,
-                tier: 'paid',
+                stripeSubscriptionId: subscriptionId,
+                subscriptionStatus: 'trialing',
+                tier: 'PAID',
               },
             }),
           });
@@ -75,13 +86,64 @@ export async function POST(request: NextRequest) {
       break;
     }
 
+    case 'customer.subscription.updated': {
+      const subscription = event.data.object as Stripe.Subscription;
+      const customerId = subscription.customer as string;
+      const subscriptionId = subscription.id;
+      const status = subscription.status;
+      const trialEnd = subscription.trial_end 
+        ? new Date(subscription.trial_end * 1000).toISOString()
+        : null;
+
+      console.log('Subscription updated:', subscriptionId, 'Status:', status);
+
+      try {
+        const response = await fetch(`${process.env.GRAPHQL_URL}/graphql`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            query: `
+              mutation UpdateSubscriptionStatus(
+                $stripeCustomerId: String!
+                $stripeSubscriptionId: String!
+                $subscriptionStatus: String!
+                $trialEnd: String
+              ) {
+                updateSubscriptionStatus(
+                  stripeCustomerId: $stripeCustomerId
+                  stripeSubscriptionId: $stripeSubscriptionId
+                  subscriptionStatus: $subscriptionStatus
+                  trialEnd: $trialEnd
+                ) {
+                  id
+                  subscriptionStatus
+                  trialEnd
+                }
+              }
+            `,
+            variables: {
+              stripeCustomerId: customerId,
+              stripeSubscriptionId: subscriptionId,
+              subscriptionStatus: status,
+              trialEnd: trialEnd,
+            },
+          }),
+        });
+
+        const result = await response.json();
+        console.log('Subscription status updated:', result);
+      } catch (error) {
+        console.error('Failed to update subscription status:', error);
+      }
+      break;
+    }
+
     case 'customer.subscription.deleted': {
       const subscription = event.data.object as Stripe.Subscription;
       const customerId = subscription.customer as string;
 
       console.log('Subscription deleted for customer:', customerId);
 
-      // Downgrade user to free tier
       try {
         const response = await fetch(`${process.env.GRAPHQL_URL}/graphql`, {
           method: 'POST',
@@ -92,6 +154,7 @@ export async function POST(request: NextRequest) {
                 downgradeUserByStripeId(stripeCustomerId: $stripeCustomerId) {
                   id
                   tier
+                  subscriptionStatus
                 }
               }
             `,
@@ -105,6 +168,46 @@ export async function POST(request: NextRequest) {
         console.log('User downgraded:', result);
       } catch (error) {
         console.error('Failed to downgrade user:', error);
+      }
+      break;
+    }
+
+    case 'invoice.payment_failed': {
+      const invoice = event.data.object as Stripe.Invoice;
+      const customerId = invoice.customer as string;
+
+      console.log('Payment failed for customer:', customerId);
+
+      try {
+        const response = await fetch(`${process.env.GRAPHQL_URL}/graphql`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            query: `
+              mutation UpdateSubscriptionStatusByCustomer(
+                $stripeCustomerId: String!
+                $subscriptionStatus: String!
+              ) {
+                updateSubscriptionStatusByCustomer(
+                  stripeCustomerId: $stripeCustomerId
+                  subscriptionStatus: $subscriptionStatus
+                ) {
+                  id
+                  subscriptionStatus
+                }
+              }
+            `,
+            variables: {
+              stripeCustomerId: customerId,
+              subscriptionStatus: 'past_due',
+            },
+          }),
+        });
+
+        const result = await response.json();
+        console.log('User marked as past_due:', result);
+      } catch (error) {
+        console.error('Failed to update payment status:', error);
       }
       break;
     }
