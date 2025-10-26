@@ -77,7 +77,7 @@ export default function PricingPage() {
             <h2 className="text-3xl font-bold">Start Your 7-Day Free Trial</h2>
           </div>
           <p className="text-lg mb-4">
-            Full access to all features • No credit card required • Cancel anytime
+            Full Access to All Features • 7 Days Free • Cancel Anytime
           </p>
           <div className="flex items-center justify-center space-x-6 text-sm">
             <span className="flex items-center">
