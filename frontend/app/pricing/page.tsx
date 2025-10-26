@@ -3,7 +3,7 @@
 import React, { useState } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
-import { Check, ArrowRight, Loader2, Star } from 'lucide-react'
+import { Check, ArrowRight, Loader2, Star, Shield } from 'lucide-react'
 import { loadStripe } from '@stripe/stripe-js'
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!)
@@ -16,9 +16,8 @@ export default function PricingPage() {
 
   const handleSubscribe = async (priceId: string) => {
     if (!session) {
-      // Store the intended plan and redirect to signup
       localStorage.setItem('intended_plan', priceId)
-      router.push('/signup')
+      router.push('/login')
       return
     }
 
@@ -53,7 +52,7 @@ export default function PricingPage() {
 
   const monthlyFeatures = [
     '2 AI powered searches daily',
-    'Up to 20 curated results per search',
+    'Complete curated results each search - nothing held back',
     'AI-powered outreach analysis',
     'Contact information extraction',
     'Personalized email templates',
@@ -71,6 +70,31 @@ export default function PricingPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-12 px-4">
       <div className="container mx-auto max-w-4xl">
+        {/* 7-Day Free Trial Banner */}
+        <div className="bg-gradient-to-r from-green-400 to-blue-500 text-white rounded-2xl shadow-xl p-6 mb-12 text-center">
+          <div className="flex items-center justify-center space-x-3 mb-3">
+            <Shield className="w-8 h-8" />
+            <h2 className="text-3xl font-bold">Start Your 7-Day Free Trial</h2>
+          </div>
+          <p className="text-lg mb-4">
+            Full access to all features • No credit card required • Cancel anytime
+          </p>
+          <div className="flex items-center justify-center space-x-6 text-sm">
+            <span className="flex items-center">
+              <Check className="w-5 h-5 mr-2" />
+              No hidden fees
+            </span>
+            <span className="flex items-center">
+              <Check className="w-5 h-5 mr-2" />
+              Cancel anytime
+            </span>
+            <span className="flex items-center">
+              <Check className="w-5 h-5 mr-2" />
+              30-day guarantee
+            </span>
+          </div>
+        </div>
+
         {/* Header */}
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold text-gray-900 mb-4">
@@ -119,6 +143,7 @@ export default function PricingPage() {
               <div className="text-4xl font-bold text-blue-600 mb-2">
                 $29<span className="text-lg text-gray-500">/month</span>
               </div>
+              <p className="text-sm text-green-600 font-medium mb-2">After 7-day free trial</p>
               <p className="text-gray-600">Perfect for growing businesses</p>
             </div>
 
@@ -147,7 +172,7 @@ export default function PricingPage() {
                 </>
               ) : (
                 <>
-                  Get Started Monthly
+                  Start Free Trial
                   <ArrowRight className="w-5 h-5 ml-2" />
                 </>
               )}
@@ -158,7 +183,6 @@ export default function PricingPage() {
           <div className={`bg-white rounded-2xl shadow-lg p-8 transition-all duration-300 relative ${
             selectedPlan === 'annual' ? 'ring-2 ring-blue-500 scale-105' : 'hover:shadow-xl'
           }`}>
-            {/* Popular Badge */}
             <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
               <div className="bg-gradient-to-r from-orange-400 to-pink-500 text-white px-4 py-1 rounded-full text-sm font-medium flex items-center">
                 <Star className="w-4 h-4 mr-1" />
@@ -171,6 +195,7 @@ export default function PricingPage() {
               <div className="text-4xl font-bold text-blue-600 mb-2">
                 $24<span className="text-lg text-gray-500">/month</span>
               </div>
+              <p className="text-sm text-green-600 font-medium mb-2">After 7-day free trial</p>
               <p className="text-gray-600">
                 <span className="line-through text-gray-400">$348/year</span> → 
                 <span className="text-green-600 font-medium"> $290/year</span>
@@ -206,7 +231,7 @@ export default function PricingPage() {
                 </>
               ) : (
                 <>
-                  Get Started Annual
+                  Start Free Trial
                   <ArrowRight className="w-5 h-5 ml-2" />
                 </>
               )}
