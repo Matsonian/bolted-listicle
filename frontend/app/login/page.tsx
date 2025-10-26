@@ -37,94 +37,51 @@ export default function LoginPage() {
   }
 
   const handleSignUp = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsLoading(true)
-    setError("")
+  e.preventDefault()
+  setIsLoading(true)
+  setError("")
 
-    console.log('=== SIGNUP STARTED ===')
+  console.log('=== SIGNUP STARTED ===')
 
-    if (signUpData.password !== signUpData.confirmPassword) {
-      setError("Passwords do not match")
-      setIsLoading(false)
-      return
-    }
-
-    if (signUpData.password.length < 6) {
-      setError("Password must be at least 6 characters long")
-      setIsLoading(false)
-      return
-    }
-
-    try {
-      // Step 1: Create account and sign in
-      console.log('=== CALLING SIGNIN ===')
-      const result = await signIn("credentials", {
-        email: signUpData.email,
-        password: signUpData.password,
-        redirect: false,
-      })
-      console.log("=== SIGNIN RESULT ===", result)
-
-      if (result?.error) {
-        console.error('=== SIGNIN ERROR ===', result.error)
-        setError("Failed to create account. Please try again or use a different email.")
-        setIsLoading(false)
-        return
-      }
-
-      if (result?.ok) {
-        console.log('=== SIGNIN SUCCESS - CREATING CHECKOUT ===')
-        // Step 2: Automatically create Stripe checkout session with trial
-        try {
-          const checkoutResponse = await fetch('/api/create-checkout-session', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              priceId: process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_MONTHLY
-            }),
-          })
-
-          console.log('=== CHECKOUT RESPONSE STATUS ===', checkoutResponse.status)
-
-          if (!checkoutResponse.ok) {
-            const errorData = await checkoutResponse.json()
-            console.error('=== CHECKOUT ERROR ===', errorData)
-            throw new Error('Failed to create checkout session')
-          }
-
-          const checkoutData = await checkoutResponse.json()
-          console.log('=== CHECKOUT DATA ===', checkoutData)
-
-          if (checkoutData.sessionId) {
-            console.log('=== REDIRECTING TO STRIPE ===')
-            // Step 3: Redirect to Stripe checkout
-            const { loadStripe } = await import('@stripe/stripe-js')
-            const stripe = await loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!)
-            
-            const { error: stripeError } = await stripe!.redirectToCheckout({
-              sessionId: checkoutData.sessionId
-            })
-
-            if (stripeError) {
-              console.error('=== STRIPE REDIRECT ERROR ===', stripeError)
-              router.push("/pricing")
-            }
-          } else {
-            console.log('=== NO SESSION ID - FALLBACK TO PRICING ===')
-            router.push("/pricing")
-          }
-        } catch (checkoutError) {
-          console.error('=== CHECKOUT EXCEPTION ===', checkoutError)
-          router.push("/pricing")
-        }
-      }
-    } catch (error: any) {
-      console.error('=== SIGNUP EXCEPTION ===', error)
-      setError(error.message || "Failed to create account")
-      setIsLoading(false)
-    }
+  if (signUpData.password !== signUpData.confirmPassword) {
+    setError("Passwords do not match")
+    setIsLoading(false)
+    return
   }
 
+  if (signUpData.password.length < 6) {
+    setError("Password must be at least 6 characters long")
+    setIsLoading(false)
+    return
+  }
+
+  try {
+    console.log('=== CALLING SIGNIN ===')
+    const result = await signIn("credentials", {
+      email: signUpData.email,
+      password: signUpData.password,
+      redirect: false,
+    })
+    console.log("=== SIGNIN RESULT ===", result)
+
+    if (result?.error) {
+      console.error('=== SIGNIN ERROR ===', result.error)
+      setError("Failed to create account. Please try again or use a different email.")
+      setIsLoading(false)
+      return
+    }
+
+    if (result?.ok) {
+      // Redirect to pricing page to show features before Stripe
+      router.push("/pricing")
+    }
+  } catch (error: any) {
+    console.error('=== SIGNUP EXCEPTION ===', error)
+    setError(error.message || "Failed to create account")
+    setIsLoading(false)
+  }
+}
+  
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
